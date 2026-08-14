@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_guru"
+        android:icon="@drawable/ic_guru"
+        android:title="गुरु" />
+    <item
+        android:id="@+id/nav_gyan"
+        android:icon="@drawable/ic_gyan"
+        android:title="ज्ञान" />
+    <item
+        android:id="@+id/nav_sadhana"
+        android:icon="@drawable/ic_sadhana"
+        android:title="साधना" />
+    <item
+        android:id="@+id/nav_jyotish"
+        android:icon="@drawable/ic_jyotish"
+        android:title="ज्योतिष" />
+    <item
+        android:id="@+id/nav_karm"
+        android:icon="@drawable/ic_karma"
+        android:title="कर्म" />
+</menu>

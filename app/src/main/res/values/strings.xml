@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">KARMPHAL</string>
+    <!-- Replace 'YOUR_GEMINI_API_KEY' with your actual API key from https://aistudio.google.com/app/apikey -->
+    <string name="gemini_api_key">AIzaSyDFXAz4GifnC1Y0oyf6C8XXQAyCZqUNwFY</string>
+</resources>

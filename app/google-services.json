@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "210078230799",
+    "project_id": "karmphal-8874",
+    "storage_bucket": "karmphal-8874.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:210078230799:android:c7467dc9cc7e25944c367a",
+        "android_client_info": {
+          "package_name": "com.project.karmphal"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBQeiQUQoPEKikTRZ-jBAR4x7uJUzKqseU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

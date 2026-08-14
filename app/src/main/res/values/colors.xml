@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="primary">#FF8C00</color>
+    <color name="primary_variant">#D87000</color>
+    <color name="secondary">#FFB703</color>
+    <color name="accent">#FFD700</color>
+    <color name="bg_dark">#080405</color>
+    <color name="card_bg">#1C1216</color>
+    <color name="card_stroke">#3A242B</color>
+    <color name="text_gold">#FFF5E1</color>
+    <color name="text_subtle">#B3FFF5E1</color>
+    <color name="glow">#66FF8C00</color>
+    <color name="error">#CF6679</color>
+    <color name="chat_user_bg">#2C1A10</color>
+    <color name="chat_ai_bg">#1A1625</color>
+</resources>

@@ -1,0 +1,10 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Prayer Mala / Bead Counter Icon -->
+    <path
+        android:fillColor="#FF8C00"
+        android:pathData="M12,2A3,3 0,0 0,9 5A3,3 0,0 0,12 8A3,3 0,0 0,15 5A3,3 0,0 0,12 2M5,7A3,3 0,0 0,2 10A3,3 0,0 0,5 13A3,3 0,0 0,8 10A3,3 0,0 0,5 7M19,7A3,3 0,0 0,16 10A3,3 0,0 0,19 13A3,3 0,0 0,22 10A3,3 0,0 0,19 7M5,15A3,3 0,0 0,2 18A3,3 0,0 0,5 21A3,3 0,0 0,8 18A3,3 0,0 0,5 15M19,15A3,3 0,0 0,16 18A3,3 0,0 0,19 21A3,3 0,0 0,22 18A3,3 0,0 0,19 15M12,14A3,3 0,0 0,9 17A3,3 0,0 0,12 20A3,3 0,0 0,15 17A3,3 0,0 0,12 14Z"/>
+</vector>

@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_dark"
+    android:clipToPadding="false"
+    android:paddingBottom="36dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="12dp">
+
+        <!-- Header Image & Title -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="140dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="6dp"
+            android:layout_marginBottom="16dp">
+            
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/banner_kundali"
+                    android:scaleType="centerCrop"
+                    android:contentDescription="Spiritual Banner" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="#70000000" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="वैदिक ज्योतिष, कुंडली व वास्तु"
+                    android:textColor="@color/secondary"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:layout_gravity="center"
+                    android:shadowColor="#FF000000"
+                    android:shadowDx="2"
+                    android:shadowDy="2"
+                    android:shadowRadius="4" />
+            </FrameLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- 12 Zodiac Rashi Chips -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="⭐ १२ राशि दैनिक राशिफल (Zodiac Horoscope):"
+            android:textColor="@color/secondary"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp" />
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="none"
+            android:layout_marginBottom="16dp">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <com.google.android.material.chip.Chip android:id="@+id/chipMesh" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="मेष (Aries)" app:chipBackgroundColor="@color/card_bg" android:textColor="@color/text_gold" app:chipStrokeColor="@color/primary" app:chipStrokeWidth="1dp" android:layout_marginEnd="6dp" />
+                <com.google.android.material.chip.Chip android:id="@+id/chipVrishabha" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="वृषभ (Taurus)" app:chipBackgroundColor="@color/card_bg" android:textColor="@color/text_gold" app:chipStrokeColor="@color/primary" app:chipStrokeWidth="1dp" android:layout_marginEnd="6dp" />
+                <com.google.android.material.chip.Chip android:id="@+id/chipMithun" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="मिथुन (Gemini)" app:chipBackgroundColor="@color/card_bg" android:textColor="@color/text_gold" app:chipStrokeColor="@color/primary" app:chipStrokeWidth="1dp" android:layout_marginEnd="6dp" />
+                <com.google.android.material.chip.Chip android:id="@+id/chipKarka" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="कर्क (Cancer)" app:chipBackgroundColor="@color/card_bg" android:textColor="@color/text_gold" app:chipStrokeColor="@color/primary" app:chipStrokeWidth="1dp" android:layout_marginEnd="6dp" />
+                <com.google.android.material.chip.Chip android:id="@+id/chipSimha" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="सिंह (Leo)" app:chipBackgroundColor="@color/card_bg" android:textColor="@color/text_gold" app:chipStrokeColor="@color/primary" app:chipStrokeWidth="1dp" android:layout_marginEnd="6dp" />
+                <com.google.android.material.chip.Chip android:id="@+id/chipKanya" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="कन्या (Virgo)" app:chipBackgroundColor="@color/card_bg" android:textColor="@color/text_gold" app:chipStrokeColor="@color/primary" app:chipStrokeWidth="1dp" android:layout_marginEnd="6dp" />
+                <com.google.android.material.chip.Chip android:id="@+id/chipTula" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="तुला (Libra)" app:chipBackgroundColor="@color/card_bg" android:textColor="@color/text_gold" app:chipStrokeColor="@color/primary" app:chipStrokeWidth="1dp" android:layout_marginEnd="6dp" />
+                <com.google.android.material.chip.Chip android:id="@+id/chipVrishchika" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="वृश्चिक (Scorpio)" app:chipBackgroundColor="@color/card_bg" android:textColor="@color/text_gold" app:chipStrokeColor="@color/primary" app:chipStrokeWidth="1dp" android:layout_marginEnd="6dp" />
+                <com.google.android.material.chip.Chip android:id="@+id/chipDhanu" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="धनु (Sagittarius)" app:chipBackgroundColor="@color/card_bg" android:textColor="@color/text_gold" app:chipStrokeColor="@color/primary" app:chipStrokeWidth="1dp" android:layout_marginEnd="6dp" />
+                <com.google.android.material.chip.Chip android:id="@+id/chipMakar" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="मकर (Capricorn)" app:chipBackgroundColor="@color/card_bg" android:textColor="@color/text_gold" app:chipStrokeColor="@color/primary" app:chipStrokeWidth="1dp" android:layout_marginEnd="6dp" />
+                <com.google.android.material.chip.Chip android:id="@+id/chipKumbha" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="कुंभ (Aquarius)" app:chipBackgroundColor="@color/card_bg" android:textColor="@color/text_gold" app:chipStrokeColor="@color/primary" app:chipStrokeWidth="1dp" android:layout_marginEnd="6dp" />
+                <com.google.android.material.chip.Chip android:id="@+id/chipMeen" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="मीन (Pisces)" app:chipBackgroundColor="@color/card_bg" android:textColor="@color/text_gold" app:chipStrokeColor="@color/primary" app:chipStrokeWidth="1dp" />
+            </LinearLayout>
+        </HorizontalScrollView>
+
+        <!-- Jyotish Feature Grid -->
+        <GridLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:columnCount="2"
+            android:alignmentMode="alignMargins"
+            android:layout_marginBottom="16dp">
+
+            <!-- Kundali Analysis Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardKundaliTab"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_margin="6dp"
+                app:cardBackgroundColor="@color/card_bg"
+                app:strokeColor="@color/primary"
+                app:strokeWidth="1dp"
+                app:cardCornerRadius="14dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="12dp" android:gravity="center">
+                    <ImageView android:layout_width="44dp" android:layout_height="44dp" android:src="@drawable/banner_kundali" android:scaleType="centerCrop"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="जन्म कुंडली विश्लेषण" android:textColor="@color/secondary" android:textStyle="bold" android:textSize="14sp" android:layout_marginTop="4dp"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="लग्न, ग्रह दशा व रत्न" android:textColor="@color/text_subtle" android:textSize="11sp"/>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Vivah Milan Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardVivahMilan"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_margin="6dp"
+                app:cardBackgroundColor="@color/card_bg"
+                app:strokeColor="@color/primary"
+                app:strokeWidth="1dp"
+                app:cardCornerRadius="14dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="12dp" android:gravity="center">
+                    <ImageView android:layout_width="44dp" android:layout_height="44dp" android:src="@drawable/ic_vivah_milan" app:tint="@color/secondary"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="विवाह गुण मिलान" android:textColor="@color/secondary" android:textStyle="bold" android:textSize="14sp" android:layout_marginTop="4dp"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="अष्टकूट व नाड़ी विचार" android:textColor="@color/text_subtle" android:textSize="11sp"/>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Vastu Shastra Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardVastuUpay"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_margin="6dp"
+                app:cardBackgroundColor="@color/card_bg"
+                app:strokeColor="@color/primary"
+                app:strokeWidth="1dp"
+                app:cardCornerRadius="14dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="12dp" android:gravity="center">
+                    <ImageView android:layout_width="44dp" android:layout_height="44dp" android:src="@drawable/ic_vastu" app:tint="@color/secondary"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="वास्तु दोष एवं उपाय" android:textColor="@color/secondary" android:textStyle="bold" android:textSize="14sp" android:layout_marginTop="4dp"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="दिशा ज्ञान व शांति नियम" android:textColor="@color/text_subtle" android:textSize="11sp"/>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Lal Kitab Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardLalKitab"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_margin="6dp"
+                app:cardBackgroundColor="@color/card_bg"
+                app:strokeColor="@color/primary"
+                app:strokeWidth="1dp"
+                app:cardCornerRadius="14dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="12dp" android:gravity="center">
+                    <ImageView android:layout_width="44dp" android:layout_height="44dp" android:src="@drawable/ic_lal_kitab"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="लाल किताब उपाय" android:textColor="@color/secondary" android:textStyle="bold" android:textSize="14sp" android:layout_marginTop="4dp"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="अचूक व सरल टोटके" android:textColor="@color/text_subtle" android:textSize="11sp"/>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+        </GridLayout>
+
+        <!-- Kundali Input Form Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardBackgroundColor="@color/card_bg"
+            app:strokeColor="@color/primary"
+            app:strokeWidth="1dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="6dp"
+            android:layout_marginBottom="16dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="जन्म विवरण (Kundali &amp; Astro Form):"
+                    android:textColor="@color/secondary"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="12dp" />
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="पूरा नाम (Full Name)"
+                    android:layout_marginBottom="10dp"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etName"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/text_gold" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="जन्म तिथि (DD/MM/YYYY)"
+                    android:layout_marginBottom="10dp"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etDOB"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/text_gold" />
+                </com.google.android.material.textfield.TextInputLayout>
+                
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="जन्म समय (HH:MM AM/PM)"
+                    android:layout_marginBottom="10dp"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etTime"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/text_gold" />
+                </com.google.android.material.textfield.TextInputLayout>
+                
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="जन्म स्थान (City, State)"
+                    android:layout_marginBottom="14dp"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etPlace"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/text_gold" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnGenerateKundli"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:text="संपूर्ण कुंडली फलादेश प्राप्त करें"
+                    app:backgroundTint="@color/primary"
+                    android:textColor="@color/black"
+                    android:textSize="15sp"
+                    app:cornerRadius="10dp"/>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Result Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardBackgroundColor="@color/card_bg"
+            app:strokeColor="@color/secondary"
+            app:strokeWidth="1dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="6dp">
+            <TextView
+                android:id="@+id/tvKundliResult"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="18dp"
+                android:textColor="@color/text_gold"
+                android:textSize="15sp"
+                android:lineSpacingExtra="5dp"
+                android:text="जन्म विवरण दर्ज करें या ऊपर दिए गए किसी भी ज्योतिष कार्ड / राशि बटन पर क्लिक करके तुरंत फलादेश प्राप्त करें।" />
+        </com.google.android.material.card.MaterialCardView>
+    </LinearLayout>
+</ScrollView>

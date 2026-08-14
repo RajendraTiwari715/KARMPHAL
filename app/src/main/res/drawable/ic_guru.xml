@@ -1,0 +1,10 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Guru / Spiritual Guide Icon -->
+    <path
+        android:fillColor="#FF8C00"
+        android:pathData="M12,2A5,5 0,0 1,17 7A5,5 0,0 1,12 12A5,5 0,0 1,7 7A5,5 0,0 1,12 2M12,4A3,3 0,0 0,9 7A3,3 0,0 0,12 10A3,3 0,0 0,15 7A3,3 0,0 0,12 4M12,13.9C15.33,13.9 22,15.57 22,18.9V22H2V18.9C2,15.57 8.67,13.9 12,13.9M12,15.9C8.03,15.9 3.9,17.87 3.9,18.9V20.1H20.1V18.9C20.1,17.87 15.97,15.9 12,15.9Z"/>
+</vector>
