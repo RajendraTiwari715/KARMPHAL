@@ -1,0 +1,210 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-dark: #120A05;
+    --bg-surface: #1C1008;
+    --bg-card: #28170D;
+    --bg-card-hover: #341E12;
+    --accent-copper: #C58B4E;
+    --accent-gold: #E0A96D;
+    --accent-gold-light: #F3CA9D;
+    --border-gold: rgba(197, 139, 78, 0.35);
+    --border-gold-glow: rgba(224, 169, 109, 0.6);
+  }
+
+  body {
+    background-color: #120A05;
+    color: #F7E7D6;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background-image: 
+      radial-gradient(circle at 50% 0%, rgba(197, 139, 78, 0.12) 0%, transparent 65%),
+      radial-gradient(circle at 100% 100%, rgba(140, 75, 25, 0.08) 0%, transparent 50%),
+      radial-gradient(circle at 0% 100%, rgba(140, 75, 25, 0.08) 0%, transparent 50%);
+    background-attachment: fixed;
+  }
+}
+
+/* Sacred Typography Utilities */
+.font-dharmik {
+  font-family: 'Rozha One', 'Cinzel', 'Noto Serif Devanagari', serif;
+  letter-spacing: 0.02em;
+}
+
+.font-sanskrit {
+  font-family: 'Tiro Devanagari Sanskrit', 'Noto Serif Devanagari', serif;
+}
+
+/* Premium Dark Chocolate & Matte Copper-Gold Glassmorphism Cards */
+.glass-card {
+  background: linear-gradient(145deg, rgba(38, 22, 12, 0.85) 0%, rgba(24, 14, 8, 0.95) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(197, 139, 78, 0.25);
+  box-shadow: 
+    0 10px 30px -10px rgba(0, 0, 0, 0.8),
+    inset 0 1px 1px rgba(255, 215, 160, 0.12),
+    inset 0 0 20px rgba(197, 139, 78, 0.04);
+  border-radius: 1.5rem;
+}
+
+.glass-card-gold {
+  background: linear-gradient(135deg, rgba(46, 26, 15, 0.9) 0%, rgba(26, 14, 8, 0.98) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1.5px solid rgba(224, 169, 109, 0.45);
+  box-shadow: 
+    0 15px 35px -5px rgba(0, 0, 0, 0.9),
+    0 0 25px rgba(197, 139, 78, 0.15),
+    inset 0 1px 2px rgba(255, 230, 190, 0.2);
+  border-radius: 1.5rem;
+}
+
+/* Circular Golden Icon Button as seen in reference image */
+.circle-gold-btn {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 35% 30%, #52311B 0%, #2A170C 70%, #170C06 100%);
+  border: 2px solid #C58B4E;
+  box-shadow: 
+    0 8px 20px rgba(0, 0, 0, 0.6),
+    0 0 15px rgba(197, 139, 78, 0.25),
+    inset 0 2px 4px rgba(243, 202, 157, 0.35);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.circle-gold-btn:hover {
+  transform: translateY(-3px) scale(1.05);
+  border-color: #E0A96D;
+  box-shadow: 
+    0 12px 25px rgba(0, 0, 0, 0.8),
+    0 0 20px rgba(224, 169, 109, 0.45),
+    inset 0 2px 6px rgba(255, 230, 190, 0.5);
+}
+
+.circle-gold-btn:active {
+  transform: translateY(1px) scale(0.96);
+}
+
+/* Interactive Stotra List Tile as shown in mockup */
+.stotra-list-tile {
+  background: linear-gradient(90deg, rgba(42, 24, 13, 0.85) 0%, rgba(28, 16, 9, 0.95) 100%);
+  border: 1px solid rgba(197, 139, 78, 0.3);
+  border-radius: 1.25rem;
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.25s ease-out;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.stotra-list-tile:hover {
+  background: linear-gradient(90deg, rgba(58, 33, 18, 0.95) 0%, rgba(36, 20, 11, 0.98) 100%);
+  border-color: rgba(224, 169, 109, 0.6);
+  transform: translateX(4px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.7), 0 0 15px rgba(197, 139, 78, 0.2);
+}
+
+/* Buttons */
+.btn-gold {
+  background: linear-gradient(135deg, #E0A96D 0%, #C58B4E 50%, #9B632F 100%);
+  color: #120A05;
+  font-weight: 700;
+  border-radius: 1rem;
+  padding: 0.65rem 1.4rem;
+  border: 1px solid #F3CA9D;
+  box-shadow: 0 4px 15px rgba(197, 139, 78, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+  transition: all 0.25s ease-in-out;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.btn-gold:hover {
+  background: linear-gradient(135deg, #F3CA9D 0%, #E0A96D 50%, #B87A3E 100%);
+  box-shadow: 0 6px 20px rgba(224, 169, 109, 0.5), 0 0 15px rgba(243, 202, 157, 0.3);
+  transform: translateY(-1px);
+}
+
+.btn-gold:active {
+  transform: translateY(1px);
+}
+
+/* Badges */
+.badge-gold {
+  background: linear-gradient(135deg, rgba(197, 139, 78, 0.25) 0%, rgba(140, 75, 25, 0.35) 100%);
+  color: #F3CA9D;
+  border: 1px solid rgba(224, 169, 109, 0.4);
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.badge-saffron {
+  background: linear-gradient(135deg, rgba(184, 80, 20, 0.3) 0%, rgba(130, 45, 10, 0.4) 100%);
+  color: #FFC085;
+  border: 1px solid rgba(230, 110, 40, 0.4);
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+/* Diya Animation */
+@keyframes diyaGlow {
+  0%, 100% {
+    filter: drop-shadow(0 0 6px rgba(243, 202, 157, 0.8)) drop-shadow(0 0 12px rgba(197, 139, 78, 0.4));
+    transform: scale(1);
+  }
+  50% {
+    filter: drop-shadow(0 0 10px rgba(255, 230, 190, 1)) drop-shadow(0 0 20px rgba(224, 169, 109, 0.7));
+    transform: scale(1.08);
+  }
+}
+
+.animate-diya {
+  display: inline-block;
+  animation: diyaGlow 2.5s infinite ease-in-out;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #120A05;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3D2214;
+  border-radius: 4px;
+  border: 1px solid rgba(197, 139, 78, 0.2);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #5A331E;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

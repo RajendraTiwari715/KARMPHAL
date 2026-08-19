@@ -13,3 +13,7 @@
 .externalNativeBuild
 .cxx
 local.properties
+.env
+.env.*
+node_modules
+dist
