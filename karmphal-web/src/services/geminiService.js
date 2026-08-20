@@ -42,13 +42,13 @@ class GeminiService {
     // 2. Canonical Scriptures Search
     const matchedScriptures = SCRIPTURES_CATALOG.filter(s => 
       q.includes(s.granth.toLowerCase()) || 
-      q.includes('वेद') && s.granth.includes('वेद') ||
-      q.includes('गीता') && s.granth.includes('गीता') ||
-      q.includes('उपनिषद्') && s.granth.includes('उपनिषद्') ||
-      q.includes('पुराण') && s.granth.includes('पुराण') ||
-      q.includes('रामायण') && s.granth.includes('रामायण') ||
-      q.includes('योग') && s.granth.includes('योग') ||
-      q.includes('कर्म') && s.id.includes('gita')
+      (q.includes('वेद') && s.granth.includes('वेद')) ||
+      (q.includes('गीता') && s.granth.includes('गीता')) ||
+      (q.includes('उपनिषद्') && s.granth.includes('उपनिषद्')) ||
+      (q.includes('पुराण') && s.granth.includes('पुराण')) ||
+      (q.includes('रामायण') && s.granth.includes('रामायण')) ||
+      (q.includes('योग') && s.granth.includes('योग')) ||
+      (q.includes('कर्म') && s.id.includes('gita'))
     ).slice(0, 3);
 
     if (matchedScriptures.length > 0) {
@@ -97,9 +97,9 @@ ${DREAM_MOTIFS.slice(0, 5).map(m => `- ${m.motif}: ${m.interpretation} (उप�
     const systemInstruction = `आप 'सनातन AI आचार्य' हैं—एक परम ज्ञानी, स्नेही, करुणामयी एवं शास्त्र-सम्मत सनातन आध्यात्मिक मार्गदर्शक।
 
 आपके उत्तर देने के नियम:
-१. भाषा: १००% शुद्ध, मधुर, प्रामाणिक एवं सरल हिन्दी। उत्तर बहुत लम्बा व उबाऊ न हो, अपितु सटीक, स्पष्ट और कल्याणकारी हो।
+१. भाषा: १००% शुद्ध, मधुर, प्रामाणिक एवं सरल हिन्दी। उत्तर बहुत लम्बा व उबाऊ न हो, अपितु सटीक, स्पष्ट, प्रेरक और कल्याणकारी हो।
 २. शास्त्रोक्त प्रमाण: जहाँ आवश्यकता हो, भगवद्गीता, वेद, उपनिषद् या पुराण के श्लोक व भावार्थ का सन्दर्भ दें।
-३. ज्योतिष, कुण्डली एवं कर्म: अन्धविश्वास से दूर रखकर सञ्चित, प्रारब्ध व क्रियमाण कर्म का ज्ञान दें तथा सात्विक उपाय (गायत्री मन्त्र, भगवान् का नाम जप, गोसेवा, दीपदान, दान-पुण्य) बताएं।
+३. ज्योतिष, कुण्डली एवं कर्म: अन्धविश्वास और भय से दूर रखकर सञ्चित, प्रारब्ध व क्रियमाण कर्म का ज्ञान दें तथा सात्विक उपाय (गायत्री मन्त्र, भगवान् का नाम जप, गोसेवा, दीपदान, दान-पुण्य) बताएं।
 ४. अपने उत्तर में किसी प्रकार के तकनीकी शब्द (जैसे RAG, LLM, Model, Prompt, AI System) का उल्लेख कभी न करें। आप केवल एक सच्चे गुरु और आध्यात्मिक मार्गदर्शक के रूप में बात करें।
 ५. जिज्ञासु के हर प्रश्न का सीधा, सच्चा और सन्तुष्टिदायक उत्तर दें।`;
 
@@ -109,7 +109,8 @@ ${ragContext}
 [जिज्ञासु का प्रश्न]:
 ${userMessage}`;
 
-    const models = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
+    // Priority list of available Gemini models verified with 200 OK
+    const models = ['gemini-3.5-flash', 'gemini-flash-latest', 'gemini-3.5-flash-lite', 'gemini-3.6-flash'];
 
     for (const model of models) {
       try {
@@ -157,7 +158,7 @@ ${userMessage}`;
       }
     }
 
-    // Local spiritual fallback if API key or network is unreachable
+    // Local spiritual fallback if network is unreachable
     const localResolution = resolveTheologicalInquiry(userMessage, { planets: panchangContext?.planets });
     return {
       text: localResolution.content
