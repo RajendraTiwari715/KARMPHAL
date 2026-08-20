@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Sparkles, Flame, RotateCcw, ShieldCheck, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
 import { audioService } from '../../services/audioService';
 import { storageService } from '../../services/storageService';
-import confetti from 'canvas-confetti';
+import { useJapaTelemetry } from './useJapaTelemetry';
+import { Button, Badge, Card } from '../shared';
 
 const MANTRAS = [
   { id: 'gayatri', name: 'गायत्री महामन्त्र', text: 'ॐ भूर्भुवः स्वः तत्सवितुर्वरेण्यं भर्गो देवस्य धीमहि धियो यो नः प्रचोदयात् ॥', syllables: 24, minSeconds: 2.88 },
@@ -13,13 +14,11 @@ const MANTRAS = [
 
 export default function DigitalJapaMala() {
   const [selectedMantra, setSelectedMantra] = useState(MANTRAS[0]);
-  const [beadCount, setBeadCount] = useState(0);
-  const [malaCycle, setMalaCycle] = useState(0);
-  const [lastChantTime, setLastChantTime] = useState(Date.now());
-  const [antiCheatStatus, setAntiCheatStatus] = useState('valid');
   const [isSwadhyayaRunning, setIsSwadhyayaRunning] = useState(false);
   const [swadhyayaMinutes, setSwadhyayaMinutes] = useState(0);
   const [tasks, setTasks] = useState(() => storageService.getState().tasks || []);
+
+  const { beadCount, malaCycle, antiCheatStatus, handleBeadChant, resetMala } = useJapaTelemetry(selectedMantra);
 
   // Swadhyaya Timer logic
   useEffect(() => {
@@ -33,35 +32,6 @@ export default function DigitalJapaMala() {
     return () => clearInterval(interval);
   }, [isSwadhyayaRunning]);
 
-  const handleBeadClick = () => {
-    const now = Date.now();
-    const elapsedSeconds = (now - lastChantTime) / 1000;
-    const requiredMinSeconds = selectedMantra.minSeconds;
-
-    // Anti-Cheat Syllable Velocity Evaluation: T_min = N_s * 120ms
-    if (elapsedSeconds < requiredMinSeconds && beadCount > 0) {
-      setAntiCheatStatus('mechanical_violation');
-      audioService.playBeadClick();
-      setBeadCount(prev => (prev + 1) % 108);
-    } else {
-      setAntiCheatStatus('valid');
-      audioService.playBeadClick();
-      storageService.addPunya(1, `जप: ${selectedMantra.name}`);
-
-      const nextBead = beadCount + 1;
-      if (nextBead >= 108) {
-        audioService.playMeruGong();
-        confetti({ particleCount: 80, spread: 60, origin: { y: 0.6 } });
-        setBeadCount(0);
-        setMalaCycle(prev => prev + 1);
-        storageService.incrementMala(selectedMantra.id);
-      } else {
-        setBeadCount(nextBead);
-      }
-    }
-    setLastChantTime(now);
-  };
-
   const handleTaskToggle = (taskId) => {
     audioService.playTempleBell(528, 0.8);
     storageService.toggleTask(taskId);
@@ -71,12 +41,12 @@ export default function DigitalJapaMala() {
   return (
     <div className="space-y-6">
       {/* Header Banner */}
-      <div className="glass-card-gold p-6 sm:p-8 relative overflow-hidden">
+      <Card variant="gold" className="p-6 sm:p-8 relative overflow-hidden">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="badge-gold">१०८ मनके पारम्परिक जप माला</span>
-              <span className="badge-saffron">अक्षर वेग रक्षक तकनीक</span>
+              <Badge variant="gold">१०८ मनके पारम्परिक जप माला</Badge>
+              <Badge variant="saffron">अक्षर वेग रक्षक तकनीक</Badge>
             </div>
             <h2 className="text-2xl sm:text-3xl font-dharmik font-bold text-amber-200 flex items-center gap-2">
               <Flame className="w-6 h-6 text-amber-400" />
@@ -87,24 +57,25 @@ export default function DigitalJapaMala() {
             </p>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Main Mala & Sadhana Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column: Interactive 108 Bead Japa Mala */}
-        <div className="lg:col-span-6 glass-card p-6 flex flex-col justify-between items-center text-center relative overflow-hidden">
+        <Card variant="glass" className="lg:col-span-6 p-6 flex flex-col justify-between items-center text-center relative overflow-hidden">
           {/* Mantra Selector */}
           <div className="w-full mb-4">
-            <label className="block text-xs font-bold text-slate-300 mb-1">इष्ट मन्त्र चयन करें</label>
+            <label className="block text-xs font-bold text-slate-300 mb-1 text-left">इष्ट मन्त्र चयन करें</label>
             <select
               value={selectedMantra.id}
-              onChange={e => {
+              onChange={(e) => {
                 const found = MANTRAS.find(m => m.id === e.target.value);
-                setSelectedMantra(found);
-                setBeadCount(0);
-                audioService.playBeadClick();
+                if (found) {
+                  setSelectedMantra(found);
+                  resetMala();
+                }
               }}
-              className="w-full bg-slate-900 border border-slate-700 text-slate-100 p-2.5 rounded-xl text-xs outline-none focus:border-amber-400 font-sans"
+              className="w-full bg-slate-900 border border-slate-700 text-amber-300 text-xs px-3.5 py-2.5 rounded-xl outline-none focus:border-amber-400 font-sans"
             >
               {MANTRAS.map(m => (
                 <option key={m.id} value={m.id}>{m.name}</option>
@@ -112,70 +83,82 @@ export default function DigitalJapaMala() {
             </select>
           </div>
 
-          {/* Selected Mantra Text Display */}
-          <div className="p-4 rounded-2xl bg-slate-950/80 border border-amber-500/20 mb-6 w-full">
-            <pre className="font-sanskrit text-sm text-amber-200 whitespace-pre-line leading-relaxed">
+          {/* Active Mantra Shloka Card */}
+          <div className="p-4 rounded-2xl bg-slate-900/90 border border-amber-500/20 mb-6 w-full shadow-inner">
+            <pre className="font-sanskrit text-sm text-amber-200 whitespace-pre-line leading-relaxed font-bold">
               {selectedMantra.text}
             </pre>
           </div>
 
-          {/* Interactive Bead Clicker Wheel */}
-          <div className="relative my-2">
+          {/* 108 Bead Visual Circular Dial */}
+          <div className="relative my-4 flex items-center justify-center">
+            {/* Outer Progress Circle */}
+            <svg className="w-56 h-56 transform -rotate-90">
+              <circle
+                cx="112"
+                cy="112"
+                r="96"
+                stroke="currentColor"
+                strokeWidth="8"
+                className="text-slate-800"
+                fill="transparent"
+              />
+              <circle
+                cx="112"
+                cy="112"
+                r="96"
+                stroke="currentColor"
+                strokeWidth="10"
+                strokeDasharray={2 * Math.PI * 96}
+                strokeDashoffset={2 * Math.PI * 96 * (1 - beadCount / 108)}
+                strokeLinecap="round"
+                className="text-amber-400 transition-all duration-150"
+                fill="transparent"
+              />
+            </svg>
+
+            {/* Inner Tap Button */}
             <button
-              onClick={handleBeadClick}
-              className="w-48 h-48 rounded-full bg-gradient-to-br from-amber-500 via-orange-600 to-amber-800 p-1.5 shadow-2xl shadow-amber-500/30 hover:scale-105 active:scale-95 transition-all group flex items-center justify-center border-4 border-amber-300/40 cursor-pointer"
+              onClick={handleBeadChant}
+              className="absolute w-40 h-40 rounded-full bg-gradient-to-br from-amber-500 via-orange-600 to-amber-700 flex flex-col items-center justify-center text-slate-950 shadow-2xl shadow-amber-500/40 hover:scale-105 active:scale-95 transition-transform border-4 border-amber-200 cursor-pointer"
             >
-              <div className="w-full h-full rounded-full bg-[#0E0F1A] flex flex-col items-center justify-center p-4">
-                <span className="text-[10px] text-amber-400 font-bold uppercase tracking-widest">मनका संख्या</span>
-                <span className="text-5xl font-black text-amber-200 font-mono my-1">{beadCount}</span>
-                <span className="text-[10px] text-slate-400 font-bold">/ १०८ मनके (मेरु)</span>
-                <span className="text-[11px] text-amber-300 font-bold mt-1 group-hover:animate-pulse">स्पर्श कर जपें</span>
-              </div>
+              <span className="font-mono text-3xl font-black">{beadCount}</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-900 mt-0.5">मनका स्पर्श (Tap)</span>
+              <span className="text-[10px] font-semibold text-slate-900/80">/ १०८ मनके</span>
             </button>
           </div>
 
-          {/* Anti-Cheat Syllable Velocity Badge */}
-          <div className="mt-4 w-full">
-            {antiCheatStatus === 'valid' ? (
-              <div className="p-2.5 rounded-xl bg-emerald-950/60 border border-emerald-500/30 text-emerald-300 text-xs flex items-center justify-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                <span>✓ प्रामाणिक शुद्ध जप (प्रति मनका +१ पुण्य)</span>
-              </div>
+          {/* Status & Anti-cheat indicator */}
+          <div className="w-full flex items-center justify-between text-xs pt-4 border-t border-slate-800">
+            <div className="flex items-center gap-1.5">
+              <Flame className="w-4 h-4 text-orange-400" />
+              <span className="text-slate-300 font-medium">सम्पूर्ण माला चक्र: <strong className="text-amber-300">{malaCycle}</strong></span>
+            </div>
+
+            {antiCheatStatus === 'mechanical_violation' ? (
+              <Badge variant="rose" icon={AlertTriangle}>
+                अति-तीव्र वेग (चेतावनी)
+              </Badge>
             ) : (
-              <div className="p-2.5 rounded-xl bg-rose-950/80 border border-rose-500/40 text-rose-300 text-xs flex items-center justify-center gap-1.5">
-                <AlertTriangle className="w-4 h-4 text-rose-400" />
-                <span>⚠ अत्यधिक तीव्र गति (पुण्य अंक रोके गए)</span>
-              </div>
+              <Badge variant="emerald" icon={ShieldCheck}>
+                शुद्ध वेग प्रमाणित
+              </Badge>
             )}
           </div>
+        </Card>
 
-          {/* Mala Stats & Reset */}
-          <div className="flex items-center justify-between w-full mt-4 pt-4 border-t border-white/5 text-xs">
-            <span className="text-slate-300 font-bold">
-              पूर्ण माला चक्र: <strong className="text-amber-300 font-mono text-sm">{malaCycle}</strong>
-            </span>
-            <button
-              onClick={() => {
-                setBeadCount(0);
-                audioService.playBeadClick();
-              }}
-              className="text-slate-400 hover:text-amber-300 flex items-center gap-1 text-xs"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>माला पुनः प्रारम्भ करें</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Right Column: Nitya Karma & Swadhyaya Study Timer */}
+        {/* Right Column: Nitya Karmas & Swadhyaya Tracker */}
         <div className="lg:col-span-6 space-y-6">
           {/* Nitya Karma Checklist */}
-          <div className="glass-card p-6">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-dharmik text-base font-bold text-amber-200 flex items-center gap-2">
+          <Card variant="glass" className="p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <div className="flex items-center gap-2">
                 <CheckCircle className="w-5 h-5 text-amber-400" />
-                <span>नित्य कर्म दैनिक नियम</span>
-              </h3>
+                <h3 className="font-dharmik text-lg font-bold text-amber-200">
+                  दैनिक सात्विक नित्य कर्म
+                </h3>
+              </div>
+              <Badge variant="gold">नित्य सङ्कल्प</Badge>
             </div>
 
             <div className="space-y-2 text-xs">
@@ -183,59 +166,53 @@ export default function DigitalJapaMala() {
                 <div
                   key={task.id}
                   onClick={() => handleTaskToggle(task.id)}
-                  className={`p-3 rounded-2xl border cursor-pointer flex items-center justify-between transition-all ${
+                  className={`p-3 rounded-2xl border cursor-pointer transition-all flex items-center justify-between ${
                     task.completed
                       ? 'bg-emerald-950/30 border-emerald-500/40 text-emerald-200'
                       : 'bg-slate-900/60 border-slate-800 text-slate-300 hover:border-amber-500/30'
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className={`w-5 h-5 rounded-lg border flex items-center justify-center ${
-                      task.completed ? 'bg-emerald-500 border-emerald-400 text-slate-950 font-bold' : 'border-slate-600'
-                    }`}>
-                      {task.completed && '✓'}
-                    </div>
-                    <span className={`font-semibold ${task.completed ? 'line-through text-slate-400' : 'text-slate-100'}`}>
-                      {task.title}
+                    <input
+                      type="checkbox"
+                      checked={task.completed}
+                      onChange={() => {}}
+                      className="w-4 h-4 rounded text-amber-500 focus:ring-amber-400 border-slate-700 bg-slate-900"
+                    />
+                    <span className={`font-medium ${task.completed ? 'line-through opacity-70' : ''}`}>
+                      {task.name}
                     </span>
                   </div>
-                  <span className="text-[11px] font-mono text-amber-400 font-bold">+{task.points} pts</span>
+                  <span className="text-[10px] font-bold font-mono text-amber-400">+{task.punya} पुण्य</span>
                 </div>
               ))}
             </div>
-          </div>
+          </Card>
 
-          {/* Swadhyaya Study Timer */}
-          <div className="glass-card p-6 border-t-4 border-cyan-500">
-            <h3 className="font-dharmik text-base font-bold text-cyan-300 mb-2 flex items-center gap-2">
-              <Clock className="w-5 h-5 text-cyan-400" />
-              <span>स्वाध्याय (वैदिक ग्रन्थ अध्ययन) समय-मापक</span>
-            </h3>
-            <p className="text-xs text-slate-400 mb-4 font-sans">
-              प्रति मिनट ग्रन्थ अध्ययन पर +२ पुण्य अर्जित करें।
+          {/* Swadhyaya Timer Card */}
+          <Card variant="glass" className="p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <div className="flex items-center gap-2">
+                <Clock className="w-5 h-5 text-amber-400" />
+                <h3 className="font-dharmik text-lg font-bold text-amber-200">
+                  दैनिक शास्त्र स्वाध्याय
+                </h3>
+              </div>
+              <span className="text-xs font-mono font-bold text-amber-400">{swadhyayaMinutes} मिनट</span>
+            </div>
+
+            <p className="text-xs text-slate-300 font-sans">
+              शास्त्र स्वाध्याय के प्रत्येक मिनट पर २ पुण्य अंक अर्जित होते हैं।
             </p>
 
-            <div className="flex items-center justify-between bg-slate-950/80 p-4 rounded-2xl border border-cyan-500/30 mb-4">
-              <div>
-                <span className="text-[10px] text-slate-400 font-bold uppercase">सत्र समय</span>
-                <div className="text-3xl font-black font-mono text-cyan-200">{swadhyayaMinutes} मिनट</div>
-              </div>
-
-              <button
-                onClick={() => {
-                  audioService.playTempleBell(432, 1.0);
-                  setIsSwadhyayaRunning(!isSwadhyayaRunning);
-                }}
-                className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                  isSwadhyayaRunning
-                    ? 'bg-rose-500 text-slate-950 shadow-lg'
-                    : 'bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 shadow-lg'
-                }`}
-              >
-                {isSwadhyayaRunning ? 'स्वाध्याय विराम (Pause)' : 'स्वाध्याय प्रारम्भ करें'}
-              </button>
-            </div>
-          </div>
+            <Button
+              variant={isSwadhyayaRunning ? 'outline' : 'gold'}
+              onClick={() => setIsSwadhyayaRunning(!isSwadhyayaRunning)}
+              className="w-full text-xs py-2.5"
+            >
+              {isSwadhyayaRunning ? 'स्वाध्याय विराम दें (Pause)' : 'स्वाध्याय प्रारम्भ करें (Start)'}
+            </Button>
+          </Card>
         </div>
       </div>
     </div>
