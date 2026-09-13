@@ -1,15 +1,35 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Copy, Check } from 'lucide-react';
+import { Send, Copy, Check, Sparkles } from 'lucide-react';
 import { geminiService } from '../../services/geminiService';
 
 export default function SanatanAIAcharya({ panchangData }) {
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      sender: 'acharya',
-      text: 'ॐ नमो नारायणाय । कल्याणमस्तु वत्स। आप धर्म, कर्म, कुण्डली, जीवन के कष्ट अथवा शास्त्र सम्बन्धी कोई भी प्रश्न पूछें, मैं आपको सप्रमाण व सटीक मार्गदर्शन प्रदान करूँगा।'
-    }
-  ]);
+  const defaultMessage = {
+    id: 1,
+    sender: 'acharya',
+    text: 'ॐ नमो नारायणाय । कल्याणमस्तु वत्स। आप धर्म, कर्म, कुण्डली, जीवन के कष्ट अथवा शास्त्र सम्बन्धी कोई भी प्रश्न पूछें, मैं आपको सप्रमाण व सटीक मार्गदर्शन प्रदान करूँगा।'
+  };
+
+  const [messages, setMessages] = useState([defaultMessage]);
+
+  useEffect(() => {
+    fetch('/api/user/chat-history')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.length > 0) {
+          const formatted = data.map((d, i) => ({ id: i + 1, sender: d.sender, text: d.text }));
+          setMessages(formatted);
+        }
+      })
+      .catch(err => console.warn('Failed to load chat history', err));
+  }, []);
+
+  const saveMessageToBackend = (sender, text) => {
+    fetch('/api/user/chat-history', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sender, text })
+    }).catch(err => console.warn('Failed to save message', err));
+  };
 
   const [inputQuery, setInputQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -31,6 +51,7 @@ export default function SanatanAIAcharya({ panchangData }) {
     };
 
     setMessages(prev => [...prev, userMsg]);
+    saveMessageToBackend('user', query);
     setInputQuery('');
     setIsLoading(true);
 
@@ -44,6 +65,7 @@ export default function SanatanAIAcharya({ panchangData }) {
       };
 
       setMessages(prev => [...prev, acharyaMsg]);
+      saveMessageToBackend('acharya', result.text);
     } catch (error) {
       console.error('Chat error:', error);
       const fallbackMsg = {
@@ -64,50 +86,50 @@ export default function SanatanAIAcharya({ panchangData }) {
   };
 
   const samplePrompts = [
-    'कर्म सिद्धान्त कैसे कार्य करता है और क्या प्रारब्ध बदला जा सकता है?',
-    'मेरी कुण्डली का लग्न, चन्द्र नक्षत्र व ग्रह स्थिति देखकर मार्गदर्शन करें।',
-    'गरुड़ पुराण के २८ नरक कौन से हैं और महापापों का प्रायश्चित क्या है?',
-    'स्वप्न में श्वेत गौ, पर्वत पर चढ़ना अथवा सर्प देखने का क्या फल होता है?',
-    'घर में ईशान्य (NE) कोण में क्या होना चाहिए और वास्तु दोष का क्या उपाय है?'
+    'कर्म सिद्धान्त कैसे कार्य करता है?',
+    'मेरी कुण्डली का मार्गदर्शन करें।',
+    'गरुड़ पुराण के २८ नरक कौन से हैं?',
+    'स्वप्न में श्वेत गौ देखने का क्या फल है?',
+    'घर में ईशान्य (NE) कोण का क्या वास्तु है?'
   ];
 
   return (
-    <div className="space-y-4">
-      {/* Main Chat Container */}
-      <div className="glass-card p-4 sm:p-6 flex flex-col h-[620px] border border-[#C58B4E]/30 shadow-2xl relative">
+    <div className="space-y-3 sm:space-y-4">
+      {/* Main Chat Container - Responsive Height */}
+      <div className="glass-card p-3.5 sm:p-6 flex flex-col h-[520px] sm:h-[600px] md:h-[640px] border border-[#C58B4E]/30 shadow-2xl relative rounded-2xl sm:rounded-3xl">
         {/* Messages Feed */}
-        <div className="flex-1 overflow-y-auto pr-1 sm:pr-2 space-y-4 mb-3">
+        <div className="flex-1 overflow-y-auto pr-1 sm:pr-2 space-y-3 sm:space-y-4 mb-2 sm:mb-3">
           {messages.map(msg => {
             const isUser = msg.sender === 'user';
 
             return (
               <div
                 key={msg.id}
-                className={`flex flex-col ${isUser ? 'items-end' : 'items-start'} space-y-1.5`}
+                className={`flex flex-col ${isUser ? 'items-end' : 'items-start'} space-y-1`}
               >
-                <div className={`max-w-3xl rounded-2xl p-4 text-xs sm:text-sm leading-relaxed ${
+                <div className={`max-w-[92%] sm:max-w-2xl lg:max-w-3xl rounded-2xl p-3 sm:p-4 text-xs sm:text-sm leading-relaxed ${
                   isUser
                     ? 'bg-gradient-to-r from-[#C58B4E]/30 to-[#8C4B19]/40 text-[#F7E7D6] border border-[#C58B4E]/40 rounded-br-none'
-                    : 'bg-[#1C1008] text-[#F7E7D6] border border-[#C58B4E]/25 rounded-bl-none shadow-xl'
+                    : 'bg-black/40 backdrop-blur-sm text-[#F7E7D6] border border-[#C58B4E]/25 rounded-bl-none shadow-xl'
                 }`}>
                   {!isUser && (
-                    <div className="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-[#C58B4E]/20">
-                      <span className="font-dharmik font-bold text-[#F3CA9D] text-sm flex items-center gap-1.5">
-                        <span className="animate-diya text-sm">🪔</span>
+                    <div className="flex items-center justify-between gap-2 mb-1.5 pb-1 border-b border-[#C58B4E]/20">
+                      <span className="font-dharmik font-bold text-[#F3CA9D] text-xs sm:text-sm flex items-center gap-1.5">
+                        <span className="animate-diya text-xs sm:text-sm">🪔</span>
                         <span>आचार्य जी</span>
                       </span>
 
                       <button
                         onClick={() => handleCopy(msg.id, msg.text)}
                         title="उत्तर प्रतिलिपि बनाएं"
-                        className="p-1 text-[#D4A373] hover:text-[#FFF] rounded"
+                        className="p-1 text-[#D4A373] hover:text-[#FFF] rounded active:scale-95"
                       >
                         {copiedId === msg.id ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                       </button>
                     </div>
                   )}
 
-                  <div className="whitespace-pre-line text-[#F7E7D6] leading-relaxed font-sans font-normal">
+                  <div className="whitespace-pre-line text-[#F7E7D6] leading-relaxed font-sans font-normal text-xs sm:text-sm">
                     {msg.text}
                   </div>
                 </div>
@@ -117,9 +139,9 @@ export default function SanatanAIAcharya({ panchangData }) {
 
           {/* Loading Indicator */}
           {isLoading && (
-            <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-[#1C1008] border border-[#C58B4E]/30 max-w-xs">
-              <span className="font-sanskrit text-lg text-[#E0A96D] animate-spin">ॐ</span>
-              <div className="text-xs text-[#F3CA9D] font-semibold">
+            <div className="flex items-center gap-2.5 p-3 rounded-2xl bg-black/40 backdrop-blur-sm border border-[#C58B4E]/30 max-w-[240px]">
+              <span className="font-sanskrit text-base text-[#E0A96D] animate-spin">ॐ</span>
+              <div className="text-[11px] sm:text-xs text-[#F3CA9D] font-semibold">
                 आचार्य जी उत्तर दे रहे हैं...
               </div>
             </div>
@@ -134,7 +156,7 @@ export default function SanatanAIAcharya({ panchangData }) {
             <button
               key={idx}
               onClick={() => handleSend(prompt)}
-              className="px-3 py-1.5 rounded-xl text-[11px] whitespace-nowrap bg-[#1C1008] hover:bg-[#C58B4E]/20 text-[#D4A373] hover:text-[#F3CA9D] border border-[#C58B4E]/20 hover:border-[#C58B4E]/50 transition-all font-medium"
+              className="px-2.5 py-1.5 rounded-xl text-[10px] sm:text-[11px] whitespace-nowrap bg-black/40 backdrop-blur-sm hover:bg-[#C58B4E]/20 text-[#D4A373] hover:text-[#F3CA9D] border border-[#C58B4E]/20 hover:border-[#C58B4E]/50 transition-all font-medium shrink-0 active:scale-95"
             >
               {prompt}
             </button>
@@ -142,19 +164,19 @@ export default function SanatanAIAcharya({ panchangData }) {
         </div>
 
         {/* Input Bar */}
-        <div className="flex items-center gap-2 pt-2">
+        <div className="flex items-center gap-2 pt-1 sm:pt-2">
           <input
             type="text"
             placeholder="आचार्य जी से कोई भी प्रश्न पूछें..."
             value={inputQuery}
             onChange={e => setInputQuery(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleSend()}
-            className="flex-1 bg-[#140B06] border border-[#C58B4E]/30 text-[#F7E7D6] text-xs sm:text-sm px-4 py-3 rounded-xl outline-none focus:border-[#E0A96D] font-sans"
+            className="flex-1 bg-black/50 backdrop-blur-sm border border-[#C58B4E]/30 text-[#F7E7D6] text-xs sm:text-sm px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-xl outline-none focus:border-[#E0A96D] font-sans"
           />
           <button
             onClick={() => handleSend()}
             disabled={isLoading || !inputQuery.trim()}
-            className="btn-gold py-3 px-5 disabled:opacity-40"
+            className="btn-gold py-2.5 sm:py-3 px-4 sm:px-5 disabled:opacity-40 shrink-0"
           >
             <Send className="w-4 h-4" />
           </button>

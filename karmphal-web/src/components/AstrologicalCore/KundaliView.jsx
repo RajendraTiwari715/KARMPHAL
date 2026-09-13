@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Sparkles, Compass, ShieldAlert, Award, RefreshCw, Sun, Moon, Calendar, HeartHandshake, CheckCircle2, User } from 'lucide-react';
-import { computePlanetaryPositions, computePanchang } from '../../services/ephemerisEngine';
+import { ArrowLeft, Sparkles, Compass, ShieldAlert, Award, RefreshCw, Sun, Moon, Calendar, HeartHandshake, CheckCircle2, User, Copy, Check, BookOpen, Clock, Download, RefreshCcw } from 'lucide-react';
+import { computePlanetaryPositions, computePanchang, getCoordinatesForCity, computeVimshottariDasha, analyzeDoshas } from '../../services/ephemerisEngine';
 import { audioService } from '../../services/audioService';
+import { geminiService } from '../../services/geminiService';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 export default function KundaliView({ onBack }) {
   const [formData, setFormData] = useState({
@@ -11,35 +14,143 @@ export default function KundaliView({ onBack }) {
     place: 'नई दिल्ली (New Delhi)'
   });
 
-  const [isGenerated, setIsGenerated] = useState(true);
+  const [isGenerated, setIsGenerated] = useState(false);
   const [chartType, setChartType] = useState('north'); // 'north' or 'south'
+  const [aiReading, setAiReading] = useState('');
+  const [isGeneratingAi, setIsGeneratingAi] = useState(false);
+  const [copiedAi, setCopiedAi] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  
+  const [calculatedData, setCalculatedData] = useState(null);
 
   const handleGenerate = (e) => {
     e?.preventDefault();
-    if (!formData.name.trim()) return;
+    if (!formData.name.trim() || !formData.dob || !formData.time) return;
     audioService.playTempleBell(528, 1.5);
+    
+    // Parse Date and Time
+    const [year, month, day] = formData.dob.split('-').map(Number);
+    const [hours, minutes] = formData.time.split(':').map(Number);
+    const birthDate = new Date(year, month - 1, day, hours, minutes);
+    
+    // Get Coordinates
+    const coords = getCoordinatesForCity(formData.place);
+    
+    // Compute Planets using exact time and location
+    const planets = computePlanetaryPositions(birthDate, coords.lat, coords.lon);
+    
+    // Compute Dasha timeline using Moon's longitude and birth date
+    const moon = planets.find(p => p.id === 'MO' || p.name === 'चन्द्र');
+    const dashaTimeline = computeVimshottariDasha(birthDate, moon.longitude);
+    
+    setCalculatedData({ planets, dashaTimeline: dashaTimeline.dashaTimeline, coords });
     setIsGenerated(true);
   };
 
-  const planets = computePlanetaryPositions();
-  const lagna = planets[0]; // Ascendant
-  const moon = planets[2]; // Moon
-  const sun = planets[1]; // Sun
+  const handleGenerateAiReading = async () => {
+    if (!calculatedData) return;
+    audioService.playTempleBell(432, 1.2);
+    setIsGeneratingAi(true);
+    try {
+      const reading = await geminiService.generateKundaliReading(formData, calculatedData.planets);
+      if (reading) {
+        setAiReading(reading);
+      } else {
+        setAiReading('कुण्डली गणना पूर्ण हुई। लग्न एवं चन्द्र स्थिति के अनुसार आपका जीवन चक्र शुभ एवं उन्नतिशील है।');
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsGeneratingAi(false);
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    const reportElement = document.getElementById('kundali-report');
+    if (!reportElement) return;
+
+    audioService.playBeadClick();
+    setIsExporting(true);
+    try {
+      const canvas = await html2canvas(reportElement, { 
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+      });
+      const imgData = canvas.toDataURL('image/png');
+      
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`${formData.name}_Kundali_Report.pdf`);
+    } catch (err) {
+      console.error('PDF Export failed:', err);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleCopyReading = () => {
+    if (!aiReading) return;
+    navigator.clipboard.writeText(aiReading);
+    setCopiedAi(true);
+    setTimeout(() => setCopiedAi(false), 2000);
+  };
+
+  const planets = calculatedData?.planets || [];
+  const lagna = planets.length > 0 ? planets[0] : {}; // Ascendant
+  const moon = planets.find(p => p.name === 'चन्द्र') || {}; // Moon
+
+  // Analyze Doshas
+  const doshas = planets.length > 0 ? analyzeDoshas(planets) : {
+    manglik: { status: 'निर्दोष', color: 'emerald' },
+    kaalSarp: { status: 'निर्दोष', color: 'emerald' },
+    sadesati: { status: 'निर्दोष', color: 'emerald' },
+    pitru: { status: 'निर्दोष', color: 'emerald' }
+  };
 
   // Group planets by House for North Indian Chart
   const housePlanets = {};
   for (let i = 1; i <= 12; i++) housePlanets[i] = [];
+  
+  // Group planets by Sign for South Indian Chart
+  const signPlanets = {};
+  for (let i = 1; i <= 12; i++) signPlanets[i] = [];
+
   planets.forEach(p => {
+    const shortName = p.sanskrit ? p.sanskrit.split(' ')[0] : p.name.split(' ')[0];
+    const isLagna = p.name === 'लग्न';
+    
     if (p.house >= 1 && p.house <= 12) {
-      const shortName = p.sanskrit ? p.sanskrit.split(' ')[0] : p.name.split(' ')[0];
-      housePlanets[p.house].push({ name: shortName, fullName: p.name, isRetro: p.isRetro });
+      housePlanets[p.house].push({ name: shortName, fullName: p.name, isRetro: p.isRetro, isLagna });
+    }
+    
+    if (p.signIndex >= 1 && p.signIndex <= 12) {
+      signPlanets[p.signIndex].push({ name: shortName, fullName: p.name, isRetro: p.isRetro, isLagna });
     }
   });
+
+  const renderSouthBox = (signNum, x, y) => {
+    const pList = signPlanets[signNum] || [];
+    const isLagna = pList.some(p => p.isLagna);
+    return (
+      <g transform={`translate(${x},${y})`} key={signNum}>
+        <rect width="95" height="95" fill="transparent" stroke="#D4A373" strokeWidth="1.5" />
+        {isLagna && <text x="5" y="15" fill="#D4A373" fontSize="11" fontWeight="bold">लग्न</text>}
+        <text x="47.5" y="50" fill="currentColor" fontSize="12" fontWeight="bold" textAnchor="middle">
+          {pList.filter(p => !p.isLagna).map(p => p.name).join(' ')}
+        </text>
+      </g>
+    );
+  };
 
   return (
     <div className="space-y-6 animate-fade-in pb-12">
       {/* Header Bar with Back Button */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between no-print">
         <button
           onClick={() => {
             audioService.playBeadClick();
@@ -51,11 +162,23 @@ export default function KundaliView({ onBack }) {
           <span>ज्योतिष खण्ड में वापस जाएं</span>
         </button>
 
-        <span className="badge-gold font-bold text-xs">जन्म कुण्डली एवं जीवन चक्र</span>
+        <div className="flex items-center gap-3">
+          {isGenerated && (
+            <button 
+              onClick={handleDownloadPDF}
+              disabled={isExporting}
+              className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-amber-500/20 border border-amber-500/50 text-amber-200 hover:bg-amber-500/40 transition-all text-xs font-bold"
+            >
+              {isExporting ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+              <span>{isExporting ? 'PDF बन रहा है...' : 'PDF डाउनलोड करें'}</span>
+            </button>
+          )}
+          <span className="badge-gold font-bold text-xs">जन्म कुण्डली एवं जीवन चक्र</span>
+        </div>
       </div>
 
       {/* User Input Form */}
-      <div className="glass-card-gold p-6 sm:p-8 space-y-4">
+      <div className="glass-card-gold p-6 sm:p-8 space-y-4 no-print">
         <div>
           <h2 className="font-dharmik text-xl sm:text-2xl font-bold text-amber-200 flex items-center gap-2">
             <Compass className="w-6 h-6 text-amber-400" />
@@ -68,7 +191,7 @@ export default function KundaliView({ onBack }) {
 
         <form onSubmit={handleGenerate} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 pt-2">
           <div>
-            <label className="block text-xs font-bold text-slate-300 mb-1">आपका नाम (Name)</label>
+            <label className="block text-xs font-bold text-slate-300 mb-1">आपका नाम</label>
             <input
               type="text"
               required
@@ -80,7 +203,7 @@ export default function KundaliView({ onBack }) {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-300 mb-1">जन्म दिनांक (DOB)</label>
+            <label className="block text-xs font-bold text-slate-300 mb-1">जन्म दिनांक</label>
             <input
               type="date"
               required
@@ -91,7 +214,7 @@ export default function KundaliView({ onBack }) {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-300 mb-1">जन्म समय (Time)</label>
+            <label className="block text-xs font-bold text-slate-300 mb-1">जन्म समय</label>
             <input
               type="time"
               required
@@ -102,7 +225,7 @@ export default function KundaliView({ onBack }) {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-300 mb-1">जन्म स्थान (Place of Birth)</label>
+            <label className="block text-xs font-bold text-slate-300 mb-1">जन्म स्थान</label>
             <div className="flex gap-2">
               <input
                 type="text"
@@ -125,183 +248,241 @@ export default function KundaliView({ onBack }) {
 
       {/* Generated Kundali Report */}
       {isGenerated && (
-        <div className="space-y-6 animate-fade-in">
-          {/* User Profile Summary Banner */}
-          <div className="glass-card p-5 flex flex-wrap items-center justify-between gap-4 border-l-4 border-amber-400">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center text-slate-950 font-bold text-xl">
-                👤
-              </div>
-              <div>
-                <h3 className="font-bold text-base text-amber-200">{formData.name} की जन्म पत्रिका</h3>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  जन्म: {formData.dob} | समय: {formData.time} | स्थान: {formData.place}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3 text-xs">
-              <div className="bg-slate-900/80 px-3 py-1.5 rounded-xl border border-amber-500/20">
-                <span className="text-slate-400">लग्न राशि: </span>
-                <strong className="text-amber-300">{lagna.signSanskrit}</strong>
-              </div>
-              <div className="bg-slate-900/80 px-3 py-1.5 rounded-xl border border-cyan-500/20">
-                <span className="text-slate-400">चन्द्र राशि: </span>
-                <strong className="text-cyan-300">{moon.signSanskrit}</strong>
-              </div>
-              <div className="bg-slate-900/80 px-3 py-1.5 rounded-xl border border-emerald-500/20">
-                <span className="text-slate-400">जन्म नक्षत्र: </span>
-                <strong className="text-emerald-300">{moon.nakshatra} (पाद {moon.pada})</strong>
-              </div>
+        <div className="space-y-6 animate-fade-in mt-8">
+          <div className="flex items-center justify-between no-print">
+            <h3 className="text-xl font-bold font-dharmik text-amber-200">कुण्डली फलादेश व जीवन चक्र</h3>
+            <div className="flex bg-slate-900 rounded-lg p-1 border border-amber-500/30">
+              <button 
+                onClick={() => setChartType('north')}
+                className={`px-4 py-1.5 rounded-md text-xs font-bold transition-colors ${chartType === 'north' ? 'bg-amber-500 text-slate-900' : 'text-slate-400'}`}
+              >
+                उत्तर भारतीय (North)
+              </button>
+              <button 
+                onClick={() => setChartType('south')}
+                className={`px-4 py-1.5 rounded-md text-xs font-bold transition-colors ${chartType === 'south' ? 'bg-amber-500 text-slate-900' : 'text-slate-400'}`}
+              >
+                दक्षिण भारतीय (South)
+              </button>
             </div>
           </div>
-
-          {/* Interactive Chart & Planetary Positions */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Chart SVG */}
-            <div className="lg:col-span-6 glass-card p-6 flex flex-col justify-between items-center">
-              <div className="flex items-center justify-between w-full mb-4">
-                <h4 className="font-dharmik text-base font-bold text-amber-200">
-                  लग्न कुण्डली चक्र ({chartType === 'north' ? 'उत्तर भारतीय प्रारूप' : 'दक्षिण भारतीय प्रारूप'})
-                </h4>
-                <div className="flex bg-slate-950 p-1 rounded-xl border border-amber-500/20 text-xs">
-                  <button
-                    onClick={() => setChartType('north')}
-                    className={`px-3 py-1 rounded-lg ${chartType === 'north' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-400'}`}
-                  >
-                    उत्तर
-                  </button>
-                  <button
-                    onClick={() => setChartType('south')}
-                    className={`px-3 py-1 rounded-lg ${chartType === 'south' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-400'}`}
-                  >
-                    दक्षिण
-                  </button>
+          
+          <div id="kundali-report" className="print-report bg-white dark:bg-[#111] text-black dark:text-white rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-800 p-8 sm:p-12 overflow-hidden relative">
+            
+            {/* PAGE 1: Summary & Basic Details */}
+            <div className="page-section min-h-[900px] flex flex-col page-break-after">
+              <div className="text-center mb-8 border-b-2 border-amber-500 pb-6">
+                <span className="text-4xl text-amber-500 mb-2 block">ॐ</span>
+                <h1 className="text-3xl font-dharmik font-bold text-amber-600 dark:text-amber-400">श्री भृगु संहिता फलादेश</h1>
+                <h2 className="text-xl mt-2 font-bold">{formData.name} की जन्म पत्रिका</h2>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-6 mb-8 text-sm">
+                <div className="p-4 border border-gray-300 dark:border-gray-700 rounded-xl">
+                  <h3 className="font-bold text-amber-600 dark:text-amber-400 mb-3 border-b border-gray-200 pb-1">जन्म विवरण</h3>
+                  <div className="space-y-2">
+                    <p><strong>नाम:</strong> {formData.name}</p>
+                    <p><strong>दिनांक:</strong> {formData.dob}</p>
+                    <p><strong>समय:</strong> {formData.time}</p>
+                    <p><strong>स्थान:</strong> {formData.place}</p>
+                  </div>
                 </div>
-              </div>
-
-              {/* North Indian Diamond Chart SVG */}
-              <div className="relative aspect-square max-w-[380px] w-full bg-[#0B0C16] rounded-2xl p-4 border border-amber-500/30 shadow-2xl flex items-center justify-center">
-                <svg viewBox="0 0 400 400" className="w-full h-full">
-                  <rect x="10" y="10" width="380" height="380" fill="none" stroke="#F3BA2F" strokeWidth="2.5" />
-                  <line x1="10" y1="10" x2="390" y2="390" stroke="#F3BA2F" strokeWidth="1.5" />
-                  <line x1="10" y1="390" x2="390" y2="10" stroke="#F3BA2F" strokeWidth="1.5" />
-                  <polygon points="200,10 390,200 200,390 10,200" fill="rgba(243, 186, 47, 0.05)" stroke="#F3BA2F" strokeWidth="2" />
-
-                  <text x="200" y="55" fill="#FDE047" fontSize="12" fontWeight="bold" textAnchor="middle">प्रथम भाव (लग्न)</text>
-                  <text x="200" y="85" fill="#E2E8F0" fontSize="11" textAnchor="middle">{housePlanets[1]?.map(p => p.name).join(' ') || '-'}</text>
-
-                  <text x="110" y="55" fill="#94A3B8" fontSize="10" textAnchor="middle">२. धन</text>
-                  <text x="110" y="75" fill="#E2E8F0" fontSize="10" textAnchor="middle">{housePlanets[2]?.map(p => p.name).join(' ') || '-'}</text>
-
-                  <text x="45" y="110" fill="#94A3B8" fontSize="10" textAnchor="middle">३. पराक्रम</text>
-                  <text x="45" y="135" fill="#E2E8F0" fontSize="10" textAnchor="middle">{housePlanets[3]?.map(p => p.name).join(' ') || '-'}</text>
-
-                  <text x="85" y="200" fill="#FDE047" fontSize="12" fontWeight="bold" textAnchor="middle">४. सुख भाव</text>
-                  <text x="85" y="225" fill="#E2E8F0" fontSize="11" textAnchor="middle">{housePlanets[4]?.map(p => p.name).join(' ') || '-'}</text>
-
-                  <text x="45" y="290" fill="#94A3B8" fontSize="10" textAnchor="middle">५. सन्तान</text>
-                  <text x="45" y="315" fill="#E2E8F0" fontSize="10" textAnchor="middle">{housePlanets[5]?.map(p => p.name).join(' ') || '-'}</text>
-
-                  <text x="110" y="355" fill="#94A3B8" fontSize="10" textAnchor="middle">६. रोग/शत्रु</text>
-                  <text x="110" y="375" fill="#E2E8F0" fontSize="10" textAnchor="middle">{housePlanets[6]?.map(p => p.name).join(' ') || '-'}</text>
-
-                  <text x="200" y="335" fill="#FDE047" fontSize="12" fontWeight="bold" textAnchor="middle">७. विवाह भाव</text>
-                  <text x="200" y="360" fill="#E2E8F0" fontSize="11" textAnchor="middle">{housePlanets[7]?.map(p => p.name).join(' ') || '-'}</text>
-
-                  <text x="290" y="355" fill="#94A3B8" fontSize="10" textAnchor="middle">८. आयु</text>
-                  <text x="290" y="375" fill="#E2E8F0" fontSize="10" textAnchor="middle">{housePlanets[8]?.map(p => p.name).join(' ') || '-'}</text>
-
-                  <text x="355" y="290" fill="#94A3B8" fontSize="10" textAnchor="middle">९. भाग्य भाव</text>
-                  <text x="355" y="315" fill="#E2E8F0" fontSize="10" textAnchor="middle">{housePlanets[9]?.map(p => p.name).join(' ') || '-'}</text>
-
-                  <text x="315" y="200" fill="#FDE047" fontSize="12" fontWeight="bold" textAnchor="middle">१०. कर्म भाव</text>
-                  <text x="315" y="225" fill="#E2E8F0" fontSize="11" textAnchor="middle">{housePlanets[10]?.map(p => p.name).join(' ') || '-'}</text>
-
-                  <text x="355" y="110" fill="#94A3B8" fontSize="10" textAnchor="middle">११. लाभ</text>
-                  <text x="355" y="135" fill="#E2E8F0" fontSize="10" textAnchor="middle">{housePlanets[11]?.map(p => p.name).join(' ') || '-'}</text>
-
-                  <text x="290" y="55" fill="#94A3B8" fontSize="10" textAnchor="middle">१२. व्यय</text>
-                  <text x="290" y="75" fill="#E2E8F0" fontSize="10" textAnchor="middle">{housePlanets[12]?.map(p => p.name).join(' ') || '-'}</text>
-                </svg>
-              </div>
-            </div>
-
-            {/* Dosh Analysis & Planetary Table */}
-            <div className="lg:col-span-6 space-y-4">
-              {/* Dosh Evaluation Card */}
-              <div className="glass-card p-5 space-y-3">
-                <h4 className="font-dharmik text-base font-bold text-amber-200 flex items-center gap-2">
-                  <ShieldAlert className="w-5 h-5 text-amber-400" />
-                  <span>दोष एवं ग्रह स्थिति परीक्षण (Dosh Analysis)</span>
-                </h4>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
-                  <div className="p-3 rounded-xl bg-slate-900/80 border border-emerald-500/30">
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-slate-100">मांगलिक (कुज) दोष</span>
-                      <span className="text-emerald-400 font-bold">✓ दोष मुक्त</span>
-                    </div>
-                    <p className="text-[11px] text-slate-300 mt-1">मंगल ग्रह शुभ भाव में होने से मांगलिक दोष नहीं है।</p>
-                  </div>
-
-                  <div className="p-3 rounded-xl bg-slate-900/80 border border-emerald-500/30">
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-slate-100">कालसर्प दोष</span>
-                      <span className="text-emerald-400 font-bold">✓ दोष मुक्त</span>
-                    </div>
-                    <p className="text-[11px] text-slate-300 mt-1">राहु-केतु अक्ष के बाहर ग्रह होने से कुण्डली निर्दोष है।</p>
-                  </div>
-
-                  <div className="p-3 rounded-xl bg-slate-900/80 border border-amber-500/30">
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-slate-100">शनि साढ़े साती / ढैय्या</span>
-                      <span className="text-amber-300 font-bold">मध्यम प्रभाव</span>
-                    </div>
-                    <p className="text-[11px] text-slate-300 mt-1">शनि की ढैय्या चल रही है, शनिवार को दीपदान शुभ रहेगा।</p>
-                  </div>
-
-                  <div className="p-3 rounded-xl bg-slate-900/80 border border-emerald-500/30">
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-slate-100">पितृ दोष</span>
-                      <span className="text-emerald-400 font-bold">✓ सामान्य</span>
-                    </div>
-                    <p className="text-[11px] text-slate-300 mt-1">सूर्य देव पर शुभ ग्रहों की दृष्टि होने से पितृ दोष नहीं है।</p>
+                <div className="p-4 border border-gray-300 dark:border-gray-700 rounded-xl">
+                  <h3 className="font-bold text-amber-600 dark:text-amber-400 mb-3 border-b border-gray-200 pb-1">पंचांग एवं खगोलीय विवरण</h3>
+                  <div className="space-y-2">
+                    <p><strong>लग्न राशि:</strong> {lagna.signSanskrit}</p>
+                    <p><strong>चन्द्र राशि:</strong> {moon.signSanskrit}</p>
+                    <p><strong>नक्षत्र:</strong> {moon.nakshatra} (पाद {moon.pada})</p>
+                    <p><strong>नक्षत्र स्वामी:</strong> {moon.nakshatraLord}</p>
                   </div>
                 </div>
               </div>
 
-              {/* Life Predictions: Safalta Kab Milegi */}
-              <div className="glass-card p-5 border-t-4 border-amber-500 space-y-3">
-                <h4 className="font-dharmik text-base font-bold text-amber-300 flex items-center gap-2">
-                  <Award className="w-5 h-5 text-amber-400" />
-                  <span>सफलता एवं जीवन चक्र फलकथन (Predictions)</span>
-                </h4>
-
-                <div className="space-y-2.5 text-xs text-slate-200">
-                  <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
-                    <strong className="text-amber-300 block mb-0.5">💼 करियर एवं सफलता कब मिलेगी:</strong>
-                    <p className="leading-relaxed">
-                      दशमेश (कर्म भाव स्वामी) एवं गुरु की शुभ दृष्टि के अनुसार, <strong>२६वें वर्ष से ३२वें वर्ष</strong> के मध्य आजीविका व व्यापार में विशेष सफलता के योग हैं। वर्तमान समय में किए गए प्रयास आने वाले समय में बड़ा फल देंगे।
-                    </p>
+              <div className="mb-8 p-6 bg-amber-50 dark:bg-amber-900/10 rounded-xl border border-amber-200 dark:border-amber-900/50">
+                <h3 className="text-lg font-bold font-dharmik text-amber-600 dark:text-amber-400 mb-4 text-center">दोष परीक्षण सार (Dosha Summary)</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+                  <div>
+                    <strong className="block text-gray-600 dark:text-gray-400 text-xs mb-1">मांगलिक दोष</strong>
+                    <span className={`text-${doshas.manglik.color}-600 dark:text-${doshas.manglik.color}-400 font-bold bg-${doshas.manglik.color}-100 dark:bg-${doshas.manglik.color}-900/30 px-2 py-1 rounded inline-block`}>{doshas.manglik.status}</span>
                   </div>
-
-                  <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
-                    <strong className="text-cyan-300 block mb-0.5">💰 धन एवं आर्थिक स्थिति:</strong>
-                    <p className="leading-relaxed">
-                      द्वितीय (धन) एवं एकादश (लाभ) भाव में शुभ ग्रहों की युति से धन आगमन निरन्तर रहेगा। संचय की प्रवृत्ति आपके लिए विशेष फलदायी होगी।
-                    </p>
+                  <div>
+                    <strong className="block text-gray-600 dark:text-gray-400 text-xs mb-1">कालसर्प दोष</strong>
+                    <span className={`text-${doshas.kaalSarp.color}-600 dark:text-${doshas.kaalSarp.color}-400 font-bold bg-${doshas.kaalSarp.color}-100 dark:bg-${doshas.kaalSarp.color}-900/30 px-2 py-1 rounded inline-block`}>{doshas.kaalSarp.status}</span>
                   </div>
-
-                  <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
-                    <strong className="text-emerald-300 block mb-0.5">🪔 वैदिक शान्ति एवं उन्नति उपाय:</strong>
-                    <p className="leading-relaxed">
-                      नित्य प्रातः सूर्य देव को ताम्बे के लोटे से अर्घ्य दें, गायत्री मन्त्र की १ माला जपें, तथा गुरुवार को पीले फल या चने की दाल का दान करें।
-                    </p>
+                  <div>
+                    <strong className="block text-gray-600 dark:text-gray-400 text-xs mb-1">साढ़े साती/ढैय्या</strong>
+                    <span className={`text-${doshas.sadesati.color}-600 dark:text-${doshas.sadesati.color}-400 font-bold bg-${doshas.sadesati.color}-100 dark:bg-${doshas.sadesati.color}-900/30 px-2 py-1 rounded inline-block`}>{doshas.sadesati.status}</span>
                   </div>
+                  <div>
+                    <strong className="block text-gray-600 dark:text-gray-400 text-xs mb-1">पितृ दोष</strong>
+                    <span className={`text-${doshas.pitru.color}-600 dark:text-${doshas.pitru.color}-400 font-bold bg-${doshas.pitru.color}-100 dark:bg-${doshas.pitru.color}-900/30 px-2 py-1 rounded inline-block`}>{doshas.pitru.status}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex-1 flex flex-col items-center justify-center">
+                <h3 className="font-dharmik text-lg font-bold text-amber-600 dark:text-amber-400 mb-6">
+                  {chartType === 'north' ? 'लग्न कुण्डली (उत्तर भारतीय)' : 'लग्न कुण्डली (दक्षिण भारतीय)'}
+                </h3>
+                {/* SVG Chart */}
+                <div className="w-[300px] h-[300px] print:w-[400px] print:h-[400px] relative text-black dark:text-white">
+                  {chartType === 'north' ? (
+                    <svg viewBox="0 0 400 400" className="w-full h-full">
+                      <rect x="10" y="10" width="380" height="380" fill="transparent" stroke="#D4A373" strokeWidth="2.5" />
+                      <line x1="10" y1="10" x2="390" y2="390" stroke="#D4A373" strokeWidth="1.5" />
+                      <line x1="10" y1="390" x2="390" y2="10" stroke="#D4A373" strokeWidth="1.5" />
+                      <polygon points="200,10 390,200 200,390 10,200" fill="transparent" stroke="#D4A373" strokeWidth="2" />
+
+                      <text x="200" y="65" fill="currentColor" fontSize="13" fontWeight="bold" textAnchor="middle">{housePlanets[1]?.map(p => p.name).join(' ') || 'लग्न'}</text>
+                      <text x="110" y="75" fill="currentColor" fontSize="12" fontWeight="bold" textAnchor="middle">{housePlanets[2]?.map(p => p.name).join(' ')}</text>
+                      <text x="55" y="135" fill="currentColor" fontSize="12" fontWeight="bold" textAnchor="middle">{housePlanets[3]?.map(p => p.name).join(' ')}</text>
+                      <text x="85" y="225" fill="currentColor" fontSize="13" fontWeight="bold" textAnchor="middle">{housePlanets[4]?.map(p => p.name).join(' ')}</text>
+                      <text x="55" y="315" fill="currentColor" fontSize="12" fontWeight="bold" textAnchor="middle">{housePlanets[5]?.map(p => p.name).join(' ')}</text>
+                      <text x="110" y="375" fill="currentColor" fontSize="12" fontWeight="bold" textAnchor="middle">{housePlanets[6]?.map(p => p.name).join(' ')}</text>
+                      <text x="200" y="360" fill="currentColor" fontSize="13" fontWeight="bold" textAnchor="middle">{housePlanets[7]?.map(p => p.name).join(' ')}</text>
+                      <text x="290" y="375" fill="currentColor" fontSize="12" fontWeight="bold" textAnchor="middle">{housePlanets[8]?.map(p => p.name).join(' ')}</text>
+                      <text x="355" y="315" fill="currentColor" fontSize="12" fontWeight="bold" textAnchor="middle">{housePlanets[9]?.map(p => p.name).join(' ')}</text>
+                      <text x="315" y="225" fill="currentColor" fontSize="13" fontWeight="bold" textAnchor="middle">{housePlanets[10]?.map(p => p.name).join(' ')}</text>
+                      <text x="355" y="135" fill="currentColor" fontSize="12" fontWeight="bold" textAnchor="middle">{housePlanets[11]?.map(p => p.name).join(' ')}</text>
+                      <text x="290" y="75" fill="currentColor" fontSize="12" fontWeight="bold" textAnchor="middle">{housePlanets[12]?.map(p => p.name).join(' ')}</text>
+                      
+                      {/* Sign Numbers Reference */}
+                      <text x="200" y="25" fill="#D4A373" fontSize="10">{lagna.signIndex}</text>
+                      <text x="140" y="35" fill="#D4A373" fontSize="10">{(lagna.signIndex%12) + 1}</text>
+                      <text x="25" y="100" fill="#D4A373" fontSize="10">{(lagna.signIndex+1)%12 + 1}</text>
+                      <text x="30" y="200" fill="#D4A373" fontSize="10">{(lagna.signIndex+2)%12 + 1}</text>
+                      <text x="25" y="300" fill="#D4A373" fontSize="10">{(lagna.signIndex+3)%12 + 1}</text>
+                      <text x="140" y="380" fill="#D4A373" fontSize="10">{(lagna.signIndex+4)%12 + 1}</text>
+                      <text x="200" y="385" fill="#D4A373" fontSize="10">{(lagna.signIndex+5)%12 + 1}</text>
+                      <text x="260" y="380" fill="#D4A373" fontSize="10">{(lagna.signIndex+6)%12 + 1}</text>
+                      <text x="375" y="300" fill="#D4A373" fontSize="10">{(lagna.signIndex+7)%12 + 1}</text>
+                      <text x="375" y="200" fill="#D4A373" fontSize="10">{(lagna.signIndex+8)%12 + 1}</text>
+                      <text x="375" y="100" fill="#D4A373" fontSize="10">{(lagna.signIndex+9)%12 + 1}</text>
+                      <text x="260" y="35" fill="#D4A373" fontSize="10">{(lagna.signIndex+10)%12 + 1}</text>
+                    </svg>
+                  ) : (
+                    <svg viewBox="0 0 400 400" className="w-full h-full">
+                      {/* Grid 4x4, center is empty */}
+                      <rect x="10" y="10" width="380" height="380" fill="transparent" stroke="#D4A373" strokeWidth="2.5" />
+                      {/* Vertical Lines */}
+                      <line x1="105" y1="10" x2="105" y2="390" stroke="#D4A373" strokeWidth="1.5" />
+                      <line x1="200" y1="10" x2="200" y2="105" stroke="#D4A373" strokeWidth="1.5" />
+                      <line x1="200" y1="295" x2="200" y2="390" stroke="#D4A373" strokeWidth="1.5" />
+                      <line x1="295" y1="10" x2="295" y2="390" stroke="#D4A373" strokeWidth="1.5" />
+                      
+                      {/* Horizontal Lines */}
+                      <line x1="10" y1="105" x2="390" y2="105" stroke="#D4A373" strokeWidth="1.5" />
+                      <line x1="10" y1="200" x2="105" y2="200" stroke="#D4A373" strokeWidth="1.5" />
+                      <line x1="295" y1="200" x2="390" y2="200" stroke="#D4A373" strokeWidth="1.5" />
+                      <line x1="10" y1="295" x2="390" y2="295" stroke="#D4A373" strokeWidth="1.5" />
+
+                      {/* Top Row: Pisces(12), Aries(1), Taurus(2), Gemini(3) */}
+                      {renderSouthBox(12, 10, 10)}
+                      {renderSouthBox(1, 105, 10)}
+                      {renderSouthBox(2, 200, 10)}
+                      {renderSouthBox(3, 295, 10)}
+
+                      {/* Left & Right Cols */}
+                      {renderSouthBox(11, 10, 105)}
+                      {renderSouthBox(4, 295, 105)}
+                      
+                      {renderSouthBox(10, 10, 200)}
+                      {renderSouthBox(5, 295, 200)}
+
+                      {/* Bottom Row: Sagittarius(9), Scorpio(8), Libra(7), Virgo(6) */}
+                      {renderSouthBox(9, 10, 295)}
+                      {renderSouthBox(8, 105, 295)}
+                      {renderSouthBox(7, 200, 295)}
+                      {renderSouthBox(6, 295, 295)}
+                    </svg>
+                  )}
                 </div>
               </div>
             </div>
+
+            {/* PAGE 2: Planetary Details & Dasha */}
+            <div className="page-section min-h-[900px] flex flex-col page-break-after pt-8 border-t-2 border-dashed border-gray-300 print:border-none print:pt-0">
+              <h2 className="text-2xl font-dharmik font-bold text-amber-600 dark:text-amber-400 mb-6 text-center">ग्रह स्पष्ट एवं दशा चक्र</h2>
+              
+              <div className="mb-8 overflow-x-auto">
+                <table className="w-full text-sm text-left border-collapse">
+                  <thead>
+                    <tr className="bg-gray-100 dark:bg-gray-800 border-b border-gray-300 dark:border-gray-700">
+                      <th className="p-3 font-bold">ग्रह (Planet)</th>
+                      <th className="p-3 font-bold">राशि (Sign)</th>
+                      <th className="p-3 font-bold">अंश (Degrees)</th>
+                      <th className="p-3 font-bold">नक्षत्र (Nakshatra)</th>
+                      <th className="p-3 font-bold">भाव (House)</th>
+                      <th className="p-3 font-bold">स्थिति (Status)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {planets.map((p, idx) => {
+                      if(p.name === 'लग्न') return null;
+                      return (
+                        <tr key={idx} className="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900/50">
+                          <td className="p-3 font-semibold">{p.name} {p.isRetro ? '(व.)' : ''}</td>
+                          <td className="p-3">{p.signSanskrit}</td>
+                          <td className="p-3">{p.degreeInSign}°</td>
+                          <td className="p-3">{p.nakshatra} ({p.pada})</td>
+                          <td className="p-3">{p.house}</td>
+                          <td className="p-3">{p.isRetro ? 'वक्री' : 'मार्गी'}</td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {calculatedData?.dashaTimeline && (
+                <div className="mb-8">
+                  <h3 className="font-dharmik text-lg font-bold text-amber-600 dark:text-amber-400 mb-4">विंशोत्तरी महादशा (१२० वर्ष)</h3>
+                  <div className="grid grid-cols-3 gap-3">
+                    {calculatedData.dashaTimeline.map((dasha, idx) => {
+                      const startDate = new Date(dasha.startDate);
+                      const endDate = new Date(dasha.endDate);
+                      const isCurrent = new Date() >= startDate && new Date() <= endDate;
+                      return (
+                        <div key={idx} className={`p-3 border rounded-lg text-center ${isCurrent ? 'bg-amber-100 border-amber-400 dark:bg-amber-900/20' : 'border-gray-200 dark:border-gray-700'}`}>
+                          <strong className={`block ${isCurrent ? 'text-amber-700 dark:text-amber-400' : ''}`}>{dasha.lord} ({dasha.years} वर्ष)</strong>
+                          <span className="text-xs text-gray-500">{startDate.getFullYear()} - {endDate.getFullYear()}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* PAGE 3-5: AI Astrologer Deep Reading */}
+            <div className="page-section min-h-[900px] pt-8 border-t-2 border-dashed border-gray-300 print:border-none print:pt-0">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-dharmik font-bold text-amber-600 dark:text-amber-400">विस्तृत फलादेश एवं वैदिक उपाय</h2>
+                <div className="no-print">
+                  <button onClick={handleGenerateAiReading} disabled={isGeneratingAi} className="btn-gold text-xs py-1.5 px-3">
+                    {isGeneratingAi ? 'महर्षि गणना कर रहे हैं...' : 'फलादेश उत्पन्न करें'}
+                  </button>
+                </div>
+              </div>
+
+              {isGeneratingAi ? (
+                <div className="flex flex-col items-center justify-center py-20 text-center">
+                  <span className="font-sanskrit text-5xl text-amber-500 animate-spin mb-4 block">ॐ</span>
+                  <p className="text-gray-500">बृहत्पाराशर होरा शास्त्र के अनुसार आपका 3-5 पृष्ठ का विस्तृत फलादेश तैयार हो रहा है...</p>
+                </div>
+              ) : (
+                <div className="prose prose-sm dark:prose-invert max-w-none prose-amber">
+                  {aiReading ? (
+                    <div className="whitespace-pre-wrap leading-loose text-justify text-[15px] print:text-[12pt]">{aiReading}</div>
+                  ) : (
+                    <div className="text-center py-20 text-gray-400 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl">
+                      विस्तृत फलादेश प्राप्त करने हेतु ऊपर दिए गए बटन पर क्लिक करें। (AI इंटरनेट के माध्यम से ३-५ पृष्ठों की रिपोर्ट तैयार करेगा)
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            
           </div>
         </div>
       )}

@@ -10,7 +10,7 @@ export function Card({
   const variantStyles = {
     glass: 'glass-card',
     gold: 'glass-card-gold',
-    subtle: 'bg-[#140B06] border border-[#C58B4E]/30 rounded-2xl p-4'
+    subtle: 'bg-black/50 backdrop-blur-sm border border-[#C58B4E]/30 rounded-2xl p-4'
   };
 
   return (

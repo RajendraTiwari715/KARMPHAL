@@ -21,7 +21,7 @@ export function Button({
 
   const variantStyles = {
     gold: 'btn-gold',
-    outline: 'bg-[#1C1008] border border-[#C58B4E]/40 text-[#F3CA9D] hover:border-[#E0A96D] hover:bg-[#2A180E]',
+    outline: 'bg-black/40 backdrop-blur-sm border border-[#C58B4E]/40 text-[#F3CA9D] hover:border-[#E0A96D] hover:bg-white/15 backdrop-blur-sm',
     ghost: 'bg-transparent text-[#D4A373] hover:text-[#FFF] hover:bg-white/5',
     circle: 'circle-gold-btn'
   };

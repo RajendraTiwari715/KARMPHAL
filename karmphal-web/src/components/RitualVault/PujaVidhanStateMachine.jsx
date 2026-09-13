@@ -117,8 +117,8 @@ export default function PujaVidhanStateMachine() {
                   isCurrent
                     ? 'bg-[#C58B4E]/30 border-[#E0A96D] text-[#FFF] shadow-lg scale-105'
                     : isCompleted
-                    ? 'bg-[#1C1008] border-emerald-500/40 text-emerald-300'
-                    : 'bg-[#140B06] border-[#C58B4E]/20 text-[#A67C52]'
+                    ? 'bg-black/40 backdrop-blur-sm border-emerald-500/40 text-emerald-300'
+                    : 'bg-black/50 backdrop-blur-sm border-[#C58B4E]/20 text-[#A67C52]'
                 }`}
               >
                 <div className="flex items-center justify-center gap-1 text-[10px] font-bold">
@@ -144,7 +144,7 @@ export default function PujaVidhanStateMachine() {
             <button
               onClick={handlePrev}
               disabled={currentStageIndex === 0}
-              className="p-2.5 rounded-xl bg-[#140B06] border border-[#C58B4E]/30 text-slate-300 hover:text-[#F3CA9D] disabled:opacity-30"
+              className="p-2.5 rounded-xl bg-black/50 backdrop-blur-sm border border-[#C58B4E]/30 text-slate-300 hover:text-[#F3CA9D] disabled:opacity-30"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
@@ -159,7 +159,7 @@ export default function PujaVidhanStateMachine() {
         </div>
 
         {/* Sanskrit Mool Mantra */}
-        <div className="p-5 rounded-2xl bg-[#140B06] border border-[#C58B4E]/30">
+        <div className="p-5 rounded-2xl bg-black/50 backdrop-blur-sm border border-[#C58B4E]/30">
           <div className="text-xs text-[#E0A96D] font-bold mb-2 flex items-center justify-between">
             <span>शास्त्रोक्त मन्त्र (Sanskrit Mantra)</span>
             <span className="text-[11px] text-[#C58B4E]">{stage.accentNote}</span>
@@ -170,7 +170,7 @@ export default function PujaVidhanStateMachine() {
         </div>
 
         {/* Practical Action Instruction */}
-        <div className="p-4 rounded-2xl bg-[#1C1008] border border-[#C58B4E]/20 text-xs">
+        <div className="p-4 rounded-2xl bg-black/40 backdrop-blur-sm border border-[#C58B4E]/20 text-xs">
           <strong className="text-[#E0A96D] block font-bold mb-1">क्रिया निर्देश (Action To Perform):</strong>
           <p className="text-[#E6D0BA] text-sm leading-relaxed font-sans">{stage.action}</p>
         </div>

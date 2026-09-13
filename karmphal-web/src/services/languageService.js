@@ -369,20 +369,17 @@ export const TRANSLATIONS = {
 
 class LanguageService {
   constructor() {
-    this.currentLang = localStorage.getItem('karmphal_lang') || 'hi'; // Default Shuddh Hindi
+    this.currentLang = 'hi'; // Enforce Shuddh Hindi
     this.listeners = [];
   }
 
   getLang() {
-    return this.currentLang;
+    return 'hi';
   }
 
   setLang(lang) {
-    if (['hi', 'sa', 'en'].includes(lang)) {
-      this.currentLang = lang;
-      localStorage.setItem('karmphal_lang', lang);
-      this.listeners.forEach(fn => fn(lang));
-    }
+    // Language locked to Hindi as per requirements
+    // Ignore any attempts to change language
   }
 
   subscribe(listener) {
@@ -393,7 +390,7 @@ class LanguageService {
   }
 
   t() {
-    return TRANSLATIONS[this.currentLang] || TRANSLATIONS.hi;
+    return TRANSLATIONS['hi'];
   }
 }
 

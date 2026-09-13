@@ -35,6 +35,7 @@ const DEFAULT_STATE = {
 class StorageService {
   constructor() {
     this.state = this.loadState();
+    this.fetchInitialStateFromBackend();
   }
 
   loadState() {
@@ -54,9 +55,32 @@ class StorageService {
     return { ...DEFAULT_STATE, tasks: [...DEFAULT_TASKS] };
   }
 
+  async fetchInitialStateFromBackend() {
+    try {
+      const res = await fetch('/api/user/profile');
+      if (res.ok) {
+        const user = await res.json();
+        this.state.punyaLedger = user.totalPunya || this.state.punyaLedger;
+        this.state.currentStreak = user.sadhanaStreak || this.state.currentStreak;
+        this.saveState();
+      }
+    } catch (e) {
+      console.warn('Backend load failed', e);
+    }
+  }
+
   saveState() {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(this.state));
+      // Sync critical stats to backend
+      fetch('/api/user/punya', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          totalPunya: this.state.punyaLedger, 
+          sadhanaStreak: this.state.currentStreak 
+        })
+      }).catch(err => console.warn('Backend sync failed', err));
     } catch (e) {
       console.warn('LocalStorage save error', e);
     }

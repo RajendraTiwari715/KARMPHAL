@@ -4,7 +4,6 @@ import KundaliView from '../components/AstrologicalCore/KundaliView';
 import VivahMilanView from '../components/VivahMilan/VivahMilanView';
 import RashiView from '../components/AstrologicalCore/RashiView';
 import VastuView from '../components/VastuShastra/VastuView';
-import LalKitabUpayView from '../components/LalKitab/LalKitabUpayView';
 import { Calendar, Compass, HeartHandshake, Star, Home, BookOpen, ChevronRight, Sparkles } from 'lucide-react';
 import { audioService } from '../services/audioService';
 
@@ -53,15 +52,6 @@ const JYOTISH_MODULES = [
     icon: Home,
     color: 'from-emerald-500 to-teal-600',
     badge: '१६-कोणीय वास्तु'
-  },
-  {
-    id: 'lalkitab',
-    title: '६. लाल किताब के महा-उपाय',
-    subtitle: 'धन, नौकरी, विवाह, स्वास्थ्य व नवग्रह उपाय',
-    desc: 'व्यापार वृद्धि, सरकारी नौकरी, विवाह बाधा निवारण, असाध्य रोग मुक्ति, शत्रु शान्ति एवं सूर्य से केतु तक ९ ग्रहों के अचूक उपाय।',
-    icon: BookOpen,
-    color: 'from-purple-500 to-indigo-600',
-    badge: 'लाल किताब'
   }
 ];
 
@@ -98,10 +88,6 @@ export default function JyotishSection({ panchangData }) {
 
   if (activeModule === 'vastu') {
     return <VastuView onBack={handleBackToHub} />;
-  }
-
-  if (activeModule === 'lalkitab') {
-    return <LalKitabUpayView onBack={handleBackToHub} />;
   }
 
   // Master Jyotish Hub View (6 Cards Grid)

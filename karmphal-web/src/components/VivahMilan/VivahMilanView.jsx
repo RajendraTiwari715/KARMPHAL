@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
-import { HeartHandshake, CheckCircle2, XCircle, Sparkles, ShieldAlert, Award, ArrowLeft } from 'lucide-react';
+import { HeartHandshake, CheckCircle2, XCircle, Sparkles, ShieldAlert, Award, ArrowLeft, BookOpen, Copy, Check, RefreshCw, Download } from 'lucide-react';
 import { calculateAshtakoot } from '../../services/ashtakootEngine';
 import { NAKSHATRAS, ZODIAC_SIGNS } from '../../services/ephemerisEngine';
 import { audioService } from '../../services/audioService';
+import { geminiService } from '../../services/geminiService';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 export default function VivahMilanView({ onBack }) {
   const [groomData, setGroomData] = useState({
@@ -22,6 +25,10 @@ export default function VivahMilanView({ onBack }) {
   });
 
   const [result, setResult] = useState(() => calculateAshtakoot(groomData, brideData));
+  const [aiMilanReading, setAiMilanReading] = useState('');
+  const [isGeneratingAi, setIsGeneratingAi] = useState(false);
+  const [copiedAi, setCopiedAi] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   const handleMatch = (e) => {
     e?.preventDefault();
@@ -29,6 +36,70 @@ export default function VivahMilanView({ onBack }) {
     const res = calculateAshtakoot(groomData, brideData);
     setResult(res);
   };
+
+  const handleGenerateAiMilanReading = async () => {
+    audioService.playTempleBell(432, 1.2);
+    setIsGeneratingAi(true);
+    try {
+      const groomFull = {
+        ...groomData,
+        nakshatraName: NAKSHATRAS.find(n => n.id === groomData.nakshatraId)?.name || 'रोहिणी',
+        rashiName: ZODIAC_SIGNS.find(z => z.id === groomData.rashiId)?.sanskrit || 'वृषभ'
+      };
+      const brideFull = {
+        ...brideData,
+        nakshatraName: NAKSHATRAS.find(n => n.id === brideData.nakshatraId)?.name || 'हस्त',
+        rashiName: ZODIAC_SIGNS.find(z => z.id === brideData.rashiId)?.sanskrit || 'कन्या'
+      };
+
+      const reading = await geminiService.generateVivahMilanReading(groomFull, brideFull, result);
+      if (reading) {
+        setAiMilanReading(reading);
+      } else {
+        setAiMilanReading('अष्टकूट मिलान की विस्तृत गणना पूर्ण हुई। वर एवं कन्या के मध्य संस्कार, स्वभाव और गृहस्थ धर्म का तालमेल उत्तम है।');
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsGeneratingAi(false);
+    }
+  };
+
+  const handleCopyReading = () => {
+    if (!aiMilanReading) return;
+    navigator.clipboard.writeText(aiMilanReading);
+    setCopiedAi(true);
+    setTimeout(() => setCopiedAi(false), 2000);
+  };
+
+  const handleDownloadPDF = async () => {
+    const reportElement = document.getElementById('milan-report');
+    if (!reportElement) return;
+
+    audioService.playBeadClick();
+    setIsExporting(true);
+    try {
+      const canvas = await html2canvas(reportElement, { 
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+      });
+      const imgData = canvas.toDataURL('image/png');
+      
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`${groomData.name}_${brideData.name}_Milan_Report.pdf`);
+    } catch (err) {
+      console.error('PDF Export failed:', err);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
 
   const getScoreColor = (score, max) => {
     const ratio = score / max;
@@ -40,7 +111,7 @@ export default function VivahMilanView({ onBack }) {
   return (
     <div className="space-y-6 animate-fade-in pb-12">
       {/* Header Bar with Back Button */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between no-print">
         <button
           onClick={() => {
             audioService.playBeadClick();
@@ -52,7 +123,19 @@ export default function VivahMilanView({ onBack }) {
           <span>ज्योतिष खण्ड में वापस जाएं</span>
         </button>
 
-        <span className="badge-gold font-bold text-xs">३६ गुण अष्टकूट विवाह मिलन</span>
+        <div className="flex items-center gap-3">
+          {result && (
+            <button 
+              onClick={handleDownloadPDF}
+              disabled={isExporting}
+              className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-amber-500/20 border border-amber-500/50 text-amber-200 hover:bg-amber-500/40 transition-all text-xs font-bold"
+            >
+              <Download className="w-4 h-4" />
+              <span>{isExporting ? 'PDF बन रहा है...' : 'PDF डाउनलोड करें'}</span>
+            </button>
+          )}
+          <span className="badge-gold font-bold text-xs">३६ गुण अष्टकूट विवाह मिलन</span>
+        </div>
       </div>
 
       {/* Hero Banner */}
@@ -61,7 +144,7 @@ export default function VivahMilanView({ onBack }) {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <span className="badge-gold">वर-कन्या कुण्डली गुण मिलान</span>
-              <span className="badge-saffron">दोष परिहार (Parihara) सहित</span>
+              <span className="badge-saffron">दोष परिहार सहित</span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-dharmik font-bold text-amber-200 flex items-center gap-2">
               <HeartHandshake className="w-6 h-6 text-amber-400" />
@@ -75,18 +158,18 @@ export default function VivahMilanView({ onBack }) {
       </div>
 
       {/* Groom & Bride Input Form */}
-      <form onSubmit={handleMatch} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <form onSubmit={handleMatch} className="grid grid-cols-1 md:grid-cols-2 gap-6 no-print">
         {/* Groom Profile */}
         <div className="glass-card p-5 sm:p-6 border-t-4 border-blue-500 space-y-3.5">
           <div className="flex items-center justify-between">
             <h3 className="font-dharmik text-base font-bold text-blue-300">
-              वर का विवरण (Groom Details)
+              वर का विवरण
             </h3>
             <span className="badge-gold text-[10px]">वर पक्ष</span>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-300 mb-1">वर का नाम (Groom Name)</label>
+            <label className="block text-xs font-bold text-slate-300 mb-1">वर का नाम</label>
             <input
               type="text"
               required
@@ -165,13 +248,13 @@ export default function VivahMilanView({ onBack }) {
         <div className="glass-card p-5 sm:p-6 border-t-4 border-rose-500 space-y-3.5">
           <div className="flex items-center justify-between">
             <h3 className="font-dharmik text-base font-bold text-rose-300">
-              कन्या का विवरण (Bride Details)
+              कन्या का विवरण
             </h3>
-            <span className="badge-saffron text-[10px]">कन्या पक्ष</span>
+            <span className="badge-gold text-[10px]">कन्या पक्ष</span>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-300 mb-1">कन्या का नाम (Bride Name)</label>
+            <label className="block text-xs font-bold text-slate-300 mb-1">कन्या का नाम</label>
             <input
               type="text"
               required
@@ -254,64 +337,123 @@ export default function VivahMilanView({ onBack }) {
         </div>
       </form>
 
-      {/* Match Result Output Card */}
-      <div className="glass-card-gold p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6">
-        <div className="flex items-center gap-5">
-          <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-slate-950 border-4 border-amber-500 flex flex-col items-center justify-center shadow-xl shadow-amber-500/20 shrink-0">
-            <span className="text-3xl sm:text-4xl font-black text-amber-300 font-mono">{result.totalScore}</span>
-            <span className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">/ ३६ गुण</span>
-          </div>
-
-          <div>
-            <div className="flex items-center gap-2">
-              <span className={`text-lg sm:text-xl font-bold ${result.totalScore >= 24 ? 'text-emerald-400' : result.totalScore >= 18 ? 'text-amber-400' : 'text-rose-400'}`}>
-                {result.totalScore >= 24 ? 'उत्तम मिलन (अत्यन्त शुभ)' : result.totalScore >= 18 ? 'मध्यम मिलन (स्वीकार्य)' : 'अधम मिलन (दोषयुक्त)'}
-              </span>
-              {result.isViable ? <CheckCircle2 className="w-5 h-5 text-emerald-400" /> : <XCircle className="w-5 h-5 text-rose-400" />}
-            </div>
-            <p className="text-xs text-slate-300 mt-1.5 max-w-md font-sans leading-relaxed">
-              <strong>{groomData.name}</strong> एवं <strong>{brideData.name}</strong> के मध्य कुल {result.totalScore} गुण मिलते हैं। 
-              {result.totalScore >= 18 ? ' वैवाहिक जीवन हेतु यह सम्बन्ध शास्त्र सम्मत एवं शुभ है।' : ' गुणों की संख्या कम होने के कारण कुण्डली के अन्य भावों का परीक्षण आवश्यक है।'}
-            </p>
-          </div>
-        </div>
-
-        {/* Manglik Status */}
-        <div className="w-full md:w-auto bg-slate-950/80 p-4 rounded-2xl border border-amber-500/30 text-xs">
-          <div className="flex items-center gap-1.5 text-amber-300 font-bold mb-1">
-            <ShieldAlert className="w-4 h-4 text-amber-400" />
-            <span>मांगलिक (कुज) दोष स्थिति</span>
-          </div>
-          <p className="text-slate-200 text-[11px] max-w-xs">{result.manglik.status}</p>
-        </div>
-      </div>
-
-      {/* 8 Kootas Detailed Grid */}
-      <div className="glass-card p-6 space-y-4">
-        <h3 className="font-dharmik text-base font-bold text-amber-200 flex items-center gap-2">
-          <Award className="w-5 h-5 text-amber-400" />
-          <span>८ अष्टकूट विस्तृत प्राप्ताङ्क विवरण</span>
-        </h3>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {result.kootas.map((koota, idx) => (
-            <div key={idx} className={`p-3.5 rounded-2xl border ${getScoreColor(koota.obtained, koota.max)}`}>
-              <div className="flex items-center justify-between mb-1">
-                <span className="font-bold text-xs text-slate-100">{idx + 1}. {koota.name} कूट</span>
-                <span className="font-mono text-xs font-black px-2 py-0.5 rounded bg-slate-950/60 border border-current">
-                  {koota.obtained} / {koota.max}
-                </span>
+      {result && (
+        <div className="mt-8 animate-fade-in">
+          <div id="milan-report" className="print-report bg-white dark:bg-[#111] text-black dark:text-white rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-800 p-8 sm:p-12 overflow-hidden relative">
+            
+            {/* PAGE 1: Summary */}
+            <div className="page-section min-h-[900px] print:h-[1050px] flex flex-col page-break-after">
+              <div className="text-center mb-8 border-b-2 border-amber-500 pb-6">
+                <span className="text-4xl text-amber-500 mb-2 block">ॐ</span>
+                <h1 className="text-3xl font-dharmik font-bold text-amber-600 dark:text-amber-400">विवाह मेलापक फलादेश</h1>
+                <h2 className="text-xl mt-2 font-bold">{groomData.name} एवं {brideData.name} का अष्टकूट मिलान</h2>
               </div>
-              <p className="text-[11px] text-slate-300 mt-2 leading-relaxed font-sans">{koota.desc}</p>
-              {koota.cancelled && (
-                <div className="mt-2 text-[10px] bg-emerald-950/80 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded flex items-center gap-1 font-bold">
-                  <span>✓ दोष परिहार लागू</span>
+
+              <div className="flex flex-col items-center justify-center mb-10">
+                <div className="relative w-32 h-32 rounded-full border-4 border-amber-500 flex flex-col items-center justify-center shadow-xl shadow-amber-500/20 mb-4">
+                  <span className="text-4xl font-black text-amber-600 dark:text-amber-400 font-mono">{result.totalScore}</span>
+                  <span className="text-xs uppercase tracking-widest font-bold">/ ३६ गुण</span>
+                </div>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className={`text-2xl font-bold ${result.totalScore >= 24 ? 'text-emerald-600 dark:text-emerald-400' : result.totalScore >= 18 ? 'text-amber-600 dark:text-amber-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                    {result.totalScore >= 24 ? 'उत्तम मिलन (अत्यन्त शुभ)' : result.totalScore >= 18 ? 'मध्यम मिलन (स्वीकार्य)' : 'अधम मिलन (दोषयुक्त)'}
+                  </span>
+                  {result.isViable ? <CheckCircle2 className="w-6 h-6 text-emerald-600 dark:text-emerald-400" /> : <XCircle className="w-6 h-6 text-rose-600 dark:text-rose-400" />}
+                </div>
+                <p className="text-sm text-center max-w-lg leading-relaxed">
+                  <strong>{groomData.name}</strong> एवं <strong>{brideData.name}</strong> के मध्य कुल {result.totalScore} गुण मिलते हैं। 
+                  {result.totalScore >= 18 ? ' वैवाहिक जीवन हेतु यह सम्बन्ध शास्त्र सम्मत एवं शुभ है।' : ' गुणों की संख्या कम होने के कारण कुण्डली के अन्य भावों का परीक्षण आवश्यक है।'}
+                </p>
+              </div>
+
+              <div className="w-full bg-amber-50 dark:bg-amber-900/10 p-5 rounded-2xl border border-amber-500/30 text-sm flex-1">
+                <div className="flex items-center justify-center gap-2 text-amber-600 dark:text-amber-400 font-bold mb-2">
+                  <ShieldAlert className="w-5 h-5" />
+                  <span className="text-lg">मांगलिक (कुज) दोष स्थिति</span>
+                </div>
+                <p className="text-center leading-relaxed font-bold">{result.manglik.status}</p>
+                <div className="mt-6 text-center text-xs text-gray-500">
+                  मांगलिक दोष का निर्णय केवल भाव स्थिति के आधार पर किया गया है। पूर्ण परिहार के लिए सम्पूर्ण कुण्डली का विश्लेषण आवश्यक है।
+                </div>
+              </div>
+            </div>
+
+            {/* PAGE 2: 8 Kootas Detailed Grid */}
+            <div className="page-section min-h-[900px] print:h-[1050px] flex flex-col page-break-after pt-8 border-t-2 border-dashed border-gray-300 print:border-none print:pt-0">
+              <h2 className="text-2xl font-dharmik font-bold text-amber-600 dark:text-amber-400 mb-6 flex items-center justify-center gap-2">
+                <Award className="w-6 h-6 text-amber-500" />
+                <span>८ अष्टकूट विस्तृत प्राप्ताङ्क विवरण</span>
+              </h2>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {result.kootas.map((koota, idx) => (
+                  <div key={idx} className="p-4 rounded-xl border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors">
+                    <div className="flex items-center justify-between mb-2 border-b border-gray-200 dark:border-gray-700 pb-2">
+                      <span className="font-bold text-sm">{idx + 1}. {koota.name} कूट</span>
+                      <span className="font-mono text-sm font-black px-2 py-1 rounded bg-gray-100 dark:bg-gray-800">
+                        {koota.obtained} / {koota.max}
+                      </span>
+                    </div>
+                    <p className="text-xs mt-2 leading-relaxed">{koota.desc}</p>
+                    {koota.cancelled && (
+                      <div className="mt-3 text-[11px] bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 px-2 py-1 rounded flex items-center gap-1 font-bold inline-flex">
+                        <Check className="w-3 h-3" />
+                        <span>दोष परिहार लागू</span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* PAGE 3-5: Deep AI Astrologer Vivah Milan Reading */}
+            <div className="page-section min-h-[900px] pt-8 border-t-2 border-dashed border-gray-300 print:border-none print:pt-0">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
+                <div>
+                  <h2 className="text-2xl font-dharmik font-bold text-amber-600 dark:text-amber-400 flex items-center gap-2">
+                    <Sparkles className="w-6 h-6 text-amber-500" />
+                    <span>विस्तृत मेलापक फलादेश (३-५ पृष्ठ)</span>
+                  </h2>
+                  <p className="text-xs mt-1 text-gray-500 dark:text-gray-400">
+                    ३६ गुण, मांगलिक सामंजस्य, मानसिक तालमेल व वैदिक उपाय
+                  </p>
+                </div>
+
+                <div className="no-print">
+                  <button
+                    onClick={handleGenerateAiMilanReading}
+                    disabled={isGeneratingAi}
+                    className="btn-gold text-xs py-1.5 px-4 flex items-center gap-2"
+                  >
+                    {isGeneratingAi ? <RefreshCw className="w-4 h-4 animate-spin" /> : <BookOpen className="w-4 h-4" />}
+                    <span>{isGeneratingAi ? 'महर्षि गणना कर रहे हैं...' : 'विस्तृत फलादेश उत्पन्न करें'}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* AI Reading Content Area */}
+              {isGeneratingAi ? (
+                <div className="flex flex-col items-center justify-center py-20 text-center">
+                  <span className="font-sanskrit text-5xl text-amber-500 animate-spin mb-4 block">ॐ</span>
+                  <p className="text-gray-500">मेलापक शास्त्र व अष्टकूट परिहार के आधार पर फलादेश तैयार किया जा रहा है...</p>
+                </div>
+              ) : (
+                <div className="prose prose-sm dark:prose-invert max-w-none prose-amber">
+                  {aiMilanReading ? (
+                    <div className="whitespace-pre-wrap leading-loose text-justify text-[15px] print:text-[12pt]">
+                      {aiMilanReading}
+                    </div>
+                  ) : (
+                    <div className="text-center py-20 text-gray-400 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl">
+                      विस्तृत फलादेश प्राप्त करने हेतु ऊपर दिए गए बटन पर क्लिक करें। (AI इंटरनेट के माध्यम से ३-५ पृष्ठों की रिपोर्ट तैयार करेगा)
+                    </div>
+                  )}
                 </div>
               )}
             </div>
-          ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

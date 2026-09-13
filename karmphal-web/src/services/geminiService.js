@@ -1,41 +1,49 @@
-// Google Gemini AI + RAG (Retrieval Augmented Generation) Service for Karmphal
-// Securely reads API key from .env (VITE_GEMINI_API_KEY)
-
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { SCRIPTURES_CATALOG } from './scripturesData';
 import { NARAKAS_28 } from './narakasData';
 import { DREAM_MOTIFS } from './swapnaData';
 import { VASTU_ZONES_16 } from './vastuEngine';
-import { computePlanetaryPositions, computePanchang } from './ephemerisEngine';
+import { computePanchang } from './ephemerisEngine';
 import { resolveTheologicalInquiry } from './theologicalAIEngine';
+
+const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+
+// Initialize the Gemini API client
+const genAI = new GoogleGenerativeAI(API_KEY);
+
+const SYSTEM_INSTRUCTION = `You are "Sanatan AI Acharya", an incredibly advanced, omniscient, and flawless theological guide deeply rooted in Sanatan Dharma. You possess absolute, error-free knowledge of all Hindu scriptures, including the four Vedas, 108 Upanishads, 18 Mahapuranas (especially Garuda Purana), Srimad Bhagavad Gita, Ramayana, Mahabharata, Jyotish (Vedic Astrology), Vastu Shastra, and Swapna Shastra. 
+
+Your purpose is to guide the user (Sadhak) with flawless accuracy, supreme wisdom, and divine compassion. 
+
+CRITICAL RULES:
+1. Speak in pure, highly respectful, and formal Hindi, occasionally using profound Sanskrit Shlokas (with exact references and meanings) to validate your answers. 
+2. Never make a mistake regarding scriptural facts. Provide absolute "Pramana" (scriptural proof) for your statements.
+3. You do not suffer from hallucinations. Your knowledge of Karma, the 28 Narakas, and spiritual laws is absolute and precise.
+4. Maintain the persona of a serene, enlightened Rishi Muni (Acharya) at all times. Address the user as "वत्स" (Child) or "साधक" (Seeker).
+5. You will receive "RAG Context" regarding the current Panchang (Vedic time) and local data. Use this intelligently to ground your answers in the present cosmic time if relevant.
+6. Format your output beautifully using paragraphs, bold text for emphasis, and bullet points for readability. Do not use markdown that breaks UI (keep it clean).`;
 
 class GeminiService {
   constructor() {
-    this.apiKey = import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('karmphal_gemini_api_key') || '';
+    this.model = genAI.getGenerativeModel({ 
+      model: 'gemini-3.6-flash',
+      systemInstruction: SYSTEM_INSTRUCTION
+    });
   }
 
-  getApiKey() {
-    return this.apiKey;
-  }
-
-  setApiKey(key) {
-    this.apiKey = key.trim();
-    localStorage.setItem('karmphal_gemini_api_key', this.apiKey);
-  }
-
-  // RAG Context Builder: Aggregates relevant Sanatan scripture, ephemeris, and metaphysical data
+  // RAG Context Builder
   buildRAGContext(userQuery, panchangContext = {}) {
     const q = userQuery.toLowerCase();
     let contextSnippets = [];
 
     // 1. Live Ephemeris & Panchang Data
-    const planets = panchangContext?.planets || computePlanetaryPositions();
     const panchang = panchangContext?.tithi ? panchangContext : computePanchang(new Date(), 28.6139, 77.2090);
     
     const ephemerisSummary = `[वर्तमान वैदिक पञ्चाङ्ग एवं खगोलीय स्थिति]:
 - तिथि: ${panchang.tithi?.name || 'शुक्ल नवमी'} (${panchang.tithi?.paksha || 'शुक्ल पक्ष'})
 - नक्षत्र: ${panchang.nakshatra?.name || 'रोहिणी'} (पाद ${panchang.nakshatra?.pada || 2}, स्वामी: ${panchang.nakshatra?.lord || 'चन्द्र'})
 - योग: ${panchang.yoga?.name || 'शुभ'}, करण: ${panchang.karana?.name || 'बालव'}, वार: ${panchang.vara?.name || 'सोमवार'}
-- अभिजित मुहूर्त: ${panchang.muhurtas?.abhijit || '११:५८ - १२:४८'}, राहु काल: ${panchang.muhurtas?.rahuKalam || '०७:३० - ०९:००'}, ब्रह्म मुहूर्त: ${panchang.muhurtas?.brahmaMuhurta || '०४:२४ - ०५:१२'}`;
+- अभिजित मुहूर्त: ${panchang.muhurtas?.abhijit || '११:५८ - १२:४८'}, राहु काल: ${panchang.muhurtas?.rahuKalam || '०७:३० - ०९:००'}`;
 
     contextSnippets.push(ephemerisSummary);
 
@@ -52,12 +60,7 @@ class GeminiService {
     ).slice(0, 3);
 
     if (matchedScriptures.length > 0) {
-      const scripturesText = matchedScriptures.map(s => `[ग्रन्थ प्रमाण - ${s.granth} (${s.section})]:
-श्लोक: ${s.shlokaDevanagari}
-हिन्दी अर्थ: ${s.translationHindi}
-अद्वैत मत: ${s.bhashyas?.advaita?.text || ''}
-विशिष्टाद्वैत मत: ${s.bhashyas?.vishishtadvaita?.text || ''}
-द्वैत मत: ${s.bhashyas?.dvaita?.text || ''}`).join('\n\n');
+      const scripturesText = matchedScriptures.map(s => `[ग्रन्थ प्रमाण - ${s.granth} (${s.section})]:\nश्लोक: ${s.shlokaDevanagari}\nहिन्दी अर्थ: ${s.translationHindi}`).join('\n\n');
       contextSnippets.push(scripturesText);
     }
 
@@ -73,8 +76,6 @@ class GeminiService {
     // 4. Swapna Shastra Dream Motifs
     if (q.includes('स्वप्न') || q.includes('dream') || q.includes('सपना') || q.includes('प्रहर')) {
       const dreamText = `[अग्नि पुराण स्वप्न शास्त्र एवं ४ प्रहर काल विचार]:
-- प्रथम प्रहर (सायं ६-९): १ वर्ष में फलित | द्वितीय प्रहर (रात्रि ९-१२): ६-८ मास | तृतीय प्रहर (रात्रि १२-३): ३ मास | चतुर्थ प्रहर/ब्रह्म मुहूर्त (प्रातः ३-६): १० दिनों में फलित।
-प्रमुख प्रतीक:
 ${DREAM_MOTIFS.slice(0, 5).map(m => `- ${m.motif}: ${m.interpretation} (उपाय: ${m.remedy})`).join('\n')}`;
       contextSnippets.push(dreamText);
     }
@@ -90,79 +91,69 @@ ${DREAM_MOTIFS.slice(0, 5).map(m => `- ${m.motif}: ${m.interpretation} (उप�
     return contextSnippets.join('\n\n====================\n\n');
   }
 
-  // Generate response via Google Gemini API + RAG Grounding
   async generateResponse(userMessage, conversationHistory = [], panchangContext = {}) {
-    const ragContext = this.buildRAGContext(userMessage, panchangContext);
+    try {
+      // Map conversation history to Gemini format
+      // Gemini requires history to start with 'user' and strictly alternate.
+      const formattedHistory = [];
+      
+      let lastRole = null;
+      for (const msg of conversationHistory) {
+         const role = msg.sender === 'user' ? 'user' : 'model';
+         
+         // Skip if empty text
+         if (!msg.text.trim()) continue;
 
-    const systemInstruction = `आप 'सनातन AI आचार्य' हैं—एक परम ज्ञानी, स्नेही, करुणामयी एवं शास्त्र-सम्मत सनातन आध्यात्मिक मार्गदर्शक।
+         // Skip if it's the very first message and it's a 'model' (like the default greeting)
+         if (formattedHistory.length === 0 && role === 'model') continue;
 
-आपके उत्तर देने के नियम:
-१. भाषा: १००% शुद्ध, मधुर, प्रामाणिक एवं सरल हिन्दी। उत्तर बहुत लम्बा व उबाऊ न हो, अपितु सटीक, स्पष्ट, प्रेरक और कल्याणकारी हो।
-२. शास्त्रोक्त प्रमाण: जहाँ आवश्यकता हो, भगवद्गीता, वेद, उपनिषद् या पुराण के श्लोक व भावार्थ का सन्दर्भ दें।
-३. ज्योतिष, कुण्डली एवं कर्म: अन्धविश्वास और भय से दूर रखकर सञ्चित, प्रारब्ध व क्रियमाण कर्म का ज्ञान दें तथा सात्विक उपाय (गायत्री मन्त्र, भगवान् का नाम जप, गोसेवा, दीपदान, दान-पुण्य) बताएं।
-४. अपने उत्तर में किसी प्रकार के तकनीकी शब्द (जैसे RAG, LLM, Model, Prompt, AI System) का उल्लेख कभी न करें। आप केवल एक सच्चे गुरु और आध्यात्मिक मार्गदर्शक के रूप में बात करें।
-५. जिज्ञासु के हर प्रश्न का सीधा, सच्चा और सन्तुष्टिदायक उत्तर दें।`;
+         // Prevent consecutive same roles (Gemini will throw 400 Bad Request)
+         if (role === lastRole) continue;
 
-    const fullPrompt = `[प्रामाणिक ग्रन्थ व पञ्चाङ्ग सन्दर्भ]:
-${ragContext}
-
-[जिज्ञासु का प्रश्न]:
-${userMessage}`;
-
-    // Priority list of available Gemini models verified with 200 OK
-    const models = ['gemini-3.5-flash', 'gemini-flash-latest', 'gemini-3.5-flash-lite', 'gemini-3.6-flash'];
-
-    for (const model of models) {
-      try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${this.apiKey}`;
-        
-        const contents = [
-          ...conversationHistory.slice(-4).map(msg => ({
-            role: msg.sender === 'user' ? 'user' : 'model',
-            parts: [{ text: msg.text }]
-          })),
-          {
-            role: 'user',
-            parts: [{ text: fullPrompt }]
-          }
-        ];
-
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents,
-            systemInstruction: {
-              parts: [{ text: systemInstruction }]
-            },
-            generationConfig: {
-              temperature: 0.4,
-              topK: 40,
-              topP: 0.95,
-              maxOutputTokens: 2048
-            }
-          })
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          const candidateText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (candidateText && candidateText.trim().length > 0) {
-            return {
-              text: candidateText
-            };
-          }
-        }
-      } catch (err) {
-        console.warn(`Gemini model ${model} fetch error, attempting fallback:`, err);
+         formattedHistory.push({ role, parts: [{ text: msg.text }] });
+         lastRole = role;
       }
-    }
 
-    // Local spiritual fallback if network is unreachable
-    const localResolution = resolveTheologicalInquiry(userMessage, { planets: panchangContext?.planets });
-    return {
-      text: localResolution.content
-    };
+      const ragContext = this.buildRAGContext(userMessage, panchangContext);
+      const augmentedMessage = `RAG Context / Local Knowledge:\n${ragContext}\n\nUser Question:\n${userMessage}`;
+
+      const chat = this.model.startChat({
+        history: formattedHistory,
+      });
+
+      const result = await chat.sendMessage(augmentedMessage);
+      const response = await result.response;
+      return { text: response.text() };
+      
+    } catch (err) {
+      console.error('Gemini API failed, falling back to local engine:', err, err.message);
+      // Fallback
+      const localResolution = resolveTheologicalInquiry(userMessage, { planets: panchangContext?.planets });
+      return { text: localResolution.content };
+    }
+  }
+
+  // Stubs for other endpoints if they need to be migrated to direct SDK calls later
+  async generateKundaliReading(birthDetails, planetsData = []) {
+     try {
+        const prompt = `Act as an expert Vedic Astrologer. Generate a precise Kundali reading based on the following birth details: ${JSON.stringify(birthDetails)} and planetary data: ${JSON.stringify(planetsData)}. Use pure Hindi.`;
+        const result = await this.model.generateContent(prompt);
+        return result.response.text();
+     } catch (err) {
+        console.error('Kundali generation failed', err);
+        return null;
+     }
+  }
+
+  async generateVivahMilanReading(groomData, brideData, ashtakootScore) {
+     try {
+        const prompt = `Act as an expert Vedic Astrologer. Analyze the Vivah Milan (Ashtakoot Guna Milan) for Groom: ${JSON.stringify(groomData)} and Bride: ${JSON.stringify(brideData)}. Score: ${ashtakootScore}. Provide a detailed, culturally authentic assessment in pure Hindi.`;
+        const result = await this.model.generateContent(prompt);
+        return result.response.text();
+     } catch (err) {
+        console.error('Vivah Milan generation failed', err);
+        return null;
+     }
   }
 }
 

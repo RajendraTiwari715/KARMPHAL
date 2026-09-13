@@ -33,34 +33,8 @@ export default function Navbar({ activeSection, setActiveSection, panchangData }
 
   return (
     <>
-      {/* Desktop & Tablet Sticky Header */}
-      <header className="sticky top-0 z-40 bg-[#120A05]/95 backdrop-blur-2xl border-b border-[#C58B4E]/30 shadow-2xl">
-        {/* Panchang Live Ticker Ribbon */}
-        <div className="bg-gradient-to-r from-[#1C1008] via-[#2A170C] to-[#1C1008] px-4 py-1.5 text-[11px] sm:text-xs border-b border-[#C58B4E]/20 flex flex-wrap items-center justify-between text-[#F3CA9D] gap-2">
-          <div className="flex items-center gap-2.5 overflow-x-auto no-scrollbar py-0.5">
-            <span className="flex items-center gap-1.5 font-bold text-[#E0A96D] whitespace-nowrap">
-              <span className="animate-diya text-sm">🪔</span>
-              {panchangData?.tithi?.name || 'शुक्ल नवमी'}
-            </span>
-            <span className="text-[#C58B4E]/50">•</span>
-            <span className="whitespace-nowrap">नक्षत्र: <strong className="text-[#F7E7D6]">{panchangData?.nakshatra?.name || 'रोहिणी'}</strong></span>
-            <span className="text-[#C58B4E]/50 hidden sm:inline">•</span>
-            <span className="whitespace-nowrap hidden sm:inline">योग: <strong className="text-[#F7E7D6]">{panchangData?.yoga?.name || 'शुभ'}</strong></span>
-            <span className="text-[#C58B4E]/50 hidden md:inline">•</span>
-            <span className="whitespace-nowrap hidden md:inline">वार: <strong className="text-[#F7E7D6]">{panchangData?.vara?.name || 'सोमवार'}</strong></span>
-          </div>
-
-          <div className="flex items-center gap-3 text-[11px]">
-            <span className="bg-[#2A180E] text-emerald-300 border border-emerald-500/40 px-2.5 py-0.5 rounded-full flex items-center gap-1 font-semibold whitespace-nowrap">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-              अभिजित: {panchangData?.muhurtas?.abhijit ? panchangData.muhurtas.abhijit.split('(')[0] : '११:५८ - १२:४८'}
-            </span>
-            <span className="text-rose-300 bg-[#2A180E] border border-rose-500/30 px-2.5 py-0.5 rounded-full font-semibold hidden sm:inline whitespace-nowrap">
-              राहु काल: {panchangData?.muhurtas?.rahuKalam ? panchangData.muhurtas.rahuKalam.split('(')[0] : '०७:३० - ०९:००'}
-            </span>
-          </div>
-        </div>
-
+      {/* Desktop & Mobile Clean Header */}
+      <header className="sticky top-0 z-40 bg-[#0A1005]/50 backdrop-blur-3xl border-b border-[#E0A96D]/20 shadow-2xl">
         {/* Main Clean Brand Header with 3D App Logo (Profile Trigger) */}
         <div className="max-w-7xl mx-auto px-4 py-2.5 sm:py-3.5 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
@@ -68,7 +42,7 @@ export default function Navbar({ activeSection, setActiveSection, panchangData }
             <button
               onClick={() => setIsProfileOpen(true)}
               title="ॐ प्रोफाइल, खाता व भाषा विन्यास (Click to open Profile & Settings)"
-              className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-2xl overflow-hidden shadow-2xl shadow-[#C58B4E]/40 hover:scale-108 transition-all border-2 border-[#E0A96D] cursor-pointer group shrink-0"
+              className="relative w-11 h-11 sm:w-14 sm:h-14 rounded-2xl overflow-hidden shadow-2xl shadow-[#C58B4E]/40 hover:scale-108 transition-all border-2 border-[#E0A96D] cursor-pointer group shrink-0"
             >
               <img 
                 src={appLogo} 
@@ -82,7 +56,7 @@ export default function Navbar({ activeSection, setActiveSection, panchangData }
               onClick={() => setActiveSection('guru')}
               className="cursor-pointer"
             >
-              <h1 className="font-dharmik text-2xl sm:text-3xl tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-[#F7E7D6] via-[#F3CA9D] to-[#C58B4E] font-bold">
+              <h1 className="font-dharmik text-xl sm:text-3xl tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-[#F7E7D6] via-[#F3CA9D] to-[#C58B4E] font-bold">
                 {t.brandTitle}
               </h1>
               <p className="text-[10px] sm:text-xs text-[#D4A373] font-sans tracking-wide">
@@ -105,14 +79,14 @@ export default function Navbar({ activeSection, setActiveSection, panchangData }
                   onClick={() => setActiveSection(section.id)}
                   className={`flex-1 flex items-center gap-3 p-2.5 rounded-2xl transition-all cursor-pointer ${
                     isActive
-                      ? 'bg-gradient-to-r from-[#C58B4E]/30 via-[#C58B4E]/15 to-transparent border border-[#E0A96D] shadow-lg shadow-[#C58B4E]/20'
-                      : 'bg-[#1C1008]/60 hover:bg-[#2A180E] border border-white/5 text-[#D4A373] hover:text-[#F3CA9D]'
+                      ? 'bg-gradient-to-r from-[#C58B4E]/40 via-[#C58B4E]/20 to-transparent border border-[#E0A96D] shadow-lg shadow-[#C58B4E]/30 backdrop-blur-md'
+                      : 'bg-black/20 hover:bg-black/40 border border-white/5 text-[#D4A373] hover:text-[#F3CA9D] backdrop-blur-sm'
                   }`}
                 >
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center p-1.5 transition-all ${
                     isActive
-                      ? 'bg-gradient-to-br from-[#2A170C] to-[#120A05] border border-[#E0A96D] shadow-md scale-105'
-                      : 'bg-[#2A180E] border border-[#C58B4E]/20'
+                      ? 'bg-gradient-to-br from-[#2A170C]/80 to-[#120A05]/80 border border-[#E0A96D] shadow-md scale-105'
+                      : 'bg-black/30 border border-[#C58B4E]/20'
                   }`}>
                     <Icon className="w-full h-full" active={isActive} />
                   </div>
@@ -132,7 +106,7 @@ export default function Navbar({ activeSection, setActiveSection, panchangData }
       </header>
 
       {/* Mobile Bottom Clean Navigation Bar with Sacred Section Logos */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#140B06]/98 backdrop-blur-2xl border-t border-[#C58B4E]/40 px-2 py-1.5 shadow-2xl">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0A1005]/60 backdrop-blur-3xl border-t border-[#E0A96D]/20 px-2 py-1.5 shadow-2xl">
         <div className="flex items-center justify-around">
           {sections.map(section => {
             const Icon = section.icon;
@@ -150,8 +124,8 @@ export default function Navbar({ activeSection, setActiveSection, panchangData }
               >
                 <div className={`w-9 h-9 rounded-xl flex items-center justify-center p-1.5 transition-all ${
                   isActive
-                    ? 'bg-gradient-to-br from-[#2A170C] to-[#120A05] border border-[#E0A96D] shadow-lg shadow-[#C58B4E]/40'
-                    : 'bg-[#21120A] border border-[#C58B4E]/20'
+                    ? 'bg-gradient-to-br from-[#2A170C]/80 to-[#120A05]/80 border border-[#E0A96D] shadow-lg shadow-[#C58B4E]/40'
+                    : 'bg-black/30 border border-[#C58B4E]/20'
                 }`}>
                   <Icon className="w-full h-full" active={isActive} />
                 </div>

@@ -196,7 +196,7 @@ export const SACRED_LIVE_DARSHAN = [
 export const SACRED_STOTRAS = [
   {
     id: 'shiv_stotra',
-    title: 'Shiv Stotra (Hindi)',
+    title: 'शिव ताण्डव स्तोत्रम्',
     hindiTitle: 'श्री शिव ताण्डव स्तोत्रम् (सटीक हिन्दी अर्थ)',
     author: 'दशानन रावण',
     preview: 'जटाटवीगलज्जलप्रवाहपावितस्थले गलेऽवलम्ब्य लम्बितां भुजङ्गतुङ्गमालिकाम्...',
@@ -218,7 +218,7 @@ export const SACRED_STOTRAS = [
   },
   {
     id: 'ganesha_mantra',
-    title: 'Ganesha Mantra',
+    title: 'गणेश मन्त्र',
     hindiTitle: 'श्री गणेश अष्टकम् एवं संकटनाशन स्तोत्रम्',
     author: 'देवर्षि नारद',
     preview: 'प्रणम्य शिरसा देवं गौरीपुत्रं विनायकम् । भक्तावासं स्मरेन्नित्यमायुःकामार्थसिद्धये...',
@@ -237,7 +237,7 @@ export const SACRED_STOTRAS = [
   },
   {
     id: 'bhagavad_gita',
-    title: 'Bhagavad Gita',
+    title: 'भगवद् गीता',
     hindiTitle: 'श्रीमद्भगवद्गीता महासार एवं नित्य पाठ',
     author: 'महर्षि वेदव्यास',
     preview: 'कर्मण्येवाधिकारस्ते मा फलेषु कदाचन । मा कर्मफलहेतुर्भूर्मा ते सङ्गोऽस्त्वकर्मणि...',
@@ -256,7 +256,7 @@ export const SACRED_STOTRAS = [
   },
   {
     id: 'vishnu_sahasranama',
-    title: 'Vishnu Sahasranama',
+    title: 'विष्णु सहस्रनाम',
     hindiTitle: 'श्री विष्णु सहस्रनाम स्तोत्रम् (महाभारत अनुशासन पर्व)',
     author: 'पितामह भीष्म',
     preview: 'विश्वं विष्णुर्वषट्कारो भूतभव्यभवत्प्रभुः । भूतकृद्भूतभृद्भावो भूतात्मा भूतभावनः...',

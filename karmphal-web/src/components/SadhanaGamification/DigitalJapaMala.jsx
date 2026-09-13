@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Sparkles, Flame, RotateCcw, ShieldCheck, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
 import { audioService } from '../../services/audioService';
 import { storageService } from '../../services/storageService';
-import { useJapaTelemetry } from './useJapaTelemetry';
 import { Button, Badge, Card } from '../shared';
 
 const MANTRAS = [
@@ -18,7 +17,26 @@ export default function DigitalJapaMala() {
   const [swadhyayaMinutes, setSwadhyayaMinutes] = useState(0);
   const [tasks, setTasks] = useState(() => storageService.getState().tasks || []);
 
-  const { beadCount, malaCycle, antiCheatStatus, handleBeadChant, resetMala } = useJapaTelemetry(selectedMantra);
+  const [beadCount, setBeadCount] = useState(0);
+  const [malaCycle, setMalaCycle] = useState(0);
+  const [antiCheatStatus, setAntiCheatStatus] = useState('pure');
+
+  const handleBeadChant = () => {
+    setBeadCount(prev => {
+      const next = prev + 1;
+      if (next >= 108) {
+        setMalaCycle(m => m + 1);
+        storageService.addPunya(108, '१ माला जप पूर्ण');
+        return 0;
+      }
+      return next;
+    });
+  };
+
+  const resetMala = () => {
+    setBeadCount(0);
+    setMalaCycle(0);
+  };
 
   // Swadhyaya Timer logic
   useEffect(() => {

@@ -47,7 +47,7 @@ export default function SadhanaSection() {
       <div className="space-y-4 animate-fade-in pb-12">
         <button
           onClick={() => setActiveModal(null)}
-          className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-[#1C1008] border border-[#C58B4E]/40 text-[#F3CA9D] hover:bg-[#2A170C] text-xs font-bold"
+          className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-black/40 backdrop-blur-sm border border-[#C58B4E]/40 text-[#F3CA9D] hover:bg-white/20 backdrop-blur-sm text-xs font-bold"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>साधना मुख्य पृष्ठ पर वापस जाएं</span>
@@ -63,7 +63,7 @@ export default function SadhanaSection() {
       <div className="space-y-4 animate-fade-in pb-12">
         <button
           onClick={() => setActiveModal(null)}
-          className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-[#1C1008] border border-[#C58B4E]/40 text-[#F3CA9D] hover:bg-[#2A170C] text-xs font-bold"
+          className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-black/40 backdrop-blur-sm border border-[#C58B4E]/40 text-[#F3CA9D] hover:bg-white/20 backdrop-blur-sm text-xs font-bold"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>साधना मुख्य पृष्ठ पर वापस जाएं</span>
@@ -80,7 +80,7 @@ export default function SadhanaSection() {
         <div className="flex items-center justify-between">
           <button
             onClick={() => setActiveModal(null)}
-            className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-[#1C1008] border border-[#C58B4E]/40 text-[#F3CA9D] hover:bg-[#2A170C] text-xs font-bold"
+            className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-black/40 backdrop-blur-sm border border-[#C58B4E]/40 text-[#F3CA9D] hover:bg-white/20 backdrop-blur-sm text-xs font-bold"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>साधना मुख्य पृष्ठ पर वापस जाएं</span>
@@ -98,14 +98,14 @@ export default function SadhanaSection() {
                 </div>
                 <button
                   onClick={() => handleCopyText(arti.id, `${arti.title}\n\n${arti.lyrics}`)}
-                  className="p-2 rounded-xl bg-[#120A05] border border-[#C58B4E]/30 text-[#F3CA9D]"
+                  className="p-2 rounded-xl bg-black/60 backdrop-blur-sm border border-[#C58B4E]/30 text-[#F3CA9D]"
                   title="आरती प्रतिलिपि बनाएं"
                 >
                   {copiedId === arti.id ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
                 </button>
               </div>
 
-              <pre className="font-sanskrit text-xs sm:text-sm text-[#F7E7D6] whitespace-pre-line leading-relaxed bg-[#140B06]/80 p-4 rounded-2xl border border-[#C58B4E]/20">
+              <pre className="font-sanskrit text-xs sm:text-sm text-[#F7E7D6] whitespace-pre-line leading-relaxed bg-black/50 backdrop-blur-sm/80 p-4 rounded-2xl border border-[#C58B4E]/20">
                 {arti.lyrics}
               </pre>
             </div>
@@ -122,7 +122,7 @@ export default function SadhanaSection() {
         <div className="flex items-center justify-between">
           <button
             onClick={() => setActiveModal(null)}
-            className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-[#1C1008] border border-[#C58B4E]/40 text-[#F3CA9D] hover:bg-[#2A170C] text-xs font-bold"
+            className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-black/40 backdrop-blur-sm border border-[#C58B4E]/40 text-[#F3CA9D] hover:bg-white/20 backdrop-blur-sm text-xs font-bold"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>साधना मुख्य पृष्ठ पर वापस जाएं</span>
@@ -140,20 +140,20 @@ export default function SadhanaSection() {
                 </div>
                 <button
                   onClick={() => handleCopyText(chalisa.id, `${chalisa.title}\n\n[दोहा]:\n${chalisa.doha}\n\n[चौपाई]:\n${chalisa.chaupai}`)}
-                  className="p-2 rounded-xl bg-[#120A05] border border-[#C58B4E]/30 text-[#F3CA9D]"
+                  className="p-2 rounded-xl bg-black/60 backdrop-blur-sm border border-[#C58B4E]/30 text-[#F3CA9D]"
                 >
                   {copiedId === chalisa.id ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
                 </button>
               </div>
 
               {chalisa.doha && (
-                <div className="p-3.5 rounded-xl bg-[#1A0E07] border border-[#C58B4E]/30">
+                <div className="p-3.5 rounded-xl bg-black/45 backdrop-blur-sm border border-[#C58B4E]/30">
                   <span className="text-[10px] font-bold text-[#C58B4E] uppercase block mb-1">॥ दोहा ॥</span>
                   <pre className="font-sanskrit text-xs text-[#F3CA9D] whitespace-pre-line leading-relaxed">{chalisa.doha}</pre>
                 </div>
               )}
 
-              <pre className="font-sanskrit text-xs sm:text-sm text-[#F7E7D6] whitespace-pre-line leading-relaxed bg-[#140B06]/80 p-4 rounded-2xl border border-[#C58B4E]/20 max-h-80 overflow-y-auto">
+              <pre className="font-sanskrit text-xs sm:text-sm text-[#F7E7D6] whitespace-pre-line leading-relaxed bg-black/50 backdrop-blur-sm/80 p-4 rounded-2xl border border-[#C58B4E]/20 max-h-80 overflow-y-auto">
                 {chalisa.chaupai}
               </pre>
             </div>
@@ -170,7 +170,7 @@ export default function SadhanaSection() {
         <div className="flex items-center justify-between">
           <button
             onClick={() => setActiveModal(null)}
-            className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-[#1C1008] border border-[#C58B4E]/40 text-[#F3CA9D] hover:bg-[#2A170C] text-xs font-bold"
+            className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-black/40 backdrop-blur-sm border border-[#C58B4E]/40 text-[#F3CA9D] hover:bg-white/20 backdrop-blur-sm text-xs font-bold"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>साधना मुख्य पृष्ठ पर वापस जाएं</span>
@@ -188,13 +188,13 @@ export default function SadhanaSection() {
                 </div>
                 <button
                   onClick={() => handleCopyText(item.id, `${item.title}\n\n${item.mantra}\n\n[अर्थ]: ${item.meaning}`)}
-                  className="p-2 rounded-xl bg-[#120A05] border border-[#C58B4E]/30 text-[#F3CA9D]"
+                  className="p-2 rounded-xl bg-black/60 backdrop-blur-sm border border-[#C58B4E]/30 text-[#F3CA9D]"
                 >
                   {copiedId === item.id ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
                 </button>
               </div>
 
-              <div className="p-4 rounded-2xl bg-[#140B06] border border-[#C58B4E]/30 text-center">
+              <div className="p-4 rounded-2xl bg-black/50 backdrop-blur-sm border border-[#C58B4E]/30 text-center">
                 <pre className="font-sanskrit text-sm sm:text-base text-[#F3CA9D] whitespace-pre-line leading-relaxed font-bold">
                   {item.mantra}
                 </pre>
@@ -218,7 +218,7 @@ export default function SadhanaSection() {
         <div className="flex items-center justify-between">
           <button
             onClick={() => setActiveModal(null)}
-            className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-[#1C1008] border border-[#C58B4E]/40 text-[#F3CA9D] hover:bg-[#2A170C] text-xs font-bold"
+            className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-black/40 backdrop-blur-sm border border-[#C58B4E]/40 text-[#F3CA9D] hover:bg-white/20 backdrop-blur-sm text-xs font-bold"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>साधना मुख्य पृष्ठ पर वापस जाएं</span>
@@ -266,7 +266,7 @@ export default function SadhanaSection() {
         <div className="flex items-center justify-between">
           <button
             onClick={() => setActiveModal(null)}
-            className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-[#1C1008] border border-[#C58B4E]/40 text-[#F3CA9D] hover:bg-[#2A170C] text-xs font-bold"
+            className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-black/40 backdrop-blur-sm border border-[#C58B4E]/40 text-[#F3CA9D] hover:bg-white/20 backdrop-blur-sm text-xs font-bold"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>साधना मुख्य पृष्ठ पर वापस जाएं</span>
@@ -283,19 +283,19 @@ export default function SadhanaSection() {
 
             <button
               onClick={() => handleCopyText(selectedItem.id, `${selectedItem.hindiTitle}\n\n${selectedItem.content}\n\n[अर्थ]: ${selectedItem.meaning}`)}
-              className="p-2.5 rounded-xl bg-[#140B06] border border-[#C58B4E]/30 text-[#F3CA9D]"
+              className="p-2.5 rounded-xl bg-black/50 backdrop-blur-sm border border-[#C58B4E]/30 text-[#F3CA9D]"
             >
               {copiedId === selectedItem.id ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
             </button>
           </div>
 
-          <div className="p-6 rounded-2xl bg-[#140B06] border border-[#C58B4E]/30 text-center">
+          <div className="p-6 rounded-2xl bg-black/50 backdrop-blur-sm border border-[#C58B4E]/30 text-center">
             <pre className="font-sanskrit text-base sm:text-lg text-[#F7E7D6] whitespace-pre-line leading-relaxed">
               {selectedItem.content}
             </pre>
           </div>
 
-          <div className="p-5 rounded-2xl bg-[#1C1008] border border-[#C58B4E]/30 space-y-1.5">
+          <div className="p-5 rounded-2xl bg-black/40 backdrop-blur-sm border border-[#C58B4E]/30 space-y-1.5">
             <strong className="font-dharmik text-sm text-[#F3CA9D] block">हिन्दी भावार्थ एवं फलश्रुति:</strong>
             <p className="text-xs sm:text-sm text-[#E6D0BA] leading-relaxed font-sans">{selectedItem.meaning}</p>
           </div>
@@ -314,32 +314,59 @@ export default function SadhanaSection() {
 
         <div className="relative z-10 space-y-5">
           <h2 className="text-center font-serif text-xl sm:text-2xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-[#F3CA9D] via-[#E0A96D] to-[#C58B4E] drop-shadow">
-            AAJ KA PANCHANG
+            आज का पञ्चाङ्ग
           </h2>
 
-          <div className="space-y-3 pt-1 text-xs sm:text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 pt-1 text-xs sm:text-sm">
             <div className="flex items-center gap-3 text-[#F3CA9D]">
               <span className="text-base sm:text-lg">📅</span>
-              <span className="font-medium text-[#D4A373]">Date:</span>
+              <span className="font-medium text-[#D4A373]">दिनांक:</span>
               <span className="font-bold text-[#F7E7D6] ml-auto font-mono">{dateFormatted}</span>
             </div>
 
             <div className="flex items-center gap-3 text-[#F3CA9D]">
               <span className="text-base sm:text-lg">🌙</span>
-              <span className="font-medium text-[#D4A373]">Thithi:</span>
+              <span className="font-medium text-[#D4A373]">तिथि:</span>
               <span className="font-bold text-[#F7E7D6] ml-auto">{tithiFormatted}</span>
             </div>
 
             <div className="flex items-center gap-3 text-[#F3CA9D]">
               <span className="text-base sm:text-lg">🐂</span>
-              <span className="font-medium text-[#D4A373]">Rashi:</span>
+              <span className="font-medium text-[#D4A373]">राशि:</span>
               <span className="font-bold text-[#F7E7D6] ml-auto">{rashiFormatted}</span>
             </div>
 
             <div className="flex items-center gap-3 text-[#F3CA9D]">
               <span className="text-base sm:text-lg">🌟</span>
-              <span className="font-medium text-[#D4A373]">Nakshatra:</span>
+              <span className="font-medium text-[#D4A373]">नक्षत्र:</span>
               <span className="font-bold text-[#F7E7D6] ml-auto">{nakshatraFormatted}</span>
+            </div>
+            
+            <div className="flex items-center gap-3 text-[#F3CA9D]">
+              <span className="text-base sm:text-lg">✨</span>
+              <span className="font-medium text-[#D4A373]">योग:</span>
+              <span className="font-bold text-[#F7E7D6] ml-auto">{panchang.yoga?.name || 'Vajra'}</span>
+            </div>
+
+            <div className="flex items-center gap-3 text-[#F3CA9D]">
+              <span className="text-base sm:text-lg">⚡</span>
+              <span className="font-medium text-[#D4A373]">करण:</span>
+              <span className="font-bold text-[#F7E7D6] ml-auto">{panchang.karana?.name || 'Bava'}</span>
+            </div>
+          </div>
+          
+          <div className="mt-4 pt-4 border-t border-[#C58B4E]/20 space-y-2 text-[11px] sm:text-xs">
+            <div className="flex items-center justify-between">
+              <span className="text-[#C58B4E] font-bold">ब्रह्म मुहूर्त:</span>
+              <span className="text-emerald-300 font-mono">{panchang.muhurtas?.brahmaMuhurta}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-[#C58B4E] font-bold">अभिजित मुहूर्त:</span>
+              <span className="text-emerald-300 font-mono">{panchang.muhurtas?.abhijit}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-[#C58B4E] font-bold">राहु काल:</span>
+              <span className="text-rose-400 font-mono">{panchang.muhurtas?.rahuKalam}</span>
             </div>
           </div>
         </div>
@@ -354,8 +381,8 @@ export default function SadhanaSection() {
           <div className="circle-gold-btn">
             <span className="text-2xl group-hover:scale-110 transition-transform">🪔</span>
           </div>
-          <span className="text-[11px] sm:text-xs font-serif font-bold tracking-widest text-[#E0A96D] uppercase group-hover:text-[#F3CA9D]">
-            ARTI
+          <span className="text-[11px] sm:text-xs font-serif font-bold tracking-widest text-[#E0A96D] group-hover:text-[#F3CA9D]">
+            आरती
           </span>
         </div>
 
@@ -366,8 +393,8 @@ export default function SadhanaSection() {
           <div className="circle-gold-btn">
             <span className="text-2xl group-hover:scale-110 transition-transform">📜</span>
           </div>
-          <span className="text-[11px] sm:text-xs font-serif font-bold tracking-widest text-[#E0A96D] uppercase group-hover:text-[#F3CA9D]">
-            CHALISA
+          <span className="text-[11px] sm:text-xs font-serif font-bold tracking-widest text-[#E0A96D] group-hover:text-[#F3CA9D]">
+            चालीसा
           </span>
         </div>
 
@@ -378,8 +405,8 @@ export default function SadhanaSection() {
           <div className="circle-gold-btn">
             <span className="text-2xl group-hover:scale-110 transition-transform">📖</span>
           </div>
-          <span className="text-[11px] sm:text-xs font-serif font-bold tracking-widest text-[#E0A96D] uppercase group-hover:text-[#F3CA9D]">
-            MANTRA
+          <span className="text-[11px] sm:text-xs font-serif font-bold tracking-widest text-[#E0A96D] group-hover:text-[#F3CA9D]">
+            मन्त्र
           </span>
         </div>
 
@@ -390,8 +417,8 @@ export default function SadhanaSection() {
           <div className="circle-gold-btn">
             <span className="text-2xl group-hover:scale-110 transition-transform">🎥</span>
           </div>
-          <span className="text-[11px] sm:text-xs font-serif font-bold tracking-widest text-[#E0A96D] uppercase group-hover:text-[#F3CA9D]">
-            LIVE
+          <span className="text-[11px] sm:text-xs font-serif font-bold tracking-widest text-[#E0A96D] group-hover:text-[#F3CA9D]">
+            लाइव
           </span>
         </div>
       </div>
@@ -408,7 +435,7 @@ export default function SadhanaSection() {
             </div>
             <div>
               <h4 className="font-serif font-bold text-sm sm:text-base text-[#F3CA9D] group-hover:text-[#FFF] transition-colors">
-                Shiv Stotra (Hindi)
+                शिव स्तोत्र
               </h4>
               <p className="text-[11px] text-[#C58B4E] font-medium">शिव ताण्डव स्तोत्रम् व रुद्राष्टकम्</p>
             </div>
@@ -426,7 +453,7 @@ export default function SadhanaSection() {
             </div>
             <div>
               <h4 className="font-serif font-bold text-sm sm:text-base text-[#F3CA9D] group-hover:text-[#FFF] transition-colors">
-                Ganesha Mantra
+                गणेश मन्त्र
               </h4>
               <p className="text-[11px] text-[#C58B4E] font-medium">संकटनाशन स्तोत्र एवं गणेश अष्टकम्</p>
             </div>
@@ -444,7 +471,7 @@ export default function SadhanaSection() {
             </div>
             <div>
               <h4 className="font-serif font-bold text-sm sm:text-base text-[#F3CA9D] group-hover:text-[#FFF] transition-colors">
-                Bhagavad Gita
+                भगवद् गीता
               </h4>
               <p className="text-[11px] text-[#C58B4E] font-medium">सम्पूर्ण १८ अध्याय, कर्मयोग एवं सार</p>
             </div>
@@ -462,7 +489,7 @@ export default function SadhanaSection() {
             </div>
             <div>
               <h4 className="font-serif font-bold text-sm sm:text-base text-[#F3CA9D] group-hover:text-[#FFF] transition-colors">
-                Vishnu Sahasranama
+                विष्णु सहस्रनाम
               </h4>
               <p className="text-[11px] text-[#C58B4E] font-medium">श्री विष्णु सहस्रनाम स्तोत्रम्</p>
             </div>

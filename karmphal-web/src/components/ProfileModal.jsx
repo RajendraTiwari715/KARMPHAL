@@ -9,23 +9,34 @@ export default function ProfileModal({ isOpen, onClose, appState }) {
   const t = languageService.t();
 
   const [isEditing, setIsEditing] = useState(false);
-  const [userData, setUserData] = useState(() => {
-    const saved = localStorage.getItem('karmphal_user_profile');
-    if (saved) {
-      try { return JSON.parse(saved); } catch (e) {}
-    }
-    return {
-      name: 'सत्येन्द्र शर्मा',
-      phoneOrEmail: 'satyendra@karmphal.app',
-      gotra: 'कश्यप (Kashyapa)',
-      city: 'वाराणसी (Varanasi)',
-      isLoggedIn: true
-    };
+  const [userData, setUserData] = useState({
+    name: 'साधक',
+    phoneOrEmail: 'satyendra@karmphal.app',
+    gotra: 'कश्यप (Kashyapa)',
+    city: 'वाराणसी (Varanasi)',
+    isLoggedIn: true
   });
+
+  React.useEffect(() => {
+    if (isOpen) {
+      fetch('/api/user/profile')
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.name) {
+            setUserData(prev => ({ ...prev, name: data.name, gotra: data.gotra || prev.gotra, city: data.city || prev.city }));
+          }
+        })
+        .catch(err => console.warn('Failed to load profile', err));
+    }
+  }, [isOpen]);
 
   const handleSaveProfile = (e) => {
     e?.preventDefault();
-    localStorage.setItem('karmphal_user_profile', JSON.stringify(userData));
+    fetch('/api/user/profile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: userData.name, gotra: userData.gotra, city: userData.city })
+    }).catch(err => console.warn('Failed to save profile', err));
     setIsEditing(false);
   };
 
@@ -48,12 +59,12 @@ export default function ProfileModal({ isOpen, onClose, appState }) {
   else if (points >= 150) rank = 'साधक (Sadhaka)';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in">
-      <div className="glass-card-gold max-w-lg w-full p-6 sm:p-7 relative rounded-3xl border border-[#C58B4E]/60 shadow-2xl bg-[#1C1008] text-[#F7E7D6] max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xl animate-fade-in">
+      <div className="glass-card max-w-lg w-full p-6 sm:p-7 relative rounded-3xl border border-[#C58B4E]/40 shadow-2xl bg-black/60 text-[#F7E7D6] max-h-[90vh] overflow-y-auto">
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-[#D4A373] hover:text-[#FFF] rounded-full bg-[#120A05] border border-[#C58B4E]/40 transition-colors"
+          className="absolute top-4 right-4 p-2 text-[#D4A373] hover:text-[#FFF] rounded-full bg-black/60 backdrop-blur-sm border border-[#C58B4E]/40 transition-colors"
         >
           <X className="w-4 h-4" />
         </button>
@@ -73,7 +84,7 @@ export default function ProfileModal({ isOpen, onClose, appState }) {
         </div>
 
         {/* User Login Information Card */}
-        <div className="p-4 rounded-2xl bg-[#140B06] border border-[#C58B4E]/30 mb-5 space-y-3">
+        <div className="p-4 rounded-2xl bg-black/40 border border-[#C58B4E]/30 mb-5 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-xs font-bold text-[#F3CA9D]">
               <User className="w-4 h-4 text-[#E0A96D]" />
@@ -97,7 +108,7 @@ export default function ProfileModal({ isOpen, onClose, appState }) {
                   required
                   value={userData.name}
                   onChange={e => setUserData({ ...userData, name: e.target.value })}
-                  className="w-full bg-[#1C1008] border border-[#C58B4E]/40 text-[#F7E7D6] p-2 rounded-xl text-xs outline-none focus:border-[#E0A96D]"
+                  className="w-full bg-white/5 border border-[#C58B4E]/40 text-[#F7E7D6] p-2 rounded-xl text-xs outline-none focus:border-[#E0A96D]"
                 />
               </div>
 
@@ -108,7 +119,7 @@ export default function ProfileModal({ isOpen, onClose, appState }) {
                     type="text"
                     value={userData.gotra}
                     onChange={e => setUserData({ ...userData, gotra: e.target.value })}
-                    className="w-full bg-[#1C1008] border border-[#C58B4E]/40 text-[#F7E7D6] p-2 rounded-xl text-xs outline-none focus:border-[#E0A96D]"
+                    className="w-full bg-white/5 border border-[#C58B4E]/40 text-[#F7E7D6] p-2 rounded-xl text-xs outline-none focus:border-[#E0A96D]"
                   />
                 </div>
                 <div>
@@ -117,7 +128,7 @@ export default function ProfileModal({ isOpen, onClose, appState }) {
                     type="text"
                     value={userData.city}
                     onChange={e => setUserData({ ...userData, city: e.target.value })}
-                    className="w-full bg-[#1C1008] border border-[#C58B4E]/40 text-[#F7E7D6] p-2 rounded-xl text-xs outline-none focus:border-[#E0A96D]"
+                    className="w-full bg-white/5 border border-[#C58B4E]/40 text-[#F7E7D6] p-2 rounded-xl text-xs outline-none focus:border-[#E0A96D]"
                   />
                 </div>
               </div>
@@ -129,19 +140,19 @@ export default function ProfileModal({ isOpen, onClose, appState }) {
             </form>
           ) : (
             <div className="grid grid-cols-2 gap-2 text-xs pt-1">
-              <div className="p-2.5 rounded-xl bg-[#1C1008] border border-[#C58B4E]/20">
+              <div className="p-2.5 rounded-xl bg-white/5 border border-[#C58B4E]/20">
                 <span className="text-[#A67C52] text-[10px] block">नाम:</span>
                 <strong className="text-[#F7E7D6]">{userData.name}</strong>
               </div>
-              <div className="p-2.5 rounded-xl bg-[#1C1008] border border-[#C58B4E]/20">
+              <div className="p-2.5 rounded-xl bg-white/5 border border-[#C58B4E]/20">
                 <span className="text-[#A67C52] text-[10px] block">गोत्र:</span>
                 <strong className="text-[#F3CA9D]">{userData.gotra}</strong>
               </div>
-              <div className="p-2.5 rounded-xl bg-[#1C1008] border border-[#C58B4E]/20">
+              <div className="p-2.5 rounded-xl bg-white/5 border border-[#C58B4E]/20">
                 <span className="text-[#A67C52] text-[10px] block">स्थान:</span>
                 <strong className="text-[#F7E7D6]">{userData.city}</strong>
               </div>
-              <div className="p-2.5 rounded-xl bg-[#1C1008] border border-[#C58B4E]/20 flex items-center justify-between">
+              <div className="p-2.5 rounded-xl bg-white/5 border border-[#C58B4E]/20 flex items-center justify-between">
                 <div>
                   <span className="text-[#A67C52] text-[10px] block">स्थिति:</span>
                   <strong className="text-emerald-400">सक्रिय (Active)</strong>
@@ -154,7 +165,7 @@ export default function ProfileModal({ isOpen, onClose, appState }) {
 
         {/* Sadhana Stats Card */}
         <div className="grid grid-cols-2 gap-3 mb-5">
-          <div className="p-3.5 rounded-2xl bg-[#140B06] border border-[#C58B4E]/30">
+          <div className="p-3.5 rounded-2xl bg-black/40 border border-[#C58B4E]/30">
             <div className="flex items-center gap-1.5 text-[11px] text-[#E0A96D] font-bold mb-1">
               <Sparkles className="w-3.5 h-3.5" />
               <span>कुल पुण्य अर्जन</span>
@@ -163,7 +174,7 @@ export default function ProfileModal({ isOpen, onClose, appState }) {
             <span className="text-[10px] text-[#C58B4E] block mt-0.5">साधना पद: <strong className="text-[#F7E7D6]">{rank}</strong></span>
           </div>
 
-          <div className="p-3.5 rounded-2xl bg-[#140B06] border border-[#C58B4E]/30">
+          <div className="p-3.5 rounded-2xl bg-black/40 border border-[#C58B4E]/30">
             <div className="flex items-center gap-1.5 text-[11px] text-[#E0A96D] font-bold mb-1">
               <Flame className="w-3.5 h-3.5" />
               <span>साधना निरन्तरता</span>
@@ -191,7 +202,7 @@ export default function ProfileModal({ isOpen, onClose, appState }) {
                   className={`p-3 rounded-2xl border cursor-pointer transition-all flex items-center justify-between ${
                     isSelected
                       ? 'bg-[#C58B4E]/25 border-[#E0A96D] shadow-md text-[#FFF]'
-                      : 'bg-[#140B06] border-[#C58B4E]/25 text-[#D4A373] hover:border-[#C58B4E]/50'
+                      : 'bg-black/40 border-[#C58B4E]/25 text-[#D4A373] hover:border-[#C58B4E]/50'
                   }`}
                 >
                   <div>

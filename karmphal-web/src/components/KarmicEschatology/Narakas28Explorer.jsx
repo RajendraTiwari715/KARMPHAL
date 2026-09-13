@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
-import { ShieldCheck, Flame, Search, BookOpen, AlertOctagon, HeartHandshake, Sparkles, Filter } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ShieldCheck, Flame, Search, BookOpen, HeartHandshake, Sparkles, ArrowLeft, Info, AlertOctagon } from 'lucide-react';
 import { NARAKAS_28, searchNarakas, KARMIC_CATEGORIES, calculateKarmicAudit } from '../../services/narakasData';
 import { audioService } from '../../services/audioService';
 
 export default function Narakas28Explorer() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [activeNaraka, setActiveNaraka] = useState(NARAKAS_28[0]);
-  const [auditMode, setAuditMode] = useState(false);
+  const [activeNaraka, setActiveNaraka] = useState(null);
+  const [view, setView] = useState('list'); // 'list', 'detail', 'audit'
+  
   const [auditResponses, setAuditResponses] = useState({
     ahimsaViolations: 0,
     truthViolations: 0,
@@ -18,41 +19,49 @@ export default function Narakas28Explorer() {
   const filteredNarakas = searchNarakas(searchQuery, selectedCategory);
   const auditResult = calculateKarmicAudit(auditResponses);
 
-  return (
-    <div className="space-y-6">
-      {/* Header Banner */}
-      <div className="glass-card-gold p-6 relative overflow-hidden">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="badge-gold">गरुड़ पुराण सारोद्धार (३.२-३.२९)</span>
-              <span className="badge-saffron">श्रीमद्भागवत पुराण पञ्चम स्कन्ध</span>
-            </div>
-            <h2 className="text-2xl font-serif font-bold text-amber-200 flex items-center gap-2">
-              <ShieldCheck className="w-6 h-6 text-amber-400" />
-              <span>२८ नरक विवरण, कर्म शुद्धि एवं प्रायश्चित ग्रन्थागार</span>
-            </h2>
-            <p className="text-sm text-slate-300 mt-1 max-w-2xl">
-              धर्मराज यम एवं चित्रगुप्त के न्याय सिद्धान्त के अनुसार पाप कर्मों का आध्यात्मिक विपाक, सूक्ष्म शरीर (लिङ्ग शरीर) की शुद्धि प्रक्रिया, तथा वेद-विहित प्रायश्चित विधान।
-            </p>
-          </div>
+  // Scroll to top when view changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [view]);
 
-          <button
-            onClick={() => {
-              audioService.playBeadClick();
-              setAuditMode(!auditMode);
-            }}
-            className="btn-gold self-start md:self-auto"
-          >
-            <Sparkles className="w-4 h-4" />
-            <span>{auditMode ? '२८ नरक सूची देखें' : 'कर्म आत्म-परीक्षण करें'}</span>
-          </button>
+  return (
+    <div className="space-y-6 animate-fade-in pb-12">
+      
+      {/* Header Banner (Only show in list or audit mode) */}
+      {(view === 'list' || view === 'audit') && (
+        <div className="glass-card-gold p-6 relative overflow-hidden">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="badge-gold">गरुड़ पुराण सारोद्धार (३.२-३.२९)</span>
+                <span className="badge-saffron">श्रीमद्भागवत पुराण पञ्चम स्कन्ध</span>
+              </div>
+              <h2 className="text-2xl font-serif font-bold text-amber-200 flex items-center gap-2">
+                <ShieldCheck className="w-6 h-6 text-amber-400" />
+                <span>२८ नरक विवरण, कर्म शुद्धि एवं प्रायश्चित ग्रन्थागार</span>
+              </h2>
+              <p className="text-sm text-slate-300 mt-1 max-w-2xl">
+                धर्मराज यम एवं चित्रगुप्त के न्याय सिद्धान्त के अनुसार पाप कर्मों का आध्यात्मिक विपाक, सूक्ष्म शरीर (लिङ्ग शरीर) की शुद्धि प्रक्रिया, तथा वेद-विहित प्रायश्चित विधान।
+              </p>
+            </div>
+
+            <button
+              onClick={() => {
+                audioService.playBeadClick();
+                setView(view === 'audit' ? 'list' : 'audit');
+              }}
+              className="btn-gold self-start md:self-auto shrink-0"
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>{view === 'audit' ? '२८ नरक सूची देखें' : 'कर्म आत्म-परीक्षण करें'}</span>
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Mode 1: Karmic Self-Audit Tool */}
-      {auditMode ? (
-        <div className="glass-card p-6 border-t-4 border-amber-500 space-y-6">
+      {view === 'audit' && (
+        <div className="glass-card p-6 border-t-4 border-amber-500 space-y-6 animate-fade-in">
           <div>
             <h3 className="font-serif text-lg font-bold text-amber-200 flex items-center gap-2">
               <HeartHandshake className="w-5 h-5 text-amber-400" />
@@ -134,131 +143,173 @@ export default function Narakas28Explorer() {
             </div>
           </div>
         </div>
-      ) : (
-        /* Mode 2: 28 Narakas Encyclopedia Grid */
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left Column: Search, Filter & 28 Narakas List */}
-          <div className="lg:col-span-5 glass-card p-5 flex flex-col justify-between">
-            <div>
-              {/* Search & Category Filter */}
-              <div className="space-y-3 mb-4">
-                <div className="relative">
-                  <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-                  <input
-                    type="text"
-                    placeholder="नरक का नाम, पाप या श्लोक खोजें..."
-                    value={searchQuery}
-                    onChange={e => setSearchQuery(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 text-slate-100 text-xs pl-9 pr-3 py-2.5 rounded-xl outline-none focus:border-amber-400 font-sans"
-                  />
-                </div>
+      )}
 
-                <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-                  {KARMIC_CATEGORIES.map(cat => (
-                    <button
-                      key={cat.id}
-                      onClick={() => {
-                        audioService.playBeadClick();
-                        setSelectedCategory(cat.id);
-                      }}
-                      className={`px-2.5 py-1 rounded-lg text-[11px] whitespace-nowrap transition-all font-semibold ${
-                        selectedCategory === cat.id
-                          ? 'bg-amber-500 text-slate-950 font-bold'
-                          : 'bg-slate-900 text-slate-400 hover:text-slate-200'
-                      }`}
-                    >
-                      {cat.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
+      {/* Mode 2: 28 Narakas Encyclopedia Front Page List */}
+      {view === 'list' && (
+        <div className="glass-card p-6 space-y-6 animate-fade-in">
+          {/* Search & Category Filter */}
+          <div className="space-y-4">
+            <div className="relative">
+              <Search className="w-5 h-5 text-slate-400 absolute left-4 top-3" />
+              <input
+                type="text"
+                placeholder="नरक का नाम, पाप कर्म या श्लोक खोजें... (उदा. चोरी, हत्या, मांस)"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="w-full bg-slate-900 border border-slate-700 text-slate-100 text-sm pl-11 pr-4 py-3 rounded-xl outline-none focus:border-amber-400 font-sans"
+              />
+            </div>
 
-              {/* 28 Narakas Scrollable List */}
-              <div className="space-y-2 max-h-[460px] overflow-y-auto pr-1">
-                {filteredNarakas.map(naraka => {
-                  const isSelected = activeNaraka.id === naraka.id;
-
-                  return (
-                    <div
-                      key={naraka.id}
-                      onClick={() => {
-                        audioService.playBeadClick();
-                        setActiveNaraka(naraka);
-                      }}
-                      className={`p-3 rounded-2xl border cursor-pointer transition-all ${
-                        isSelected
-                          ? 'bg-amber-500/20 border-amber-500 shadow-md scale-[1.01]'
-                          : 'bg-slate-900/60 border-slate-800 hover:border-amber-500/30'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-bold text-xs text-amber-200">
-                          {naraka.id}. {naraka.nameDevanagari} ({naraka.nameIAST})
-                        </span>
-                        <span className="text-[10px] bg-slate-950 px-2 py-0.5 rounded text-amber-300 font-mono">
-                          {naraka.shlokaRef}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-slate-300 line-clamp-1">
-                        पाप: {naraka.transgression}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
+            <div className="flex flex-wrap gap-2">
+              {KARMIC_CATEGORIES.map(cat => (
+                <button
+                  key={cat.id}
+                  onClick={() => {
+                    audioService.playBeadClick();
+                    setSelectedCategory(cat.id);
+                  }}
+                  className={`px-3 py-1.5 rounded-lg text-xs transition-all font-semibold border ${
+                    selectedCategory === cat.id
+                      ? 'bg-amber-500 text-slate-950 border-amber-500 shadow-md'
+                      : 'bg-slate-900/60 text-slate-300 border-slate-700 hover:border-amber-500/50'
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* Right Column: Selected Naraka In-Depth Canonical Shloka & Expiation */}
-          <div className="lg:col-span-7 glass-card p-6 flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between pb-3 border-b border-amber-500/20 mb-4">
+          {/* Grid of Narakas */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {filteredNarakas.map(naraka => (
+              <button
+                key={naraka.id}
+                onClick={() => {
+                  audioService.playBeadClick();
+                  setActiveNaraka(naraka);
+                  setView('detail');
+                }}
+                className="p-5 rounded-2xl bg-slate-900/70 border border-slate-700 hover:border-rose-500/50 hover:bg-slate-800/80 transition-all text-left group flex flex-col justify-between min-h-[160px]"
+              >
                 <div>
-                  <span className="badge-saffron text-xs">नरक #{activeNaraka.id} • {activeNaraka.shlokaRef}</span>
-                  <h3 className="text-2xl font-serif font-bold text-amber-200 mt-1">
-                    {activeNaraka.nameDevanagari} ({activeNaraka.nameIAST})
-                  </h3>
+                  <div className="flex items-start justify-between mb-2">
+                    <span className="font-serif font-bold text-lg text-amber-200 group-hover:text-amber-300">
+                      {naraka.id}. {naraka.nameDevanagari}
+                    </span>
+                    <span className="text-[10px] bg-slate-950 px-2 py-0.5 rounded text-amber-400/80 font-mono border border-amber-500/20">
+                      {naraka.shlokaRef.split(' ')[2] || naraka.shlokaRef}
+                    </span>
+                  </div>
+                  <span className="text-[11px] text-slate-400 font-mono mb-2 block border-b border-slate-700/50 pb-2">
+                    {naraka.nameIAST}
+                  </span>
+                  <p className="text-xs text-slate-300 line-clamp-3 leading-relaxed font-sans">
+                    {naraka.transgression}
+                  </p>
                 </div>
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-amber-600 flex items-center justify-center text-slate-950 font-bold shadow-lg">
-                  <Flame className="w-5 h-5 text-slate-950" />
+                
+                <div className="mt-4 flex items-center justify-between text-rose-400 text-xs font-bold opacity-70 group-hover:opacity-100 transition-opacity">
+                  <span>विस्तृत विवरण पढ़ें</span>
+                  <BookOpen className="w-4 h-4" />
+                </div>
+              </button>
+            ))}
+            
+            {filteredNarakas.length === 0 && (
+              <div className="col-span-full py-12 text-center text-slate-400">
+                <Info className="w-8 h-8 mx-auto mb-3 opacity-50" />
+                <p>आपके द्वारा खोजा गया शब्द किसी नरक या पाप विवरण में नहीं मिला।</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Mode 3: Detailed View for Selected Naraka */}
+      {view === 'detail' && activeNaraka && (
+        <div className="animate-fade-in-up space-y-6">
+          {/* Back Navigation Bar */}
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => {
+                audioService.playBeadClick();
+                setView('list');
+                setActiveNaraka(null);
+              }}
+              className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-slate-900/90 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20 transition-all text-sm font-bold"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span>२८ नरक सूची में वापस जाएं</span>
+            </button>
+          </div>
+          
+          <div className="glass-card p-6 md:p-10 flex flex-col justify-between border-t-4 border-rose-600">
+            <div>
+              <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 pb-6 border-b border-amber-500/20 mb-6">
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="badge-saffron">नरक क्रमांक #{activeNaraka.id}</span>
+                    <span className="badge-gold font-mono">{activeNaraka.shlokaRef}</span>
+                  </div>
+                  <h3 className="text-3xl md:text-5xl font-serif font-bold text-amber-200 mt-2">
+                    {activeNaraka.nameDevanagari}
+                  </h3>
+                  <span className="text-lg text-amber-400/80 font-mono mt-1 block">
+                    ({activeNaraka.nameIAST})
+                  </span>
+                </div>
+                <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-gradient-to-br from-rose-600 to-amber-700 flex items-center justify-center text-slate-950 font-bold shadow-[0_0_30px_rgba(225,29,72,0.3)] shrink-0">
+                  <Flame className="w-8 h-8 md:w-10 md:h-10 text-slate-950" />
                 </div>
               </div>
 
               {/* Sanskrit Mool Shloka */}
-              <div className="p-4 rounded-2xl bg-slate-950/80 border border-amber-500/30 mb-4">
-                <div className="flex items-center justify-between text-xs text-amber-300 font-bold mb-2">
-                  <span className="flex items-center gap-1.5">
-                    <BookOpen className="w-4 h-4 text-amber-400" />
+              <div className="p-6 md:p-8 rounded-2xl bg-slate-950 border border-amber-500/30 mb-8 relative overflow-hidden shadow-inner">
+                <div className="absolute top-0 left-0 w-1 h-full bg-amber-500"></div>
+                <div className="flex items-center justify-between text-sm text-amber-400 font-bold mb-4">
+                  <span className="flex items-center gap-2">
+                    <BookOpen className="w-5 h-5" />
                     <span>गरुड़ पुराण मूल श्लोक (Sanskrit Shloka)</span>
                   </span>
-                  <span className="font-mono text-[11px]">{activeNaraka.shlokaRef}</span>
                 </div>
-                <pre className="font-sanskrit text-sm text-amber-100 whitespace-pre-line leading-relaxed">
+                <pre className="font-sanskrit text-lg md:text-xl text-amber-100 whitespace-pre-line leading-loose text-center py-4 bg-amber-950/20 rounded-xl">
                   {activeNaraka.sanskritShloka}
                 </pre>
               </div>
 
               {/* Transgression & Metaphysical Consequence */}
-              <div className="space-y-3 text-xs mb-4">
-                <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800">
-                  <strong className="text-rose-400 block font-bold mb-1">कारण (विहित पाप कर्म):</strong>
-                  <p className="text-slate-200 leading-relaxed">{activeNaraka.transgression}</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 text-sm md:text-base">
+                <div className="p-6 rounded-2xl bg-slate-900 border border-rose-500/20 shadow-lg">
+                  <div className="flex items-center gap-2 mb-3">
+                    <AlertOctagon className="w-5 h-5 text-rose-500" />
+                    <strong className="text-rose-400 font-bold text-lg">कारण (विहित पाप कर्म):</strong>
+                  </div>
+                  <p className="text-slate-200 leading-relaxed font-sans text-justify">
+                    {activeNaraka.transgression}
+                  </p>
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800">
-                  <strong className="text-amber-400 block font-bold mb-1">आध्यात्मिक दण्ड एवं शुद्धि स्वरूप:</strong>
-                  <p className="text-slate-200 leading-relaxed">{activeNaraka.punishmentMetaphysics}</p>
+                <div className="p-6 rounded-2xl bg-slate-900 border border-amber-500/20 shadow-lg">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Flame className="w-5 h-5 text-amber-500" />
+                    <strong className="text-amber-400 font-bold text-lg">आध्यात्मिक दण्ड एवं शुद्धि स्वरूप:</strong>
+                  </div>
+                  <p className="text-slate-200 leading-relaxed font-sans text-justify">
+                    {activeNaraka.punishmentMetaphysics}
+                  </p>
                 </div>
               </div>
             </div>
 
             {/* Prayashchitta Expiation Roadmap */}
-            <div className="p-4 rounded-2xl bg-emerald-950/40 border border-emerald-500/40 text-xs">
-              <strong className="text-emerald-300 block font-bold mb-1 flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                <span>शास्त्र सम्मत प्रायश्चित विधान (पाप मुक्ति उपाय):</span>
+            <div className="p-6 md:p-8 rounded-2xl bg-emerald-950/30 border border-emerald-500/40 text-sm md:text-base shadow-[0_0_20px_rgba(16,185,129,0.1)]">
+              <strong className="text-emerald-300 block font-bold mb-3 flex items-center gap-2 text-lg">
+                <ShieldCheck className="w-6 h-6 text-emerald-400" />
+                <span>शास्त्र सम्मत प्रायश्चित विधान (पाप मुक्ति व कर्म शुद्धि उपाय):</span>
               </strong>
-              <p className="text-emerald-100 leading-relaxed font-semibold">
+              <p className="text-emerald-100/90 leading-relaxed font-semibold font-sans text-justify">
                 {activeNaraka.prayashchittaRoadmap}
               </p>
             </div>

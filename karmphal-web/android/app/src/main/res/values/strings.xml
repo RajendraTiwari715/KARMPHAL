@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Karmphal</string>
+    <string name="title_activity_main">Karmphal</string>
+    <string name="package_name">com.karmphal.app</string>
+    <string name="custom_url_scheme">com.karmphal.app</string>
+</resources>
