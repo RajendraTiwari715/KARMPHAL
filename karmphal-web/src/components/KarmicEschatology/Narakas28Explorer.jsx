@@ -27,37 +27,7 @@ export default function Narakas28Explorer() {
   return (
     <div className="space-y-6 animate-fade-in pb-12">
       
-      {/* Header Banner (Only show in list or audit mode) */}
-      {(view === 'list' || view === 'audit') && (
-        <div className="glass-card-gold p-6 relative overflow-hidden">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="badge-gold">गरुड़ पुराण सारोद्धार (३.२-३.२९)</span>
-                <span className="badge-saffron">श्रीमद्भागवत पुराण पञ्चम स्कन्ध</span>
-              </div>
-              <h2 className="text-2xl font-serif font-bold text-amber-200 flex items-center gap-2">
-                <ShieldCheck className="w-6 h-6 text-amber-400" />
-                <span>२८ नरक विवरण, कर्म शुद्धि एवं प्रायश्चित ग्रन्थागार</span>
-              </h2>
-              <p className="text-sm text-slate-300 mt-1 max-w-2xl">
-                धर्मराज यम एवं चित्रगुप्त के न्याय सिद्धान्त के अनुसार पाप कर्मों का आध्यात्मिक विपाक, सूक्ष्म शरीर (लिङ्ग शरीर) की शुद्धि प्रक्रिया, तथा वेद-विहित प्रायश्चित विधान।
-              </p>
-            </div>
 
-            <button
-              onClick={() => {
-                audioService.playBeadClick();
-                setView(view === 'audit' ? 'list' : 'audit');
-              }}
-              className="btn-gold self-start md:self-auto shrink-0"
-            >
-              <Sparkles className="w-4 h-4" />
-              <span>{view === 'audit' ? '२८ नरक सूची देखें' : 'कर्म आत्म-परीक्षण करें'}</span>
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Mode 1: Karmic Self-Audit Tool */}
       {view === 'audit' && (
@@ -150,15 +120,27 @@ export default function Narakas28Explorer() {
         <div className="glass-card p-6 space-y-6 animate-fade-in">
           {/* Search & Category Filter */}
           <div className="space-y-4">
-            <div className="relative">
-              <Search className="w-5 h-5 text-slate-400 absolute left-4 top-3" />
-              <input
-                type="text"
-                placeholder="नरक का नाम, पाप कर्म या श्लोक खोजें... (उदा. चोरी, हत्या, मांस)"
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 text-slate-100 text-sm pl-11 pr-4 py-3 rounded-xl outline-none focus:border-amber-400 font-sans"
-              />
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search className="w-5 h-5 text-slate-400 absolute left-4 top-3" />
+                <input
+                  type="text"
+                  placeholder="नरक का नाम, पाप कर्म या श्लोक खोजें... (उदा. चोरी, हत्या, मांस)"
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-700 text-slate-100 text-sm pl-11 pr-4 py-3 rounded-xl outline-none focus:border-amber-400 font-sans"
+                />
+              </div>
+              <button
+                onClick={() => {
+                  audioService.playBeadClick();
+                  setView(view === 'audit' ? 'list' : 'audit');
+                }}
+                className="btn-gold whitespace-nowrap shrink-0 flex items-center gap-2 justify-center py-3 px-6"
+              >
+                <Sparkles className="w-4 h-4" />
+                <span>{view === 'audit' ? '२८ नरक सूची देखें' : 'कर्म आत्म-परीक्षण करें'}</span>
+              </button>
             </div>
 
             <div className="flex flex-wrap gap-2">

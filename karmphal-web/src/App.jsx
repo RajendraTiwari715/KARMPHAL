@@ -19,10 +19,11 @@ export default function App() {
 
   return (
     <div 
-      className="min-h-screen text-[#F7E7D6] flex flex-col selection:bg-[#C58B4E]/30 selection:text-[#F3CA9D] bg-cover bg-center bg-fixed relative"
+      className="min-h-screen text-[#FEF3E2] flex flex-col selection:bg-[#C58B4E]/30 selection:text-[#FFF4E6] bg-cover bg-center bg-fixed relative"
       style={{ backgroundImage: `url(${bgImage})` }}
     >
-      <div className="absolute inset-0 bg-black/10 z-0 pointer-events-none"></div>
+      {/* Warm spiritual overlay to balance contrast without being purely black */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#1A0F0A]/60 via-[#0A0502]/40 to-[#2A0E1D]/60 z-0 pointer-events-none"></div>
       
       <div className="relative z-10 flex flex-col min-h-screen">
         {/* Top Clean Navbar */}
