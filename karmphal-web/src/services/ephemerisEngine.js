@@ -1,6 +1,14 @@
 // High Precision Astrological & Ephemeris Computation Engine
 // Implements Drik Ganita Jyotish, Lahiri Ayanamsa, Panchang Formulas & Vimshottari Cascades
 
+export const EPHEMERIS_METADATA = {
+  engineVersion: "1.0.0-verified",
+  ayanamsa: "Lahiri (Chitra Paksha)",
+  houseSystem: "Whole Sign (Rashi Tulya Bhava)",
+  algorithms: "Meeus/VSOP87 Approximations",
+  constraints: "Precision limited to +/- 1 degree. Not for critical planetary warfare (Graha Yuddha) calculations."
+};
+
 export const CITY_COORDINATES = [
   { name: 'delhi', lat: 28.6139, lon: 77.2090 },
   { name: 'mumbai', lat: 19.0760, lon: 72.8777 },
@@ -376,7 +384,12 @@ export function computePanchang(date = new Date(), lat = 28.6139, lon = 77.2090)
       rahuKalam: `${formatTime(rahuStart)} - ${formatTime(rahuEnd)} (अशुभ)`,
       isAbhijitAfflicted
     },
-    planets
+    planets,
+    metadata: {
+      ...EPHEMERIS_METADATA,
+      calculatedAt: new Date().toISOString(),
+      location: { lat, lon }
+    }
   };
 }
 

@@ -1,38 +1,38 @@
 // Classical 36-Point Ashtakoot Vivah Milan & Parihara Engine
 // Implements full 8-koota compatibility matrix, exception handlers, and Kuja (Manglik) dosha evaluation
 
-import { ZODIAC_SIGNS, NAKSHATRAS } from './ephemerisEngine';
+import { ZODIAC_SIGNS, NAKSHATRAS } from './ephemerisEngine.js';
 
 // Varna mapping (Brahmin: 4, Kshatriya: 3, Vaishya: 2, Shudra: 1)
 const VARNA_MAP = {
-  Cancer: { name: 'Brahmin (ब्राह्मण)', score: 4 },
-  Scorpio: { name: 'Brahmin (ब्राह्मण)', score: 4 },
-  Pisces: { name: 'Brahmin (ब्राह्मण)', score: 4 },
-  Aries: { name: 'Kshatriya (क्षत्रिय)', score: 3 },
-  Leo: { name: 'Kshatriya (क्षत्रिय)', score: 3 },
-  Sagittarius: { name: 'Kshatriya (क्षत्रिय)', score: 3 },
-  Taurus: { name: 'Vaishya (वैश्य)', score: 2 },
-  Virgo: { name: 'Vaishya (वैश्य)', score: 2 },
-  Capricorn: { name: 'Vaishya (वैश्य)', score: 2 },
-  Gemini: { name: 'Shudra (शूद्र)', score: 1 },
-  Libra: { name: 'Shudra (शूद्र)', score: 1 },
-  Aquarius: { name: 'Shudra (शूद्र)', score: 1 }
+  4: { name: 'Brahmin (ब्राह्मण)', score: 4 }, // Cancer
+  8: { name: 'Brahmin (ब्राह्मण)', score: 4 }, // Scorpio
+  12: { name: 'Brahmin (ब्राह्मण)', score: 4 }, // Pisces
+  1: { name: 'Kshatriya (क्षत्रिय)', score: 3 }, // Aries
+  5: { name: 'Kshatriya (क्षत्रिय)', score: 3 }, // Leo
+  9: { name: 'Kshatriya (क्षत्रिय)', score: 3 }, // Sagittarius
+  2: { name: 'Vaishya (वैश्य)', score: 2 }, // Taurus
+  6: { name: 'Vaishya (वैश्य)', score: 2 }, // Virgo
+  10: { name: 'Vaishya (वैश्य)', score: 2 }, // Capricorn
+  3: { name: 'Shudra (शूद्र)', score: 1 }, // Gemini
+  7: { name: 'Shudra (शूद्र)', score: 1 }, // Libra
+  11: { name: 'Shudra (शूद्र)', score: 1 } // Aquarius
 };
 
 // Vashya classification
 const VASHYA_MAP = {
-  Aries: 'Chatushpada (Quadruped)',
-  Taurus: 'Chatushpada (Quadruped)',
-  Gemini: 'Manava (Human)',
-  Cancer: 'Jalachara (Water-dweller)',
-  Leo: 'Vanachara (Wild/Forest)',
-  Virgo: 'Manava (Human)',
-  Libra: 'Manava (Human)',
-  Scorpio: 'Keeta (Insect)',
-  Sagittarius: 'Manava (Human / Centaur)',
-  Capricorn: 'Jalachara (Water-dweller)',
-  Aquarius: 'Manava (Human)',
-  Pisces: 'Jalachara (Water-dweller)'
+  1: 'Chatushpada (Quadruped)',
+  2: 'Chatushpada (Quadruped)',
+  3: 'Manava (Human)',
+  4: 'Jalachara (Water-dweller)',
+  5: 'Vanachara (Wild/Forest)',
+  6: 'Manava (Human)',
+  7: 'Manava (Human)',
+  8: 'Keeta (Insect)',
+  9: 'Manava (Human / Centaur)',
+  10: 'Jalachara (Water-dweller)',
+  11: 'Manava (Human)',
+  12: 'Jalachara (Water-dweller)'
 };
 
 // Planetary Lordship Friendship Matrix
@@ -66,16 +66,16 @@ export function calculateAshtakoot(groomData, brideData) {
   const brideRashi = ZODIAC_SIGNS[brideData.rashiId - 1];
 
   // 1. Varna Koota (Max 1 pt)
-  const gVarna = VARNA_MAP[groomRashi.name];
-  const bVarna = VARNA_MAP[brideRashi.name];
+  const gVarna = VARNA_MAP[groomData.rashiId];
+  const bVarna = VARNA_MAP[brideData.rashiId];
   const varnaScore = gVarna.score >= bVarna.score ? 1 : 0;
   const varnaDesc = varnaScore === 1 
     ? `Compliant (Groom ${gVarna.name} >= Bride ${bVarna.name})` 
     : `Incompatible (Groom ${gVarna.name} < Bride ${bVarna.name})`;
 
   // 2. Vashya Koota (Max 2 pts)
-  const gVashya = VASHYA_MAP[groomRashi.name];
-  const bVashya = VASHYA_MAP[brideRashi.name];
+  const gVashya = VASHYA_MAP[groomData.rashiId];
+  const bVashya = VASHYA_MAP[brideData.rashiId];
   let vashyaScore = 0;
   if (gVashya === bVashya) vashyaScore = 2;
   else if ((gVashya === 'Manava' && bVashya !== 'Vanachara') || (bVashya === 'Manava' && gVashya !== 'Vanachara')) vashyaScore = 1;

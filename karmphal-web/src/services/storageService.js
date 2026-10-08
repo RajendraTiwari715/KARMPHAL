@@ -29,13 +29,35 @@ const DEFAULT_STATE = {
   },
   swadhyayaMinutes: 35,
   tasks: DEFAULT_TASKS,
-  mutationQueue: []
+  mutationQueue: [] // Queue for offline sync
 };
 
 class StorageService {
   constructor() {
     this.state = this.loadState();
+    this.listeners = [];
+    this.isSyncing = false;
+    
+    // Attempt initial fetch
     this.fetchInitialStateFromBackend();
+    
+    // Listen for online events to sync queue
+    if (typeof window !== 'undefined') {
+       window.addEventListener('online', () => this.syncOfflineQueue());
+    }
+  }
+
+  subscribe(listener) {
+    this.listeners.push(listener);
+    return () => {
+      this.listeners = this.listeners.filter(l => l !== listener);
+    };
+  }
+
+  notify() {
+    for (const listener of this.listeners) {
+      listener(this.state);
+    }
   }
 
   loadState() {
@@ -55,35 +77,109 @@ class StorageService {
     return { ...DEFAULT_STATE, tasks: [...DEFAULT_TASKS] };
   }
 
+  async initializeAuth() {
+    let token = localStorage.getItem('karmphal_auth_token');
+    if (!token) {
+      try {
+        const res = await fetch('/api/auth/guest', { method: 'POST' });
+        if (res.ok) {
+          const data = await res.json();
+          token = data.token;
+          localStorage.setItem('karmphal_auth_token', token);
+        }
+      } catch (err) {
+        console.warn('Failed to get guest token', err);
+      }
+    }
+    this.token = token;
+    return token;
+  }
+
+  getToken() {
+    return this.token || localStorage.getItem('karmphal_auth_token');
+  }
+
+  getAuthHeaders() {
+    const token = this.getToken();
+    return token ? { 'Authorization': `Bearer ${token}` } : {};
+  }
+
   async fetchInitialStateFromBackend() {
+    await this.initializeAuth();
     try {
-      const res = await fetch('/api/user/profile');
+      const res = await fetch('/api/user/profile', {
+        headers: this.getAuthHeaders()
+      });
       if (res.ok) {
         const user = await res.json();
         this.state.punyaLedger = user.totalPunya || this.state.punyaLedger;
         this.state.currentStreak = user.sadhanaStreak || this.state.currentStreak;
-        this.saveState();
+        this.saveStateToLocalOnly(); // Just save local, no need to push to backend what we just fetched
+        this.notify();
       }
     } catch (e) {
       console.warn('Backend load failed', e);
     }
   }
 
+  saveStateToLocalOnly() {
+     try {
+       localStorage.setItem(STORAGE_KEY, JSON.stringify(this.state));
+     } catch (e) {
+       console.warn('LocalStorage save error', e);
+     }
+  }
+
   saveState() {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.state));
-      // Sync critical stats to backend
-      fetch('/api/user/punya', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          totalPunya: this.state.punyaLedger, 
-          sadhanaStreak: this.state.currentStreak 
-        })
-      }).catch(err => console.warn('Backend sync failed', err));
-    } catch (e) {
-      console.warn('LocalStorage save error', e);
-    }
+    this.saveStateToLocalOnly();
+    this.notify();
+
+    // Add to mutation queue for offline sync safety
+    const mutation = {
+       totalPunya: this.state.punyaLedger, 
+       sadhanaStreak: this.state.currentStreak,
+       timestamp: Date.now()
+    };
+    
+    // We keep only the latest mutation to avoid redundant calls, since it overwrites the state
+    this.state.mutationQueue = [mutation]; 
+    this.saveStateToLocalOnly();
+
+    this.syncOfflineQueue();
+  }
+
+  async syncOfflineQueue() {
+     if (this.isSyncing || this.state.mutationQueue.length === 0 || !navigator.onLine) {
+        return;
+     }
+
+     this.isSyncing = true;
+     try {
+       const mutation = this.state.mutationQueue[0];
+       const response = await fetch('/api/user/punya', {
+         method: 'POST',
+         headers: { 
+           'Content-Type': 'application/json',
+           ...this.getAuthHeaders() 
+         },
+         body: JSON.stringify({ 
+           totalPunya: mutation.totalPunya, 
+           sadhanaStreak: mutation.sadhanaStreak 
+         })
+       });
+
+       if (response.ok) {
+          // Sync successful, clear queue
+          this.state.mutationQueue = [];
+          this.saveStateToLocalOnly();
+       } else {
+          console.warn('Backend sync returned non-OK status');
+       }
+     } catch (err) {
+       console.warn('Backend sync failed, keeping in queue', err);
+     } finally {
+       this.isSyncing = false;
+     }
   }
 
   getState() {
@@ -95,12 +191,6 @@ class StorageService {
 
   addPunya(pointsDelta = 0, reason = '') {
     this.state.punyaLedger += pointsDelta;
-    this.state.mutationQueue.push({
-      id: Date.now(),
-      reason,
-      pointsDelta,
-      timestamp: new Date().toISOString()
-    });
     this.saveState();
     return this.state;
   }

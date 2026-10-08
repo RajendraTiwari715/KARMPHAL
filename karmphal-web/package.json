@@ -10,7 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.24.1",
+    "@capacitor/camera": "^8.2.5",
+    "@capacitor/filesystem": "^8.1.4",
+    "@capacitor/haptics": "^8.0.2",
     "@tailwindcss/vite": "^4.3.3",
     "canvas-confetti": "^1.9.4",
     "html2canvas": "^1.4.1",
@@ -19,8 +21,7 @@
     "lucide-react": "^1.31.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "tailwindcss": "^4.3.3",
-    "tesseract.js": "^7.0.0"
+    "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
     "@capacitor/android": "^8.5.0",

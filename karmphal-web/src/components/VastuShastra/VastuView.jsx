@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { ArrowLeft, Compass, Sparkles, Home, ShieldCheck, Info, CheckCircle2, AlertTriangle, Download, RefreshCcw } from 'lucide-react';
 import { VASTU_ZONES_16, evaluateRoomPlacement } from '../../services/vastuEngine';
 import { audioService } from '../../services/audioService';
+import { hardwareService } from '../../services/hardwareService';
+import { Capacitor } from '@capacitor/core';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -47,7 +49,18 @@ export default function VastuView({ onBack }) {
       const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
       
       pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`Vastu_Audit_Report.pdf`);
+      
+      if (Capacitor.isNativePlatform()) {
+        const base64Pdf = pdf.output('datauristring');
+        const res = await hardwareService.saveBase64ToDownloads(base64Pdf, 'Vastu_Audit_Report.pdf');
+        if (res.success) {
+          alert('PDF Saved to Documents: ' + res.uri);
+        } else {
+          alert('Failed to save PDF: ' + res.error);
+        }
+      } else {
+        pdf.save(`Vastu_Audit_Report.pdf`);
+      }
     } catch (err) {
       console.error('PDF Export failed:', err);
     } finally {
@@ -64,7 +77,7 @@ export default function VastuView({ onBack }) {
             audioService.playBeadClick();
             onBack();
           }}
-          className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-slate-900/90 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20 transition-all text-xs font-bold"
+          className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-slate-900/90 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20 transition-all text-xs font-bold min-h-[48px]"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>ज्योतिष खण्ड में वापस जाएं</span>
@@ -74,7 +87,7 @@ export default function VastuView({ onBack }) {
           <button 
             onClick={handleDownloadPDF}
             disabled={isExporting}
-            className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-amber-500/20 border border-amber-500/50 text-amber-200 hover:bg-amber-500/40 transition-all text-xs font-bold"
+            className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-amber-500/20 border border-amber-500/50 text-amber-200 hover:bg-amber-500/40 transition-all text-xs font-bold min-h-[48px]"
           >
             {isExporting ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
             <span>{isExporting ? 'PDF बन रहा है...' : 'PDF डाउनलोड करें'}</span>
@@ -119,7 +132,7 @@ export default function VastuView({ onBack }) {
               <select
                 value={roomType}
                 onChange={e => setRoomType(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 text-slate-100 p-2.5 rounded-xl text-xs outline-none focus:border-amber-400 font-sans"
+                className="w-full bg-slate-900 border border-slate-700 text-slate-100 p-2.5 rounded-xl text-xs outline-none focus:border-amber-400 font-sans min-h-[48px]"
               >
                 {roomOptions.map(r => (
                   <option key={r.id} value={r.id}>{r.label}</option>
@@ -132,7 +145,7 @@ export default function VastuView({ onBack }) {
               <select
                 value={roomPlacementZone}
                 onChange={e => setRoomPlacementZone(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 text-slate-100 p-2.5 rounded-xl text-xs outline-none focus:border-amber-400 font-sans"
+                className="w-full bg-slate-900 border border-slate-700 text-slate-100 p-2.5 rounded-xl text-xs outline-none focus:border-amber-400 font-sans min-h-[48px]"
               >
                 {VASTU_ZONES_16.map(z => (
                   <option key={z.code} value={z.code}>{z.code} - {z.name}</option>

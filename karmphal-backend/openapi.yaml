@@ -1,0 +1,89 @@
+openapi: 3.0.0
+info:
+  title: Karmphal API
+  version: 1.0.0
+  description: Backend APIs for Karmphal App
+servers:
+  - url: http://localhost:5000/api
+    description: Local development server
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: UUID
+security:
+  - bearerAuth: []
+paths:
+  /health:
+    get:
+      summary: Health check endpoint
+      security: []
+      responses:
+        '200':
+          description: OK
+  /auth/guest:
+    post:
+      summary: Create a guest session
+      security: []
+      responses:
+        '200':
+          description: Returns a guest UUID token
+  /user/profile:
+    get:
+      summary: Get user profile
+      responses:
+        '200':
+          description: OK
+    post:
+      summary: Update user profile
+      responses:
+        '200':
+          description: OK
+  /user/punya:
+    post:
+      summary: Sync Punya and Sadhana streak
+      responses:
+        '200':
+          description: OK
+  /user/chat-history:
+    get:
+      summary: Get chat history
+      responses:
+        '200':
+          description: OK
+    post:
+      summary: Append to chat history
+      responses:
+        '200':
+          description: OK
+  /user/export:
+    get:
+      summary: Export all user data (GDPR)
+      responses:
+        '200':
+          description: OK
+  /user/delete:
+    delete:
+      summary: Permanently delete user data
+      responses:
+        '200':
+          description: OK
+  /ai/chat:
+    post:
+      summary: Chat with AI Guru
+      responses:
+        '200':
+          description: OK
+  /ai/kundali:
+    post:
+      summary: Generate Kundali Reading
+      responses:
+        '200':
+          description: OK
+  /ai/vivah-milan:
+    post:
+      summary: Generate Vivah Milan Reading
+      responses:
+        '200':
+          description: OK
