@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { User, Globe, Award, Sparkles, Flame, Check, X, ShieldCheck, Edit3, Save, LogIn, CheckCircle } from 'lucide-react';
 import { languageService } from '../services/languageService';
+import { useApp } from '../context/AppContext';
 
-export default function ProfileModal({ isOpen, onClose, appState }) {
+export default function ProfileModal({ isOpen, onClose }) {
+  const { appState } = useApp();
   if (!isOpen) return null;
 
   const currentLang = languageService.getLang();

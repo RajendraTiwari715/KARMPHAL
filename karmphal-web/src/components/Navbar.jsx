@@ -1,24 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { storageService } from '../services/storageService';
+import { useApp } from '../context/AppContext';
 import { languageService } from '../services/languageService';
 import ProfileModal from './ProfileModal';
 import appLogo from '../assets/app_logo.jpg';
 import { GuruIcon, GyanIcon, SadhanaIcon, JyotishIcon, KarmaIcon } from './SectionIcons';
 
 export default function Navbar({ activeSection, setActiveSection, panchangData }) {
-  const [appState, setAppState] = useState(storageService.getState());
+  const { appState } = useApp();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [currentLang, setCurrentLang] = useState(languageService.getLang());
 
   useEffect(() => {
     const unsub = languageService.subscribe(lang => setCurrentLang(lang));
-    const interval = setInterval(() => {
-      setAppState(storageService.getState());
-    }, 1000);
-    return () => {
-      unsub();
-      clearInterval(interval);
-    };
+    return () => unsub();
   }, []);
 
   const t = languageService.t();
@@ -34,7 +28,7 @@ export default function Navbar({ activeSection, setActiveSection, panchangData }
   return (
     <>
       {/* Desktop & Mobile Clean Header */}
-      <header className="sticky top-0 z-40 bg-[#0A1005]/50 backdrop-blur-3xl border-b border-[#E0A96D]/20 shadow-2xl">
+      <header className="sticky top-0 z-40 bg-[#0A1005]/50 backdrop-blur-3xl border-b border-[#E0A96D]/20 shadow-2xl pt-safe">
         {/* Main Clean Brand Header with 3D App Logo (Profile Trigger) */}
         <div className="max-w-7xl mx-auto px-4 py-2.5 sm:py-3.5 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
@@ -106,7 +100,7 @@ export default function Navbar({ activeSection, setActiveSection, panchangData }
       </header>
 
       {/* Mobile Bottom Clean Navigation Bar with Sacred Section Logos */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0A1005]/60 backdrop-blur-3xl border-t border-[#E0A96D]/20 px-2 py-1.5 shadow-2xl">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0A1005]/60 backdrop-blur-3xl border-t border-[#E0A96D]/20 px-2 py-1.5 shadow-2xl pb-safe">
         <div className="flex items-center justify-around">
           {sections.map(section => {
             const Icon = section.icon;
@@ -142,7 +136,6 @@ export default function Navbar({ activeSection, setActiveSection, panchangData }
       <ProfileModal
         isOpen={isProfileOpen}
         onClose={() => setIsProfileOpen(false)}
-        appState={appState}
       />
     </>
   );

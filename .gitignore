@@ -17,3 +17,13 @@ local.properties
 .env.*
 node_modules
 dist
+*.db
+*.sqlite
+*.apk
+*.aab
+keystore/
+secrets/
+.env
+.env.*
+*.db-shm
+*.db-wal

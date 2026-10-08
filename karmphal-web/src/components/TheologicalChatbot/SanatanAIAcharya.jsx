@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Copy, Check, Sparkles } from 'lucide-react';
 import { geminiService } from '../../services/geminiService';
+import { storageService } from '../../services/storageService';
 
 export default function SanatanAIAcharya({ panchangData }) {
   const defaultMessage = {
@@ -12,7 +13,9 @@ export default function SanatanAIAcharya({ panchangData }) {
   const [messages, setMessages] = useState([defaultMessage]);
 
   useEffect(() => {
-    fetch('/api/user/chat-history')
+    fetch('/api/user/chat-history', {
+      headers: storageService.getAuthHeaders()
+    })
       .then(res => res.json())
       .then(data => {
         if (data && data.length > 0) {
@@ -26,7 +29,10 @@ export default function SanatanAIAcharya({ panchangData }) {
   const saveMessageToBackend = (sender, text) => {
     fetch('/api/user/chat-history', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        ...storageService.getAuthHeaders()
+      },
       body: JSON.stringify({ sender, text })
     }).catch(err => console.warn('Failed to save message', err));
   };
