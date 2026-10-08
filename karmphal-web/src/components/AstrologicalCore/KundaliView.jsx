@@ -79,7 +79,7 @@ export default function KundaliView({ onBack }) {
     audioService.playTempleBell(432, 1.2);
     setIsGeneratingAi(true);
     try {
-      const reading = await geminiService.generateKundaliReading(formData, calculatedData.planets);
+      const reading = await geminiService.generateKundaliReading(formData, calculatedData.planets, calculatedData.dashaTimeline);
       if (reading) {
         setAiReading(reading);
       } else {

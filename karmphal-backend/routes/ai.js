@@ -7,9 +7,9 @@ const { chatSchema, kundaliSchema, vivahMilanSchema } = require('../schemas/ai.s
 // AI Quota Rate Limiter (Stricter)
 const rateLimit = require('express-rate-limit');
 const aiLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 20, // 20 requests per hour per IP (should be per user in prod)
-  message: { error: 'RATE_LIMIT', message: 'AI Quota Exceeded for this hour.' }
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 200, 
+  message: { error: 'RATE_LIMIT', message: 'AI Quota Exceeded.' }
 });
 
 router.use(aiLimiter);
@@ -47,11 +47,23 @@ CRITICAL BEHAVIORAL & TECHNICAL GUIDELINES:
 
     const fullPrompt = `[शास्त्र व पञ्चाङ्ग सन्दर्भ]:\n${ragContext || ''}\n\n[शिष्य का प्रश्न / मन की बात]:\n${userMessage}`;
 
+    // Ensure strictly alternating roles: user -> model -> user -> model
+    const filteredHistory = [];
+    (conversationHistory || []).forEach(msg => {
+      const role = msg.sender === 'user' ? 'user' : 'model';
+      // Only keep it if it is the opposite of the last pushed role
+      if (filteredHistory.length === 0 && role !== 'user') return; // History must start with user
+      if (filteredHistory.length > 0 && filteredHistory[filteredHistory.length - 1].role === role) return; // Skip consecutive identical roles
+      filteredHistory.push({ role, parts: [{ text: msg.text }] });
+    });
+
+    // If the last message was 'user', remove it to replace it with our augmented fullPrompt
+    if (filteredHistory.length > 0 && filteredHistory[filteredHistory.length - 1].role === 'user') {
+      filteredHistory.pop();
+    }
+
     const contents = [
-      ...(conversationHistory || []).slice(-4).map(msg => ({
-        role: msg.sender === 'user' ? 'user' : 'model',
-        parts: [{ text: msg.text }]
-      })),
+      ...filteredHistory.slice(-4), // Keep last 4 valid alternating messages
       {
         role: 'user',
         parts: [{ text: fullPrompt }]
@@ -76,14 +88,20 @@ CRITICAL BEHAVIORAL & TECHNICAL GUIDELINES:
 router.post('/kundali', async (req, res, next) => {
   try {
     const validatedData = kundaliSchema.parse(req.body);
-    const { birthDetails, planetsData } = validatedData;
+    const { birthDetails, planetsData, dashaTimeline } = validatedData;
 
     const systemInstruction = `Role: You are an elite, highly knowledgeable Vedic Astrologer (Jyotishi) and Master of traditional Parashari Astrology, integrated with a high-precision backend calculation engine. Your job is to generate exceptionally accurate, authentic, and detailed Vedic Kundali (Birth Chart) analysis.
 
 ### Core Calculation & Astrological Rules to Follow:
-- **Data Source Handling:** NEVER invent planetary positions. Only analyze the JSON data provided in the request body.
-- **Data-to-Insight Translation:** Translate the raw degree data into rich, professional Vedic insights.
+- **Data Source Handling:** NEVER invent planetary positions or Mahadasha. Only analyze the JSON data provided in the request body.
+- **Data-to-Insight Translation:** Translate the raw degree data and Mahadasha into rich, professional Vedic insights.
 - **Theological Safety:** Respectful, wise, positive, and guru-like. STRICTLY AVOID fear-mongering. Never predict death, terminal illness, or absolute ruin. Do not offer medical diagnosis. Always provide practical Sattvic remedies (Upay).`;
+
+    let dashaText = '';
+    if (dashaTimeline && dashaTimeline.length > 0) {
+      dashaText = `\n[विंशोत्तरी महादशा चक्र - DO NOT INVENT, USE EXACTLY THIS]:\n` + 
+        dashaTimeline.map(d => `- ${d.lord} महादशा: ${d.startDate} से ${d.endDate} (${d.years} वर्ष)`).join('\n');
+    }
 
     const userPrompt = `[जातक का जन्म विवरण]:
 - नाम: ${birthDetails.name}
@@ -92,7 +110,7 @@ router.post('/kundali', async (req, res, next) => {
 - जन्म स्थान: ${birthDetails.place}
 
 [गणना की गई ग्रह स्थिति - DO NOT RECALCULATE, USE EXACTLY THIS DATA]:
-${planetsData.map(p => `- ${p.name} (${p.sanskrit || ''}): ${p.house}वें भाव में, राशि: ${p.rashi}, अंश: ${p.deg}°, वक्री: ${p.isRetro ? 'हाँ' : 'नहीं'}`).join('\n')}
+${planetsData.map(p => `- ${p.name} (${p.sanskrit || ''}): ${p.house}वें भाव में, राशि: ${p.signSanskrit}, अंश: ${p.degreeInSign}°, वक्री: ${p.isRetro ? 'हाँ' : 'नहीं'}`).join('\n')}${dashaText}
 
 नियम: 
 1. यदि जन्म समय "अनुमानित" है, तो फलादेश की शुरुआत में एक स्पष्ट चेतावनी दें कि "जन्म समय अनुमानित होने के कारण लग्न और सूक्ष्म फलों में भिन्नता आ सकती है।"

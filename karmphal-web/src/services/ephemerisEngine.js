@@ -437,8 +437,8 @@ export function computeVimshottariDasha(birthDate = new Date(), moonLongitude = 
       antardashas.push({
         lord: subLordInfo.name,
         duration: `${subDurationYears.toFixed(2)} yrs`,
-        start: subStart.toLocaleDateString(),
-        end: subEnd.toLocaleDateString()
+        start: subStart.toISOString().split('T')[0],
+        end: subEnd.toISOString().split('T')[0]
       });
       subStart = subEnd;
     }
@@ -447,8 +447,8 @@ export function computeVimshottariDasha(birthDate = new Date(), moonLongitude = 
       lord: dashaInfo.name,
       years: durationYears.toFixed(2),
       color: dashaInfo.color,
-      startDate: currentStart.toLocaleDateString(),
-      endDate: endDate.toLocaleDateString(),
+      startDate: currentStart.toISOString().split('T')[0],
+      endDate: endDate.toISOString().split('T')[0],
       antardashas
     });
 

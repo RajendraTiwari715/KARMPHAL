@@ -1,6 +1,6 @@
 const GEMINI_API_KEY = process.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
 const MODELS = ['gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-flash-latest'];
-const TIMEOUT_MS = 30000; // 30 seconds
+const TIMEOUT_MS = 90000; // 90 seconds
 
 async function fetchWithTimeout(resource, options = {}) {
   const { timeout = 8000 } = options;

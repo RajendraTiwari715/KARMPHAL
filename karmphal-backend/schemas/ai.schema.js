@@ -3,7 +3,7 @@ const { z } = require('zod');
 const chatSchema = z.object({
   userMessage: z.string().min(1).max(2000),
   conversationHistory: z.array(z.object({
-    sender: z.enum(['user', 'model']),
+    sender: z.enum(['user', 'model', 'acharya']),
     text: z.string()
   })).max(20).optional(),
   ragContext: z.string().max(5000).optional()
@@ -21,10 +21,11 @@ const kundaliSchema = z.object({
     name: z.string(),
     sanskrit: z.string().optional(),
     house: z.number(),
-    rashi: z.string(),
-    deg: z.number(),
+    signSanskrit: z.string(),
+    degreeInSign: z.string(),
     isRetro: z.boolean()
-  })).max(20)
+  })),
+  dashaTimeline: z.any().optional()
 });
 
 const vivahMilanSchema = z.object({

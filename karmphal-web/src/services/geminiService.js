@@ -98,7 +98,7 @@ class GeminiService {
     }
   }
 
-  async generateKundaliReading(birthDetails, planetsData = []) {
+  async generateKundaliReading(birthDetails, planetsData = [], dashaTimeline = []) {
     try {
       const response = await fetch('/api/ai/kundali', {
         method: 'POST',
@@ -106,7 +106,7 @@ class GeminiService {
           'Content-Type': 'application/json',
           ...storageService.getAuthHeaders()
         },
-        body: JSON.stringify({ birthDetails, planetsData })
+        body: JSON.stringify({ birthDetails, planetsData, dashaTimeline })
       });
       const data = await response.json();
       if (!response.ok) {

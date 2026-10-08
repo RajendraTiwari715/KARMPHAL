@@ -13,17 +13,8 @@ export default function SanatanAIAcharya({ panchangData }) {
   const [messages, setMessages] = useState([defaultMessage]);
 
   useEffect(() => {
-    fetch('/api/user/chat-history', {
-      headers: storageService.getAuthHeaders()
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data && data.length > 0) {
-          const formatted = data.map((d, i) => ({ id: i + 1, sender: d.sender, text: d.text }));
-          setMessages(formatted);
-        }
-      })
-      .catch(err => console.warn('Failed to load chat history', err));
+    // Purani chat history fetch nahi karni, hamesha naye sire se start karni hai
+    setMessages([defaultMessage]);
   }, []);
 
   const saveMessageToBackend = (sender, text) => {
