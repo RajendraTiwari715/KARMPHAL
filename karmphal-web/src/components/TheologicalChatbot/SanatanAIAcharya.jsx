@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send, Copy, Check, Trash2, Loader2 } from 'lucide-react';
 import { useChat } from '../../context/useChat';
 import { useToast, useConfirm } from '../../context/useToast';
+import AcharyaMarkdown from './AcharyaMarkdown';
 
 export default function SanatanAIAcharya({ panchangData }) {
   const {
@@ -196,9 +197,13 @@ export default function SanatanAIAcharya({ panchangData }) {
                       </div>
                     )}
 
-                    <div className="whitespace-pre-line text-[#F7E7D6] leading-relaxed font-sans font-normal text-xs sm:text-sm">
-                      {msg.text}
-                    </div>
+                    {isUser ? (
+                      <div className="whitespace-pre-line text-[#F7E7D6] leading-[1.75] font-sans font-normal text-xs sm:text-sm break-words">
+                        {msg.text}
+                      </div>
+                    ) : (
+                      <AcharyaMarkdown content={msg.text} />
+                    )}
                   </div>
                 </div>
               );
