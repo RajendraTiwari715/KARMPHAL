@@ -1,5 +1,18 @@
 {
   "appId": "com.karmphal.app",
   "appName": "Karmphal",
-  "webDir": "dist"
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https",
+    "cleartext": true,
+    "allowNavigation": [
+      "https://*.karmphal.app",
+      "https://*.render.com",
+      "https://*.railway.app",
+      "https://*.run.app",
+      "http://10.0.2.2:5000",
+      "http://localhost:5000",
+      "http://127.0.0.1:5000"
+    ]
+  }
 }

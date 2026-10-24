@@ -26,9 +26,19 @@ const PORT = process.env.PORT || 5000;
 app.use(helmet());
 
 // Strict CORS Allowlist
-const allowedOrigins = ['http://localhost:5173', 'http://127.0.0.1:5173', 'capacitor://localhost', 'http://localhost'];
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'capacitor://localhost',
+  'http://localhost',
+  'https://localhost',
+  'http://10.0.2.2:5000'
+];
 if (process.env.FRONTEND_URL) {
   allowedOrigins.push(process.env.FRONTEND_URL);
+}
+if (process.env.BACKEND_URL) {
+  allowedOrigins.push(process.env.BACKEND_URL);
 }
 
 app.use(cors({
