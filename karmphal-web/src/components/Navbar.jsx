@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, memo } from 'react';
 import { Volume2, VolumeX } from 'lucide-react';
 import { languageService } from '../services/languageService';
 import { audioService } from '../services/audioService';
@@ -6,8 +6,9 @@ import ProfileModal from './ProfileModal';
 import appLogo from '../assets/app_logo.jpg';
 import { GuruIcon, GyanIcon, SadhanaIcon, JyotishIcon, KarmaIcon } from './SectionIcons';
 
-export default function Navbar({ activeSection, setActiveSection, panchangData: _panchangData }) {
+function Navbar({ activeSection, setActiveSection, panchangData: _panchangData }) {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const handleCloseProfile = useCallback(() => setIsProfileOpen(false), []);
   const [, setLang] = useState(languageService.getLang());
   const [isMuted, setIsMuted] = useState(audioService.isSoundMuted());
 
@@ -181,8 +182,10 @@ export default function Navbar({ activeSection, setActiveSection, panchangData: 
       {/* ॐ Profile & Language Modal */}
       <ProfileModal
         isOpen={isProfileOpen}
-        onClose={() => setIsProfileOpen(false)}
+        onClose={handleCloseProfile}
       />
     </>
   );
 }
+
+export default memo(Navbar);

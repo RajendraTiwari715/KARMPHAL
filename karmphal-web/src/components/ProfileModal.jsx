@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import { User, Globe, Sparkles, Flame, Check, X, Edit3, Save, CheckCircle, Volume2, VolumeX, Bell } from 'lucide-react';
 import { languageService } from '../services/languageService';
 import { audioService } from '../services/audioService';
-import { useApp } from '../context/useApp';
+import { useProfile } from '../context/useProfile';
 import { apiClient } from '../services/apiClient';
 
-export default function ProfileModal({ isOpen, onClose }) {
-  const { appState } = useApp();
+function ProfileModal({ isOpen, onClose }) {
+  const { punyaLedger } = useProfile();
 
   const currentLang = languageService.getLang();
 
@@ -64,7 +64,7 @@ export default function ProfileModal({ isOpen, onClose }) {
   ];
 
   // Calculate spiritual milestone rank from Punya points
-  const points = appState.punyaLedger || 108;
+  const points = punyaLedger || 108;
   let rank = 'भक्त (Bhakta)';
   if (points >= 1000) rank = 'परमहंस (Paramahamsa)';
   else if (points >= 500) rank = 'ऋषि (Rishi)';
@@ -293,3 +293,5 @@ export default function ProfileModal({ isOpen, onClose }) {
     </div>
   );
 }
+
+export default memo(ProfileModal);

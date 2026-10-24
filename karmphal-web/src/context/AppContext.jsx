@@ -1,50 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import { storageService } from '../services/storageService';
-import { AppContext } from './context';
+import React from 'react';
+import { ProfileProvider } from './ProfileContext';
+import { TaskProvider } from './TaskContext';
+import { JapaProvider } from './JapaContext';
 
+/**
+ * AppProvider composes the split domain contexts:
+ * - ProfileProvider (Punya ledger, user stats)
+ * - TaskProvider (Daily checklist, Swadhyaya)
+ * - JapaProvider (Mala stats, bead persistence)
+ *
+ * This completely decouples high-frequency bead taps from unrelated UI components.
+ */
 export const AppProvider = ({ children }) => {
-  const [appState, setAppState] = useState(storageService.getState());
-
-  useEffect(() => {
-    // Subscribe to any changes from storageService
-    const unsubscribe = storageService.subscribe((newState) => {
-      setAppState({ ...newState });
-    });
-    
-    return () => unsubscribe();
-  }, []);
-
-  const addPunya = (points, reason) => {
-    storageService.addPunya(points, reason);
-  };
-
-  const toggleTask = (taskId) => {
-    storageService.toggleTask(taskId);
-  };
-  
-  const recordSwadhyayaTime = (minutes) => {
-     storageService.recordSwadhyayaTime(minutes);
-  }
-
-  const incrementJapa = (mantraName, count, isLegitimate) => {
-     storageService.incrementJapa(mantraName, count, isLegitimate);
-  }
-  
-  const incrementMala = (mantraId) => {
-     storageService.incrementMala(mantraId);
-  }
-
   return (
-    <AppContext.Provider value={{ 
-      appState, 
-      addPunya, 
-      toggleTask, 
-      recordSwadhyayaTime,
-      incrementJapa,
-      incrementMala
-    }}>
-      {children}
-    </AppContext.Provider>
+    <ProfileProvider>
+      <TaskProvider>
+        <JapaProvider>
+          {children}
+        </JapaProvider>
+      </TaskProvider>
+    </ProfileProvider>
   );
 };
-

@@ -1,7 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { Flame, ShieldCheck, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
 import { audioService } from '../../services/audioService';
-import { useApp } from '../../context/useApp';
+import { useProfile } from '../../context/useProfile';
+import { useTasks } from '../../context/useTasks';
+import { storageService } from '../../services/storageService';
 import { Button, Badge, Card } from '../shared';
 
 const MANTRAS = [
@@ -11,16 +13,74 @@ const MANTRAS = [
   { id: 'om_namah_shivaya', name: 'शिव पञ्चाक्षर मन्त्र', text: 'ॐ नमः शिवाय', syllables: 5, minSeconds: 0.60 }
 ];
 
-export default function DigitalJapaMala() {
-  const { appState, addPunya, toggleTask } = useApp();
-  const tasks = appState.tasks || [];
+function DigitalJapaMala() {
+  const { addPunya } = useProfile();
+  const { tasks, toggleTask } = useTasks();
 
   const [selectedMantra, setSelectedMantra] = useState(MANTRAS[0]);
   const [isSwadhyayaRunning, setIsSwadhyayaRunning] = useState(false);
   const [swadhyayaMinutes, setSwadhyayaMinutes] = useState(0);
 
+  // High-frequency local bead counter state (strictly local to prevent parent re-renders)
   const [beadCount, setBeadCount] = useState(0);
   const [malaCycle, setMalaCycle] = useState(0);
+
+  // Debounced persistence refs
+  const pendingBeadsRef = useRef(0);
+  const debounceTimerRef = useRef(null);
+  const selectedMantraRef = useRef(selectedMantra);
+
+  useEffect(() => {
+    selectedMantraRef.current = selectedMantra;
+  }, [selectedMantra]);
+
+  // Flush accumulated bead counts to persistent storage
+  const flushPendingBeads = useCallback(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
+    }
+    const count = pendingBeadsRef.current;
+    if (count > 0) {
+      pendingBeadsRef.current = 0;
+      storageService.incrementJapa(selectedMantraRef.current.id, count, true);
+    }
+  }, []);
+
+  // Flush on unmount
+  useEffect(() => {
+    return () => {
+      flushPendingBeads();
+    };
+  }, [flushPendingBeads]);
+
+  // Flush on visibilitychange (backgrounding app or tab switch) and beforeunload
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+        flushPendingBeads();
+      }
+    };
+    const handleBeforeUnload = () => {
+      flushPendingBeads();
+    };
+
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+    }
+    if (typeof window !== 'undefined') {
+      window.addEventListener('beforeunload', handleBeforeUnload);
+    }
+
+    return () => {
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+      }
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+      }
+    };
+  }, [flushPendingBeads]);
 
   // Akshar Vega Rakshak (Real Anti-Cheat State & Refs)
   const [antiCheatStatus, setAntiCheatStatus] = useState('pure'); // 'pure' | 'throttled' | 'mechanical'
@@ -88,6 +148,17 @@ export default function DigitalJapaMala() {
     // Play tactile bead chime
     audioService.playBeadClick();
 
+    // Accumulate pending bead count locally
+    pendingBeadsRef.current += 1;
+
+    // Reset 2-second debounce timer to flush pending beads
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = setTimeout(() => {
+      flushPendingBeads();
+    }, 2000);
+
     setBeadCount(prev => {
       const next = prev + 1;
       if (next >= 108) {
@@ -97,7 +168,11 @@ export default function DigitalJapaMala() {
         audioService.playMeruGong();
         audioService.playShankh();
 
-        // Capped Punya points per minute (max 60 points/min from continuous japa)
+        // Flush full 108 beads immediately and record completed mala in storage
+        flushPendingBeads();
+        storageService.incrementMala(selectedMantraRef.current.id);
+
+        // Capped Punya points per minute (max 108 points, quota capped)
         const maxMalaPoints = 108;
         const availablePointsQuota = Math.max(0, 120 - recentPoints);
         const pointsToAward = Math.min(maxMalaPoints, availablePointsQuota);
@@ -115,6 +190,7 @@ export default function DigitalJapaMala() {
   };
 
   const resetMala = () => {
+    flushPendingBeads();
     setBeadCount(0);
     setMalaCycle(0);
     tapHistoryRef.current = [];
@@ -333,3 +409,5 @@ export default function DigitalJapaMala() {
     </div>
   );
 }
+
+export default memo(DigitalJapaMala);
