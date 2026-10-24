@@ -39,7 +39,7 @@ export default function GyanSection() {
     if (viewMode === 'elibrary' && elibraryBooks.length === 0) {
       searchELibrary(elibraryQuery);
     }
-  }, [viewMode]);
+  }, [viewMode, elibraryBooks.length, elibraryQuery]);
 
   const checkDownloadedStatus = async (books) => {
     const statusObj = {};
@@ -67,7 +67,7 @@ export default function GyanSection() {
     try {
       await libraryService.downloadAndCacheBook(book.id);
       setDownloadedBooks(prev => ({ ...prev, [book.id]: true }));
-    } catch (err) {
+    } catch {
       alert('डाउनलोड विफल रहा। कृपया बाद में पुनः प्रयास करें।');
     } finally {
       setDownloadingBooks(prev => ({ ...prev, [book.id]: false }));

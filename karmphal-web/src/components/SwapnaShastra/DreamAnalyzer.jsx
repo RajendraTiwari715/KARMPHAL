@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Moon, Sparkles, Search, Clock, ShieldCheck, Sun, Info, AlertTriangle } from 'lucide-react';
-import { DREAM_PRAHARS, DREAM_MOTIFS, analyzeDream } from '../../services/swapnaData';
+import { Moon, Sparkles, Search, ShieldCheck } from 'lucide-react';
+import { DREAM_PRAHARS, analyzeDream } from '../../services/swapnaData';
 import { audioService } from '../../services/audioService';
 
 export default function DreamAnalyzer() {

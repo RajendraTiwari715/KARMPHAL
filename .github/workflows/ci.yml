@@ -1,0 +1,42 @@
+name: CI & Code Quality
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint-and-validate:
+    name: Lint & Build Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: karmphal-web/package-lock.json
+
+      - name: Install Frontend Dependencies
+        working-directory: karmphal-web
+        run: npm ci
+
+      - name: Run Oxlint (Zero Tolerance)
+        working-directory: karmphal-web
+        run: npx oxlint --deny-warnings
+
+      - name: Run Frontend Production Build
+        working-directory: karmphal-web
+        run: npm run build
+
+      - name: Verify No Tracked Binaries or Live DBs
+        run: |
+          if git ls-files | grep -E '\.(apk|aab|db|db-wal|db-shm)$'; then
+            echo "❌ Error: Forbidden binaries or DB files found tracked in Git!"
+            exit 1
+          fi
+          echo "✅ Repository index is clean of binary artifacts and database files."

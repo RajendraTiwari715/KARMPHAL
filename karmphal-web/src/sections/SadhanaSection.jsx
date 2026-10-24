@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { 
-  Calendar, Moon, Star, Flame, Scroll, Video, 
-  ChevronRight, ArrowLeft, Sparkles, Copy, Check, Compass, ShieldCheck 
+  Video, ChevronRight, ArrowLeft, Copy, Check 
 } from 'lucide-react';
 import { computePanchang } from '../services/ephemerisEngine';
 import { 

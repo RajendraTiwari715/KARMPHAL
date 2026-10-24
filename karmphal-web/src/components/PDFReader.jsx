@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Loader, WifiOff, Download } from 'lucide-react';
+import { X, Loader, WifiOff } from 'lucide-react';
 import { libraryService } from '../services/libraryService';
 
 export default function PDFReader({ book, onClose }) {

@@ -1,7 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { storageService } from '../services/storageService';
-
-const AppContext = createContext();
+import { AppContext } from './context';
 
 export const AppProvider = ({ children }) => {
   const [appState, setAppState] = useState(storageService.getState());
@@ -49,4 +48,3 @@ export const AppProvider = ({ children }) => {
   );
 };
 
-export const useApp = () => useContext(AppContext);

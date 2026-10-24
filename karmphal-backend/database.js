@@ -1,7 +1,9 @@
 const Database = require('better-sqlite3');
 const path = require('path');
+const fs = require('fs');
 
 const dbPath = process.env.DB_PATH || path.resolve(__dirname, 'karmphal.db');
+fs.mkdirSync(path.dirname(dbPath), { recursive: true });
 const db = new Database(dbPath, { verbose: console.log });
 
 // Enforce foreign keys and WAL mode for better concurrency and reliability

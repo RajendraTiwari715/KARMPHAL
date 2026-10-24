@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, Flame, RotateCcw, ShieldCheck, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
+import { Flame, ShieldCheck, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
 import { audioService } from '../../services/audioService';
-import { useApp } from '../../context/AppContext';
+import { useApp } from '../../context/useApp';
 import { Button, Badge, Card } from '../shared';
 
 const MANTRAS = [
@@ -21,7 +21,7 @@ export default function DigitalJapaMala() {
 
   const [beadCount, setBeadCount] = useState(0);
   const [malaCycle, setMalaCycle] = useState(0);
-  const [antiCheatStatus, setAntiCheatStatus] = useState('pure');
+  const antiCheatStatus = 'pure';
 
   const handleBeadChant = () => {
     setBeadCount(prev => {
@@ -50,7 +50,7 @@ export default function DigitalJapaMala() {
       }, 60000);
     }
     return () => clearInterval(interval);
-  }, [isSwadhyayaRunning]);
+  }, [isSwadhyayaRunning, addPunya]);
 
   const handleTaskToggle = (taskId) => {
     audioService.playTempleBell(528, 0.8);

@@ -189,7 +189,7 @@ class StorageService {
     return this.state;
   }
 
-  addPunya(pointsDelta = 0, reason = '') {
+  addPunya(pointsDelta = 0, _reason = '') {
     this.state.punyaLedger += pointsDelta;
     this.saveState();
     return this.state;

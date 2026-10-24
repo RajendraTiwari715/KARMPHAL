@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bell, Sparkles, ChevronRight, ChevronLeft, Check, ShieldCheck, Award } from 'lucide-react';
+import { Bell, ChevronRight, ChevronLeft, Check } from 'lucide-react';
 import { storageService } from '../../services/storageService';
 import confetti from 'canvas-confetti';
 

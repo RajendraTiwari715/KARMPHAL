@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Compass, Sparkles, Home, ShieldCheck, Info, CheckCircle2, AlertTriangle, Download, RefreshCcw } from 'lucide-react';
+import { ArrowLeft, Compass, Home, Download, RefreshCcw } from 'lucide-react';
 import { VASTU_ZONES_16, evaluateRoomPlacement } from '../../services/vastuEngine';
 import { audioService } from '../../services/audioService';
 import { hardwareService } from '../../services/hardwareService';

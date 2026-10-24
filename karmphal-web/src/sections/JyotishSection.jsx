@@ -4,7 +4,7 @@ import KundaliView from '../components/AstrologicalCore/KundaliView';
 import VivahMilanView from '../components/VivahMilan/VivahMilanView';
 import RashiView from '../components/AstrologicalCore/RashiView';
 import VastuView from '../components/VastuShastra/VastuView';
-import { Calendar, Compass, HeartHandshake, Star, Home, BookOpen, ChevronRight, Sparkles } from 'lucide-react';
+import { Calendar, Compass, HeartHandshake, Star, Home, ChevronRight } from 'lucide-react';
 import { audioService } from '../services/audioService';
 
 const JYOTISH_MODULES = [

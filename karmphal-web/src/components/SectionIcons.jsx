@@ -1,7 +1,7 @@
 import React from 'react';
 
 // 1. GURU (आचार्य / ऋषि / दिव्य गुरु)
-export function GuruIcon({ className = "w-6 h-6", active = false }) {
+export function GuruIcon({ className = "w-6 h-6", active: _active = false }) {
   return (
     <svg viewBox="0 0 48 48" fill="none" className={className} xmlns="http://www.w3.org/2000/svg">
       <defs>
@@ -40,7 +40,7 @@ export function GuruIcon({ className = "w-6 h-6", active = false }) {
 }
 
 // 2. GYAN (वेद संहिता / ग्रन्थ / उपनिषद्)
-export function GyanIcon({ className = "w-6 h-6", active = false }) {
+export function GyanIcon({ className = "w-6 h-6", active: _active = false }) {
   return (
     <svg viewBox="0 0 48 48" fill="none" className={className} xmlns="http://www.w3.org/2000/svg">
       <defs>
@@ -71,7 +71,7 @@ export function GyanIcon({ className = "w-6 h-6", active = false }) {
 }
 
 // 3. SADHANA (दीप शिखा / रुद्राक्ष जप माला / हवन कुण्ड)
-export function SadhanaIcon({ className = "w-6 h-6", active = false }) {
+export function SadhanaIcon({ className = "w-6 h-6", active: _active = false }) {
   return (
     <svg viewBox="0 0 48 48" fill="none" className={className} xmlns="http://www.w3.org/2000/svg">
       <defs>
@@ -102,7 +102,7 @@ export function SadhanaIcon({ className = "w-6 h-6", active = false }) {
 }
 
 // 4. JYOTISH (सूर्य चक्र / नवग्रह / कुण्डली मण्डल)
-export function JyotishIcon({ className = "w-6 h-6", active = false }) {
+export function JyotishIcon({ className = "w-6 h-6", active: _active = false }) {
   return (
     <svg viewBox="0 0 48 48" fill="none" className={className} xmlns="http://www.w3.org/2000/svg">
       <defs>
@@ -139,7 +139,7 @@ export function JyotishIcon({ className = "w-6 h-6", active = false }) {
 }
 
 // 5. KARMA (धर्मचक्र / न्याय तुला / गरुड़ पुराण कर्मफल)
-export function KarmaIcon({ className = "w-6 h-6", active = false }) {
+export function KarmaIcon({ className = "w-6 h-6", active: _active = false }) {
   return (
     <svg viewBox="0 0 48 48" fill="none" className={className} xmlns="http://www.w3.org/2000/svg">
       <defs>

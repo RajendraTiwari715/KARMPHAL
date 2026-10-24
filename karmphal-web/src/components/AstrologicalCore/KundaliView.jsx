@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Sparkles, Compass, ShieldAlert, Award, RefreshCw, Sun, Moon, Calendar, HeartHandshake, CheckCircle2, User, Copy, Check, BookOpen, Clock, Download, RefreshCcw, Camera } from 'lucide-react';
-import { computePlanetaryPositions, computePanchang, getCoordinatesForCity, computeVimshottariDasha, analyzeDoshas } from '../../services/ephemerisEngine';
+import { ArrowLeft, Compass, ShieldAlert, Download, RefreshCcw, Camera } from 'lucide-react';
+import { computePlanetaryPositions, getCoordinatesForCity, computeVimshottariDasha, analyzeDoshas } from '../../services/ephemerisEngine';
 import { audioService } from '../../services/audioService';
 import { geminiService } from '../../services/geminiService';
 import { hardwareService } from '../../services/hardwareService';
@@ -21,7 +21,6 @@ export default function KundaliView({ onBack }) {
   const [chartType, setChartType] = useState('north'); // 'north' or 'south'
   const [aiReading, setAiReading] = useState('');
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
-  const [copiedAi, setCopiedAi] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   
@@ -34,7 +33,7 @@ export default function KundaliView({ onBack }) {
       const result = await hardwareService.scanKundaliPhoto();
       if (result.success) {
         // Send base64 image to Gemini for birth details extraction
-        const reading = await geminiService.generateResponse('Extract birth details (Name, DOB, Time, Place) from this kundali image.', [], null, result.base64);
+        await geminiService.generateResponse('Extract birth details (Name, DOB, Time, Place) from this kundali image.', [], null, result.base64);
         
         // This is a placeholder since we don't have true multimodality on this route yet.
         // We simulate filling the form based on scanned data.
@@ -132,13 +131,6 @@ export default function KundaliView({ onBack }) {
         window.print();
       }, 150);
     }
-  };
-
-  const handleCopyReading = () => {
-    if (!aiReading) return;
-    navigator.clipboard.writeText(aiReading);
-    setCopiedAi(true);
-    setTimeout(() => setCopiedAi(false), 2000);
   };
 
   const planets = calculatedData?.planets || [];

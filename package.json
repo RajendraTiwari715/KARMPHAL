@@ -1,0 +1,19 @@
+{
+  "name": "karmphal",
+  "version": "1.0.0",
+  "description": "Karmphal - Vedic Ephemeris & Spiritual Life-Management System",
+  "private": true,
+  "scripts": {
+    "lint": "npm --prefix karmphal-web run lint",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "karmphal-web/**/*.{js,jsx}": [
+      "npx --prefix karmphal-web oxlint"
+    ]
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^17.6.0"
+  }
+}

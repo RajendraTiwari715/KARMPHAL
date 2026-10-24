@@ -133,7 +133,6 @@ export function calculateAshtakoot(groomData, brideData) {
 
   // 7. Bhakoot Koota (Max 7 pts)
   const rashiDiff = Math.abs(groomData.rashiId - brideData.rashiId) + 1;
-  const relDiff = rashiDiff > 6 ? 14 - rashiDiff : rashiDiff;
   let bhakootScore = 7;
   let bhakootDosha = false;
   if ([2, 6, 9].includes(rashiDiff) || [12, 8, 5].includes(rashiDiff)) {

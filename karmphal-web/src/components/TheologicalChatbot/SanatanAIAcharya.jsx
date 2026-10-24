@@ -1,20 +1,20 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Copy, Check, Sparkles } from 'lucide-react';
+import { Send, Copy, Check } from 'lucide-react';
 import { geminiService } from '../../services/geminiService';
 import { storageService } from '../../services/storageService';
 
-export default function SanatanAIAcharya({ panchangData }) {
-  const defaultMessage = {
-    id: 1,
-    sender: 'acharya',
-    text: 'ॐ नमो नारायणाय । कल्याणमस्तु वत्स। आप धर्म, कर्म, कुण्डली, जीवन के कष्ट अथवा शास्त्र सम्बन्धी कोई भी प्रश्न पूछें, मैं आपको सप्रमाण व सटीक मार्गदर्शन प्रदान करूँगा।'
-  };
+const DEFAULT_MESSAGE = {
+  id: 1,
+  sender: 'acharya',
+  text: 'ॐ नमो नारायणाय । कल्याणमस्तु वत्स। आप धर्म, कर्म, कुण्डली, जीवन के कष्ट अथवा शास्त्र सम्बन्धी कोई भी प्रश्न पूछें, मैं आपको सप्रमाण व सटीक मार्गदर्शन प्रदान करूँगा।'
+};
 
-  const [messages, setMessages] = useState([defaultMessage]);
+export default function SanatanAIAcharya({ panchangData }) {
+  const [messages, setMessages] = useState([DEFAULT_MESSAGE]);
 
   useEffect(() => {
     // Purani chat history fetch nahi karni, hamesha naye sire se start karni hai
-    setMessages([defaultMessage]);
+    setMessages([DEFAULT_MESSAGE]);
   }, []);
 
   const saveMessageToBackend = (sender, text) => {

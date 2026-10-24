@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { HeartHandshake, CheckCircle2, XCircle, Sparkles, ShieldAlert, Award, ArrowLeft, BookOpen, Copy, Check, RefreshCw, Download } from 'lucide-react';
+import { HeartHandshake, CheckCircle2, XCircle, Sparkles, ShieldAlert, Award, ArrowLeft, BookOpen, Check, RefreshCw, Download } from 'lucide-react';
 import { calculateAshtakoot } from '../../services/ashtakootEngine';
 import { NAKSHATRAS, ZODIAC_SIGNS } from '../../services/ephemerisEngine';
 import { audioService } from '../../services/audioService';
@@ -27,7 +27,6 @@ export default function VivahMilanView({ onBack }) {
   const [result, setResult] = useState(() => calculateAshtakoot(groomData, brideData));
   const [aiMilanReading, setAiMilanReading] = useState('');
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
-  const [copiedAi, setCopiedAi] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
   const handleMatch = (e) => {
@@ -65,13 +64,6 @@ export default function VivahMilanView({ onBack }) {
     }
   };
 
-  const handleCopyReading = () => {
-    if (!aiMilanReading) return;
-    navigator.clipboard.writeText(aiMilanReading);
-    setCopiedAi(true);
-    setTimeout(() => setCopiedAi(false), 2000);
-  };
-
   const handleDownloadPDF = async () => {
     const reportElement = document.getElementById('milan-report');
     if (!reportElement) return;
@@ -98,14 +90,6 @@ export default function VivahMilanView({ onBack }) {
     } finally {
       setIsExporting(false);
     }
-  };
-
-
-  const getScoreColor = (score, max) => {
-    const ratio = score / max;
-    if (ratio >= 0.75) return 'text-emerald-400 border-emerald-500/30 bg-emerald-950/20';
-    if (ratio >= 0.5) return 'text-amber-400 border-amber-500/30 bg-amber-950/20';
-    return 'text-rose-400 border-rose-500/30 bg-rose-950/20';
   };
 
   return (

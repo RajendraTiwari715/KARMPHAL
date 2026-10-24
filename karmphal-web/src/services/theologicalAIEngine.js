@@ -3,8 +3,6 @@
 // Implements Pratyaksha (प्रत्यक्ष), Anumana (अनुमान), Upamana (उपमान), Shabda (शब्द) citations & 3-Darshana synthesis
 
 import { computePlanetaryPositions } from './ephemerisEngine';
-import { NARAKAS_28 } from './narakasData';
-import { DREAM_MOTIFS } from './swapnaData';
 
 export const THEOLOGICAL_TOPICS = [
   {
@@ -56,7 +54,6 @@ export function resolveTheologicalInquiry(userPrompt, contextData = {}) {
     const planets = contextData.planets || computePlanetaryPositions();
     const lagna = planets.find(p => p.name.includes('Ascendant')) || planets[0];
     const moon = planets.find(p => p.name.includes('Moon')) || planets[2];
-    const sun = planets.find(p => p.name.includes('Sun')) || planets[1];
 
     return {
       type: 'ASTROLOGICAL_RESOLUTION',
@@ -109,7 +106,7 @@ export function resolveTheologicalInquiry(userPrompt, contextData = {}) {
   }
 
   // 4. वेदान्त / दर्शन सम्बन्धी सामान्य प्रश्न
-  const matched = THEOLOGICAL_TOPICS.find(t => 
+  const matched = THEOLOGICAL_TOPICS.find(() => 
     query.includes('ब्रह्म') || query.includes('अद्वैत') || query.includes('द्वैत') || query.includes('शंकराचार्य') || query.includes('रामानुज') || query.includes('ईश्वर') || query.includes('भगवान')
   ) || THEOLOGICAL_TOPICS[0];
 

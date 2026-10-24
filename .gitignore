@@ -1,29 +1,52 @@
-*.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
-local.properties
-.env
-.env.*
-node_modules
-dist
-*.db
-*.sqlite
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build Outputs & Bundles
+dist/
+dist-ssr/
+build/
 *.apk
 *.aab
+
+# Android build outputs & local config
+android/app/build/
+**/android/app/build/
+.gradle/
+local.properties
+.externalNativeBuild/
+.cxx/
+captures/
 keystore/
 secrets/
+
+# Environment Variables & Secrets
 .env
 .env.*
-*.db-shm
+!.env.example
+
+# SQLite Databases & Storage
+*.db
+*.sqlite
 *.db-wal
+*.db-shm
+data/*.db
+data/*.db-wal
+data/*.db-shm
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# IDE & OS Artifacts
+.DS_Store
+*.iml
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json

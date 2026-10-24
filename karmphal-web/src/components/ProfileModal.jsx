@@ -1,14 +1,13 @@
-import React, { useState } from 'react';
-import { User, Globe, Award, Sparkles, Flame, Check, X, ShieldCheck, Edit3, Save, LogIn, CheckCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { User, Globe, Sparkles, Flame, Check, X, Edit3, Save, CheckCircle } from 'lucide-react';
 import { languageService } from '../services/languageService';
-import { useApp } from '../context/AppContext';
+import { useApp } from '../context/useApp';
+import { storageService } from '../services/storageService';
 
 export default function ProfileModal({ isOpen, onClose }) {
   const { appState } = useApp();
-  if (!isOpen) return null;
 
   const currentLang = languageService.getLang();
-  const t = languageService.t();
 
   const [isEditing, setIsEditing] = useState(false);
   const [userData, setUserData] = useState({
@@ -19,9 +18,11 @@ export default function ProfileModal({ isOpen, onClose }) {
     isLoggedIn: true
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (isOpen) {
-      fetch('/api/user/profile')
+      fetch('/api/user/profile', {
+        headers: storageService.getAuthHeaders()
+      })
         .then(res => res.json())
         .then(data => {
           if (data && data.name) {
@@ -32,11 +33,16 @@ export default function ProfileModal({ isOpen, onClose }) {
     }
   }, [isOpen]);
 
+  if (!isOpen) return null;
+
   const handleSaveProfile = (e) => {
     e?.preventDefault();
     fetch('/api/user/profile', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        ...storageService.getAuthHeaders()
+      },
       body: JSON.stringify({ name: userData.name, gotra: userData.gotra, city: userData.city })
     }).catch(err => console.warn('Failed to save profile', err));
     setIsEditing(false);

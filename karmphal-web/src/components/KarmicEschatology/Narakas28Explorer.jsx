@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ShieldCheck, Flame, Search, BookOpen, HeartHandshake, Sparkles, ArrowLeft, Info, AlertOctagon } from 'lucide-react';
-import { NARAKAS_28, searchNarakas, KARMIC_CATEGORIES, calculateKarmicAudit } from '../../services/narakasData';
+import { searchNarakas, KARMIC_CATEGORIES, calculateKarmicAudit } from '../../services/narakasData';
 import { audioService } from '../../services/audioService';
 
 export default function Narakas28Explorer() {

@@ -1,17 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { useApp } from '../context/AppContext';
 import { languageService } from '../services/languageService';
 import ProfileModal from './ProfileModal';
 import appLogo from '../assets/app_logo.jpg';
 import { GuruIcon, GyanIcon, SadhanaIcon, JyotishIcon, KarmaIcon } from './SectionIcons';
 
-export default function Navbar({ activeSection, setActiveSection, panchangData }) {
-  const { appState } = useApp();
+export default function Navbar({ activeSection, setActiveSection, panchangData: _panchangData }) {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [currentLang, setCurrentLang] = useState(languageService.getLang());
+  const [, setLang] = useState(languageService.getLang());
 
   useEffect(() => {
-    const unsub = languageService.subscribe(lang => setCurrentLang(lang));
+    const unsub = languageService.subscribe(lang => setLang(lang));
     return () => unsub();
   }, []);
 

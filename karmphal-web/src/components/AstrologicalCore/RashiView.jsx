@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Sparkles, Star, Sun, Moon, Award, Compass, ShieldCheck } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { audioService } from '../../services/audioService';
 
 const RASHI_DATA = [

@@ -219,7 +219,6 @@ export function computePlanetaryPositions(date = new Date(), lat = 28.6139, lon 
   const toSidereal = (trop) => (trop - ayanamsa + 720) % 360;
 
   // Local Sidereal Time (LST) & Ascendant (Lagna)
-  const hours = date.getUTCHours() + date.getUTCMinutes() / 60 + date.getUTCSeconds() / 3600;
   const gmst = (280.46061837 + 360.98564736629 * (jd - 2451545.0)) % 360;
   const lstDeg = (gmst + lon) % 360;
   const lstRad = (lstDeg * Math.PI) / 180;
@@ -468,7 +467,6 @@ export function analyzeDoshas(planets) {
   const mars = planets.find(p => p.name === 'मंगल');
   const saturn = planets.find(p => p.name === 'शनि');
   const rahu = planets.find(p => p.name === 'राहु');
-  const ketu = planets.find(p => p.name === 'केतु');
   
   const doshas = {
     manglik: { status: 'निर्दोष', color: 'emerald' },

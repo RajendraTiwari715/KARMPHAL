@@ -139,7 +139,7 @@ export const libraryService = {
    * @param {string} identifier 
    * @param {Function} onProgress 
    */
-  async downloadAndCacheBook(identifier, onProgress) {
+  async downloadAndCacheBook(identifier) {
     try {
       const pdfUrl = await this.getPdfUrl(identifier);
       if (!pdfUrl) throw new Error('PDF not found for this book');
@@ -167,7 +167,7 @@ export const libraryService = {
     try {
       const blob = await localforage.getItem(`book_${identifier}`);
       return blob !== null;
-    } catch (error) {
+    } catch {
       return false;
     }
   },

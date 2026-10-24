@@ -377,7 +377,7 @@ class LanguageService {
     return 'hi';
   }
 
-  setLang(lang) {
+  setLang(_lang) {
     // Language locked to Hindi as per requirements
     // Ignore any attempts to change language
   }
