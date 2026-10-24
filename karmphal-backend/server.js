@@ -12,7 +12,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const bodyParser = require('body-parser');
 
-const db = require('./database');
+require('./database');
 const { errorHandler } = require('./middlewares/errorHandler');
 
 const aiRoutes = require('./routes/ai');

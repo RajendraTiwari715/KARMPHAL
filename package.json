@@ -15,6 +15,9 @@
   "lint-staged": {
     "karmphal-web/**/*.{js,jsx}": [
       "npx --prefix karmphal-web oxlint"
+    ],
+    "karmphal-backend/**/*.js": [
+      "npx --prefix karmphal-web oxlint"
     ]
   },
   "devDependencies": {

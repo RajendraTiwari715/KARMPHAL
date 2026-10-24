@@ -24,7 +24,10 @@ describe('Panchang Computation Engine & React Profiler Benchmarks', () => {
     const lat = 28.6139;
     const lon = 77.2090;
 
-    // Single cold/initial computation measurement
+    // Warm up JIT compiler for ephemeris math functions
+    computePanchang(testDate, lat, lon);
+
+    // Single computation measurement
     const t0 = performance.now();
     const singleResult = computePanchang(testDate, lat, lon);
     const t1 = performance.now();
