@@ -4,7 +4,7 @@ import { DREAM_MOTIFS } from './swapnaData';
 import { VASTU_ZONES_16 } from './vastuEngine';
 import { computePanchang } from './ephemerisEngine';
 import { resolveTheologicalInquiry } from './theologicalAIEngine';
-import { storageService } from './storageService';
+import { apiClient } from './apiClient';
 
 class GeminiService {
   // RAG Context Builder
@@ -70,29 +70,16 @@ class GeminiService {
     try {
       const ragContext = this.buildRAGContext(userMessage, panchangContext);
 
-      const response = await fetch('/api/ai/chat', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          ...storageService.getAuthHeaders()
-        },
-        body: JSON.stringify({
-          userMessage,
-          conversationHistory,
-          ragContext
-        })
+      const data = await apiClient.post('/api/ai/acharya', {
+        userMessage,
+        conversationHistory,
+        ragContext
       });
 
-      if (!response.ok) {
-        throw new Error('Backend AI request failed');
-      }
-
-      const data = await response.json();
       return { text: data.text };
-
     } catch (err) {
-      console.error('Backend AI API failed, falling back to local engine:', err, err.message);
-      // Fallback
+      console.warn('Backend AI API unavailable, falling back to local theological engine:', err.message);
+      // Fallback to local theological engine
       const localResolution = resolveTheologicalInquiry(userMessage, { planets: panchangContext?.planets });
       return { text: localResolution.content };
     }
@@ -100,43 +87,29 @@ class GeminiService {
 
   async generateKundaliReading(birthDetails, planetsData = [], dashaTimeline = []) {
     try {
-      const response = await fetch('/api/ai/kundali', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          ...storageService.getAuthHeaders()
-        },
-        body: JSON.stringify({ birthDetails, planetsData, dashaTimeline })
+      const data = await apiClient.post('/api/ai/kundali', {
+        birthDetails,
+        planetsData,
+        dashaTimeline
       });
-      const data = await response.json();
-      if (!response.ok) {
-        return data.message || 'Error from AI server.';
-      }
-      return data.text;
+      return data.text || 'कुण्डली विश्लेषण प्राप्त नहीं हो सका।';
     } catch (err) {
-      console.error('Kundali generation failed', err);
-      return 'सर्वर व्यस्त है या API लिमिट खत्म हो गई है। कृपया 1 मिनट बाद पुनः प्रयास करें। (Server Busy / Rate Limit)';
+      console.error('Kundali generation failed:', err.message);
+      return err.message || 'सर्वर व्यस्त है या सेवा अनुपलब्ध है। कृपया कुछ समय बाद पुनः प्रयास करें।';
     }
   }
 
   async generateVivahMilanReading(groomData, brideData, ashtakootScore) {
     try {
-      const response = await fetch('/api/ai/vivah-milan', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          ...storageService.getAuthHeaders()
-        },
-        body: JSON.stringify({ groomData, brideData, ashtakootScore })
+      const data = await apiClient.post('/api/ai/vivah-milan', {
+        groomData,
+        brideData,
+        ashtakootScore
       });
-      const data = await response.json();
-      if (!response.ok) {
-        return data.message || 'Error from AI server.';
-      }
-      return data.text;
+      return data.text || 'विवाह मिलान विश्लेषण प्राप्त नहीं हो सका।';
     } catch (err) {
-      console.error('Vivah Milan generation failed', err);
-      return 'सर्वर व्यस्त है या API लिमिट खत्म हो गई है। कृपया 1 मिनट बाद पुनः प्रयास करें। (Server Busy / Rate Limit)';
+      console.error('Vivah Milan generation failed:', err.message);
+      return err.message || 'सर्वर व्यस्त है या सेवा अनुपलब्ध है। कृपया कुछ समय बाद पुनः प्रयास करें।';
     }
   }
 }

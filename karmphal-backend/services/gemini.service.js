@@ -1,27 +1,31 @@
-const GEMINI_API_KEY = process.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
 const MODELS = ['gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-flash-latest'];
-const TIMEOUT_MS = 90000; // 90 seconds
+const TIMEOUT_MS = 45000; // 45 seconds
 
 async function fetchWithTimeout(resource, options = {}) {
-  const { timeout = 8000 } = options;
+  const { timeout = TIMEOUT_MS } = options;
   
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeout);
   
-  const response = await fetch(resource, {
-    ...options,
-    signal: controller.signal  
-  });
-  clearTimeout(id);
-  
-  return response;
+  try {
+    const response = await fetch(resource, {
+      ...options,
+      signal: controller.signal  
+    });
+    return response;
+  } finally {
+    clearTimeout(id);
+  }
 }
 
 /**
  * Calls Gemini API with fallback models, timeout, and safe error handling.
+ * Never leaks the API key, internal endpoints, or upstream raw errors.
  */
 async function callGemini(contents, systemInstruction, generationConfig) {
-  if (!GEMINI_API_KEY) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey || apiKey.trim().length === 0 || apiKey.includes('your_gemini_api_key_here')) {
+    console.error('[GeminiService] GEMINI_API_KEY is not configured in process.env');
     throw new Error('AI_SERVICE_UNCONFIGURED');
   }
 
@@ -30,7 +34,7 @@ async function callGemini(contents, systemInstruction, generationConfig) {
 
   for (const model of MODELS) {
     try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
       
       const response = await fetchWithTimeout(url, {
         method: 'POST',
@@ -50,33 +54,33 @@ async function callGemini(contents, systemInstruction, generationConfig) {
           return { text: candidateText };
         }
       } else {
-        const errorText = await response.text();
-        console.warn(`[GeminiService] Model ${model} returned HTTP ${response.status}:`, errorText);
+        console.warn(`[GeminiService] Model ${model} returned HTTP status ${response.status}`);
         
         if (response.status === 429) {
-           isRateLimited = true;
-           // If rate limited, don't fallback to same provider immediately, but here we try fallback model
+          isRateLimited = true;
+          // Continue to fallback model if available
         } else if (response.status >= 500) {
-           // Provider error, try next model
-           lastError = new Error('PROVIDER_ERROR');
+          lastError = new Error('PROVIDER_ERROR');
         } else {
-           // Client error (400, etc) usually means bad prompt, don't retry
-           throw new Error('PROVIDER_CLIENT_ERROR');
+          // Client request format issue
+          throw new Error('INVALID_AI_REQUEST');
         }
       }
     } catch (err) {
       if (err.name === 'AbortError') {
-        console.warn(`[GeminiService] Model ${model} timed out`);
+        console.warn(`[GeminiService] Model ${model} request timed out`);
         lastError = new Error('TIMEOUT');
+      } else if (err.message === 'INVALID_AI_REQUEST') {
+        throw err;
       } else {
-        console.warn(`[GeminiService] Model ${model} network error:`, err.message);
+        console.warn(`[GeminiService] Model ${model} request failed: ${err.message}`);
         lastError = err;
       }
     }
   }
 
   if (isRateLimited) {
-     throw new Error('RATE_LIMIT_EXCEEDED');
+    throw new Error('RATE_LIMIT_EXCEEDED');
   }
   
   throw lastError || new Error('ALL_MODELS_FAILED');
