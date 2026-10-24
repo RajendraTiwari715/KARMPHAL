@@ -1,4 +1,11 @@
 require('dotenv').config();
+
+// Fail fast on startup if JWT_SECRET is missing or insecure
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET.trim().length < 16) {
+  console.error('FATAL ERROR: JWT_SECRET environment variable is missing or insecure (minimum 16 characters required). Exiting.');
+  process.exit(1);
+}
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -18,32 +25,50 @@ const PORT = process.env.PORT || 5000;
 // Security Middlewares
 app.use(helmet());
 
+// Strict CORS Allowlist
 const allowedOrigins = ['http://localhost:5173', 'http://127.0.0.1:5173', 'capacitor://localhost', 'http://localhost'];
 if (process.env.FRONTEND_URL) {
   allowedOrigins.push(process.env.FRONTEND_URL);
 }
 
 app.use(cors({
-  origin: allowedOrigins,
+  origin: (origin, callback) => {
+    // Allow non-browser requests (mobile apps, curl, native Capacitor, unit tests)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Blocked by CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Payload size limits & Sanitization (handled implicitly by body-parser limits)
+// Payload size limits
 app.use(bodyParser.json({ limit: '1mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '1mb' }));
 
-// Rate Limiting
+// Global Rate Limiting
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per `window`
+  max: 200, // 200 requests per 15 minutes per IP
   message: { error: 'RATE_LIMIT', message: 'Too many requests from this IP, please try again after 15 minutes' },
   standardHeaders: true,
   legacyHeaders: false,
 });
 app.use('/api/', globalLimiter);
 
-// Request Logging (Safe - no PII)
+// Auth Rate Limiting on /api/auth/*
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 30, // Max 30 attempts per 15 minutes
+  message: { error: 'AUTH_RATE_LIMIT', message: 'Too many authentication attempts. Please try again after 15 minutes.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use('/api/auth/', authLimiter);
+
+// Request Logging (Safe - no tokens or PII)
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
   next();
@@ -62,6 +87,11 @@ app.get('/api/health', (req, res) => {
 // Global Error Handler
 app.use(errorHandler);
 
-app.listen(PORT, () => {
-  console.log(`Backend server running on http://localhost:${PORT}`);
-});
+// Only listen if run directly (allows importing app in tests)
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Backend server running on http://localhost:${PORT}`);
+  });
+}
+
+module.exports = app;

@@ -1,4 +1,6 @@
 // Local-First Storage & State Machine for Karmphal (Punya Ledger, Tasks, Japa Counters)
+import { tokenStorage } from './tokenStorage';
+import { apiClient } from './apiClient';
 
 const STORAGE_KEY = 'karmphal_sanatan_state_v2';
 
@@ -78,17 +80,12 @@ class StorageService {
   }
 
   async initializeAuth() {
-    let token = localStorage.getItem('karmphal_auth_token');
+    let token = await tokenStorage.getToken();
     if (!token) {
       try {
-        const res = await fetch('/api/auth/guest', { method: 'POST' });
-        if (res.ok) {
-          const data = await res.json();
-          token = data.token;
-          localStorage.setItem('karmphal_auth_token', token);
-        }
+        token = await apiClient.createGuestSession();
       } catch (err) {
-        console.warn('Failed to get guest token', err);
+        console.warn('Failed to create guest session', err);
       }
     }
     this.token = token;
@@ -96,7 +93,7 @@ class StorageService {
   }
 
   getToken() {
-    return this.token || localStorage.getItem('karmphal_auth_token');
+    return this.token || localStorage.getItem('karmphal_jwt_token');
   }
 
   getAuthHeaders() {
@@ -107,11 +104,8 @@ class StorageService {
   async fetchInitialStateFromBackend() {
     await this.initializeAuth();
     try {
-      const res = await fetch('/api/user/profile', {
-        headers: this.getAuthHeaders()
-      });
-      if (res.ok) {
-        const user = await res.json();
+      const user = await apiClient.get('/api/user/profile');
+      if (user && user.totalPunya !== undefined) {
         this.state.punyaLedger = user.totalPunya || this.state.punyaLedger;
         this.state.currentStreak = user.sadhanaStreak || this.state.currentStreak;
         this.saveStateToLocalOnly(); // Just save local, no need to push to backend what we just fetched
@@ -156,27 +150,16 @@ class StorageService {
      this.isSyncing = true;
      try {
        const mutation = this.state.mutationQueue[0];
-       const response = await fetch('/api/user/punya', {
-         method: 'POST',
-         headers: { 
-           'Content-Type': 'application/json',
-           ...this.getAuthHeaders() 
-         },
-         body: JSON.stringify({ 
-           totalPunya: mutation.totalPunya, 
-           sadhanaStreak: mutation.sadhanaStreak 
-         })
+       await apiClient.post('/api/user/punya', { 
+         totalPunya: mutation.totalPunya, 
+         sadhanaStreak: mutation.sadhanaStreak 
        });
 
-       if (response.ok) {
-          // Sync successful, clear queue
-          this.state.mutationQueue = [];
-          this.saveStateToLocalOnly();
-       } else {
-          console.warn('Backend sync returned non-OK status');
-       }
+       // Sync successful, clear queue
+       this.state.mutationQueue = [];
+       this.saveStateToLocalOnly();
      } catch (err) {
-       console.warn('Backend sync failed, keeping in queue', err);
+       console.warn('Backend sync failed, keeping in queue', err.message);
      } finally {
        this.isSyncing = false;
      }

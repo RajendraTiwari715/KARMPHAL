@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Copy, Check } from 'lucide-react';
 import { geminiService } from '../../services/geminiService';
-import { storageService } from '../../services/storageService';
+import { apiClient } from '../../services/apiClient';
 
 const DEFAULT_MESSAGE = {
   id: 1,
@@ -18,14 +18,8 @@ export default function SanatanAIAcharya({ panchangData }) {
   }, []);
 
   const saveMessageToBackend = (sender, text) => {
-    fetch('/api/user/chat-history', {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        ...storageService.getAuthHeaders()
-      },
-      body: JSON.stringify({ sender, text })
-    }).catch(err => console.warn('Failed to save message', err));
+    apiClient.post('/api/user/chat-history', { sender, text })
+      .catch(err => console.warn('Failed to save message', err.message));
   };
 
   const [inputQuery, setInputQuery] = useState('');

@@ -1,25 +1,57 @@
-const { v4: uuidv4 } = require('uuid');
+const jwt = require('jsonwebtoken');
 
-// Simple guest mode token middleware
-// In a real app, use JWT. For this SQLite setup, we'll map tokens to User IDs if we had a Token table.
-// To keep it simple and migrate from existing DEFAULT_USER_ID, we'll accept a bearer token as the UUID guest ID.
-
+/**
+ * Authentication Middleware
+ * Validates cryptographically signed JWTs (HS256) and binds subject to req.user = { id: payload.sub }.
+ * Rejects missing, malformed, forged, or expired tokens with strict 401 Unauthorized status codes.
+ */
 const requireAuth = (req, res, next) => {
   const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'UNAUTHORIZED', message: 'Missing or invalid authentication token.' });
+  if (!authHeader || typeof authHeader !== 'string' || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({
+      error: 'UNAUTHORIZED',
+      message: 'Missing or malformed Authorization header. Expected Bearer <token>.'
+    });
   }
 
-  const token = authHeader.split(' ')[1];
-  
-  // Basic validation that it's a uuid or known format
-  if (!token || token.trim().length < 10) {
-    return res.status(401).json({ error: 'UNAUTHORIZED', message: 'Invalid authentication token.' });
+  const token = authHeader.substring(7).trim();
+  if (!token) {
+    return res.status(401).json({
+      error: 'UNAUTHORIZED',
+      message: 'Empty Bearer token provided.'
+    });
   }
 
-  // Attach to request
-  req.user = { id: token }; // Using the UUID as the user ID directly in DB for guest mode
-  next();
+  try {
+    const payload = jwt.verify(token, process.env.JWT_SECRET, {
+      algorithms: ['HS256']
+    });
+
+    if (!payload.sub) {
+      return res.status(401).json({
+        error: 'INVALID_TOKEN',
+        message: 'Token subject is missing.'
+      });
+    }
+
+    req.user = {
+      id: String(payload.sub),
+      role: payload.role || 'user'
+    };
+
+    next();
+  } catch (err) {
+    if (err.name === 'TokenExpiredError') {
+      return res.status(401).json({
+        error: 'TOKEN_EXPIRED',
+        message: 'Authentication token has expired. Please refresh your session.'
+      });
+    }
+    return res.status(401).json({
+      error: 'INVALID_TOKEN',
+      message: 'Invalid or forged authentication token signature.'
+    });
+  }
 };
 
 module.exports = { requireAuth };

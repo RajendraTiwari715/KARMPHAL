@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { User, Globe, Sparkles, Flame, Check, X, Edit3, Save, CheckCircle } from 'lucide-react';
 import { languageService } from '../services/languageService';
 import { useApp } from '../context/useApp';
-import { storageService } from '../services/storageService';
+import { apiClient } from '../services/apiClient';
 
 export default function ProfileModal({ isOpen, onClose }) {
   const { appState } = useApp();
@@ -20,16 +20,13 @@ export default function ProfileModal({ isOpen, onClose }) {
 
   useEffect(() => {
     if (isOpen) {
-      fetch('/api/user/profile', {
-        headers: storageService.getAuthHeaders()
-      })
-        .then(res => res.json())
+      apiClient.get('/api/user/profile')
         .then(data => {
           if (data && data.name) {
             setUserData(prev => ({ ...prev, name: data.name, gotra: data.gotra || prev.gotra, city: data.city || prev.city }));
           }
         })
-        .catch(err => console.warn('Failed to load profile', err));
+        .catch(err => console.warn('Failed to load profile', err.message));
     }
   }, [isOpen]);
 
@@ -37,14 +34,11 @@ export default function ProfileModal({ isOpen, onClose }) {
 
   const handleSaveProfile = (e) => {
     e?.preventDefault();
-    fetch('/api/user/profile', {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        ...storageService.getAuthHeaders()
-      },
-      body: JSON.stringify({ name: userData.name, gotra: userData.gotra, city: userData.city })
-    }).catch(err => console.warn('Failed to save profile', err));
+    apiClient.post('/api/user/profile', {
+      name: userData.name,
+      gotra: userData.gotra,
+      city: userData.city
+    }).catch(err => console.warn('Failed to save profile', err.message));
     setIsEditing(false);
   };
 

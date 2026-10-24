@@ -1,26 +1,20 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../database');
+const { requireAuth } = require('../middlewares/auth');
 const { profileUpdateSchema, punyaSyncSchema, chatHistorySchema } = require('../schemas/user.schema');
 
-// Optional auth for transition period. Eventually will be strictly requireAuth.
-const optionalAuth = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    req.user = { id: authHeader.split(' ')[1] };
-  } else {
-    req.user = { id: '1' }; // Fallback to DEFAULT_USER_ID = '1'
-  }
-  next();
-};
+// Enforce strict authentication on all user routes (NO optionalAuth, NO default user id '1')
+router.use(requireAuth);
 
-router.use(optionalAuth);
-
-// Get User Profile
+/**
+ * GET /api/user/profile
+ * Fetches user profile scoped strictly to req.user.id
+ */
 router.get('/profile', (req, res, next) => {
   try {
     const userId = req.user.id;
-    const user = db.prepare('SELECT * FROM Users WHERE id = ?').get(userId);
+    const user = db.prepare('SELECT id, name, gotra, city, rank, totalPunya, sadhanaStreak, sankalpaActive, updatedAt FROM Users WHERE id = ?').get(userId);
     
     if (!user) {
       return res.status(404).json({ error: 'NOT_FOUND', message: 'User profile not found' });
@@ -31,40 +25,59 @@ router.get('/profile', (req, res, next) => {
   }
 });
 
-// Update User Profile
+/**
+ * POST /api/user/profile
+ * Updates user profile scoped strictly to req.user.id
+ */
 router.post('/profile', (req, res, next) => {
   try {
     const userId = req.user.id;
+    const user = db.prepare('SELECT id FROM Users WHERE id = ?').get(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'NOT_FOUND', message: 'User not found' });
+    }
+
     const validatedData = profileUpdateSchema.parse(req.body);
     const { name, gotra, city, rank } = validatedData;
     
-    // Using COALESCE for partial updates
+    // Updates only the record corresponding to req.user.id
     db.prepare('UPDATE Users SET name = COALESCE(?, name), gotra = COALESCE(?, gotra), city = COALESCE(?, city), rank = COALESCE(?, rank), updatedAt = CURRENT_TIMESTAMP WHERE id = ?')
       .run(name || null, gotra || null, city || null, rank || null, userId);
       
-    res.json({ success: true });
+    res.json({ success: true, message: 'Profile updated successfully' });
   } catch (err) {
     next(err);
   }
 });
 
-// Sync Punya Points
+/**
+ * POST /api/user/punya
+ * Syncs Punya points and streak scoped strictly to req.user.id
+ */
 router.post('/punya', (req, res, next) => {
   try {
     const userId = req.user.id;
+    const user = db.prepare('SELECT id FROM Users WHERE id = ?').get(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'NOT_FOUND', message: 'User not found' });
+    }
+
     const validatedData = punyaSyncSchema.parse(req.body);
     const { totalPunya, sadhanaStreak } = validatedData;
     
     db.prepare('UPDATE Users SET totalPunya = ?, sadhanaStreak = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ?')
       .run(totalPunya, sadhanaStreak, userId);
       
-    res.json({ success: true });
+    res.json({ success: true, message: 'Punya synced successfully' });
   } catch (err) {
     next(err);
   }
 });
 
-// Chat History endpoints
+/**
+ * GET /api/user/chat-history
+ * Retrieves chat history scoped strictly to req.user.id
+ */
 router.get('/chat-history', (req, res, next) => {
   try {
     const userId = req.user.id;
@@ -75,6 +88,10 @@ router.get('/chat-history', (req, res, next) => {
   }
 });
 
+/**
+ * POST /api/user/chat-history
+ * Stores a chat message scoped strictly to req.user.id
+ */
 router.post('/chat-history', (req, res, next) => {
   try {
     const userId = req.user.id;
@@ -90,15 +107,21 @@ router.post('/chat-history', (req, res, next) => {
   }
 });
 
-// Data Export
+/**
+ * GET /api/user/export
+ * Exports all user data scoped strictly to req.user.id
+ */
 router.get('/export', (req, res, next) => {
   try {
     const userId = req.user.id;
-    const profile = db.prepare('SELECT * FROM Users WHERE id = ?').get(userId);
-    const chatHistory = db.prepare('SELECT * FROM ChatHistory WHERE userId = ?').all(userId);
-    const sadhanaLogs = db.prepare('SELECT * FROM SadhanaLogs WHERE userId = ?').all(userId);
+    const profile = db.prepare('SELECT id, name, gotra, city, rank, totalPunya, sadhanaStreak FROM Users WHERE id = ?').get(userId);
     
-    if (!profile) return res.status(404).json({ error: 'NOT_FOUND', message: 'User not found' });
+    if (!profile) {
+      return res.status(404).json({ error: 'NOT_FOUND', message: 'User not found' });
+    }
+
+    const chatHistory = db.prepare('SELECT sender, text, timestamp FROM ChatHistory WHERE userId = ?').all(userId);
+    const sadhanaLogs = db.prepare('SELECT * FROM SadhanaLogs WHERE userId = ?').all(userId);
     
     res.json({
       exportDate: new Date().toISOString(),
@@ -111,11 +134,20 @@ router.get('/export', (req, res, next) => {
   }
 });
 
-// Account & Data Deletion
+/**
+ * DELETE /api/user/delete
+ * Deletes user account and associated data scoped strictly to req.user.id
+ */
 router.delete('/delete', (req, res, next) => {
   try {
     const userId = req.user.id;
-    // Perform deletion within a transaction
+    const user = db.prepare('SELECT id FROM Users WHERE id = ?').get(userId);
+    
+    if (!user) {
+      return res.status(404).json({ error: 'NOT_FOUND', message: 'User not found' });
+    }
+
+    // Atomic transaction for data deletion
     const deleteTransaction = db.transaction((id) => {
       db.prepare('DELETE FROM ChatHistory WHERE userId = ?').run(id);
       db.prepare('DELETE FROM SadhanaLogs WHERE userId = ?').run(id);
@@ -123,7 +155,7 @@ router.delete('/delete', (req, res, next) => {
     });
     
     deleteTransaction(userId);
-    res.json({ success: true, message: 'User data permanently deleted.' });
+    res.json({ success: true, message: 'User account and data permanently deleted.' });
   } catch (err) {
     next(err);
   }

@@ -1,23 +1,43 @@
-import { storageService } from './storageService';
+import { tokenStorage } from './tokenStorage';
 
 const BASE_URL = import.meta.env.VITE_API_URL || '';
 
 /**
  * Unified API Client for secure backend communication.
- * Automatically handles auth tokens, JSON serialization, and safe error messages.
+ * Automatically attaches JWT tokens, handles 401 by re-creating guest sessions,
+ * and normalizes error responses.
  */
 class ApiClient {
+  async createGuestSession() {
+    const url = `${BASE_URL}/api/auth/guest`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to create guest session with status ${response.status}`);
+    }
+
+    const data = await response.json();
+    if (data.token) {
+      await tokenStorage.setTokens(data.token, data.refreshToken);
+      return data.token;
+    }
+    throw new Error('No token returned in guest session response');
+  }
+
   async getAuthHeaders() {
-    let token = storageService.getToken();
+    let token = await tokenStorage.getToken();
     if (!token) {
-      token = await storageService.initializeAuth();
+      token = await this.createGuestSession();
     }
     return token ? { 'Authorization': `Bearer ${token}` } : {};
   }
 
-  async request(endpoint, options = {}) {
+  async request(endpoint, options = {}, isRetry = false) {
     const url = `${BASE_URL}${endpoint}`;
-    const authHeaders = await this.getAuthHeaders();
+    const authHeaders = endpoint === '/api/auth/guest' ? {} : await this.getAuthHeaders();
 
     const headers = {
       'Content-Type': 'application/json',
@@ -30,6 +50,14 @@ class ApiClient {
         ...options,
         headers
       });
+
+      // Handle 401 Unauthorized by clearing stale token and refreshing guest session
+      if (response.status === 401 && !isRetry && endpoint !== '/api/auth/guest') {
+        console.warn('[ApiClient] 401 Unauthorized received. Re-creating guest session and retrying...');
+        await tokenStorage.clearTokens();
+        await this.createGuestSession();
+        return this.request(endpoint, options, true);
+      }
 
       const data = await response.json().catch(() => ({}));
 
