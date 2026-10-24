@@ -3,7 +3,7 @@ const { z } = require('zod');
 const chatSchema = z.object({
   userMessage: z.string().trim().min(1, 'प्रश्न रिक्त नहीं हो सकता।').max(1000, 'प्रश्न 1000 अक्षरों से अधिक नहीं हो सकता।'),
   conversationHistory: z.array(z.object({
-    sender: z.enum(['user', 'model', 'acharya']),
+    sender: z.enum(['user', 'model', 'acharya']).transform(val => (val === 'acharya' ? 'model' : val)),
     text: z.string().max(1000, 'संदेश 1000 अक्षरों से अधिक नहीं हो सकता।')
   })).max(10, 'चैट इतिहास में अधिकतम 10 संदेश समर्थित हैं।').optional(),
   ragContext: z.string().max(5000, 'शास्त्र संदर्भ सीमा 5000 अक्षर है।').optional()

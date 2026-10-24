@@ -12,9 +12,10 @@ const punyaSyncSchema = z.object({
   sadhanaStreak: z.number().int().min(0)
 });
 
+// Canonical vocabulary: 'user' | 'model'. Accepts 'acharya' as a backward-compatible alias normalized to 'model'.
 const chatHistorySchema = z.object({
-  sender: z.enum(['user', 'model']),
-  text: z.string().min(1).max(5000)
+  sender: z.enum(['user', 'model', 'acharya']).transform(val => (val === 'acharya' ? 'model' : val)),
+  text: z.string().trim().min(1).max(5000)
 });
 
 module.exports = {

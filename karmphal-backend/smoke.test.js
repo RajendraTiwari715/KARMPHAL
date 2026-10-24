@@ -209,9 +209,60 @@ async function runTests() {
     console.log('✅ Ownership isolation verified: User A and B are completely isolated');
 
     // ----------------------------------------------------
-    // TEST 8: Acharya AI Chatbot End-to-End with JWT
+    // TEST 8: Chat History Sender Vocabulary & Normalization
     // ----------------------------------------------------
-    console.log('\n[8/8] Testing Acharya AI chat end-to-end with verified JWT...');
+    console.log('\n[8/9] Testing Chat History Sender Validation & Normalization...');
+    
+    // 1. Valid 'user' message
+    const resUser = await fetch(`${BASE_URL}/api/user/chat-history`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenB}` },
+      body: JSON.stringify({ sender: 'user', text: 'शिष्य का प्रश्न' })
+    });
+    assert.strictEqual(resUser.status, 200, 'Expected 200 for sender: user');
+
+    // 2. Valid 'model' message (canonical Acharya response)
+    const resModel = await fetch(`${BASE_URL}/api/user/chat-history`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenB}` },
+      body: JSON.stringify({ sender: 'model', text: 'आचार्य का सप्रमाण उत्तर' })
+    });
+    assert.strictEqual(resModel.status, 200, 'Expected 200 for sender: model');
+
+    // 3. Backward-compatible 'acharya' message -> must return 200 and be normalized to 'model'
+    const resAcharya = await fetch(`${BASE_URL}/api/user/chat-history`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenB}` },
+      body: JSON.stringify({ sender: 'acharya', text: 'आचार्य का आशीर्वाद' })
+    });
+    assert.strictEqual(resAcharya.status, 200, 'Expected 200 for sender: acharya (deprecated alias)');
+
+    // 4. Invalid sender -> must return 400 Bad Request
+    const resInvalid = await fetch(`${BASE_URL}/api/user/chat-history`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenB}` },
+      body: JSON.stringify({ sender: 'hacker_bot', text: 'अमान्य प्रेषक' })
+    });
+    assert.strictEqual(resInvalid.status, 400, 'Expected 400 for invalid sender');
+    const invalidData = await resInvalid.json();
+    assert.strictEqual(invalidData.error, 'VALIDATION_ERROR');
+
+    // 5. Verify saved rows in DB via GET /api/user/chat-history
+    const historyRes = await fetch(`${BASE_URL}/api/user/chat-history`, {
+      headers: { 'Authorization': `Bearer ${tokenB}` }
+    });
+    assert.strictEqual(historyRes.status, 200);
+    const historyData = await historyRes.json();
+    assert.strictEqual(historyData.length, 3, 'Expected 3 saved messages in DB');
+    assert.strictEqual(historyData[0].sender, 'user');
+    assert.strictEqual(historyData[1].sender, 'model');
+    assert.strictEqual(historyData[2].sender, 'model', 'acharya must be saved as normalized model in DB');
+    console.log('✅ Chat history sender validation, alias normalization (acharya -> model), and 400 error verified');
+
+    // ----------------------------------------------------
+    // TEST 9: Acharya AI Chatbot End-to-End with JWT
+    // ----------------------------------------------------
+    console.log('\n[9/9] Testing Acharya AI chat end-to-end with verified JWT...');
     const aiRes = await fetch(`${BASE_URL}/api/ai/acharya`, {
       method: 'POST',
       headers: {

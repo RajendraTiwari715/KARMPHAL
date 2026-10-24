@@ -5,7 +5,7 @@ import { apiClient } from '../../services/apiClient';
 
 const DEFAULT_MESSAGE = {
   id: 1,
-  sender: 'acharya',
+  sender: 'model',
   text: 'ॐ नमो नारायणाय । कल्याणमस्तु वत्स। आप धर्म, कर्म, कुण्डली, जीवन के कष्ट अथवा शास्त्र सम्बन्धी कोई भी प्रश्न पूछें, मैं आपको सप्रमाण व सटीक मार्गदर्शन प्रदान करूँगा।'
 };
 
@@ -51,17 +51,17 @@ export default function SanatanAIAcharya({ panchangData }) {
 
       const acharyaMsg = {
         id: Date.now() + 1,
-        sender: 'acharya',
+        sender: 'model',
         text: result.text
       };
 
       setMessages(prev => [...prev, acharyaMsg]);
-      saveMessageToBackend('acharya', result.text);
+      saveMessageToBackend('model', result.text);
     } catch (error) {
       console.error('Chat error:', error);
       const fallbackMsg = {
         id: Date.now() + 1,
-        sender: 'acharya',
+        sender: 'model',
         text: 'कर्म का नियम सनातन और अटल है। श्रीमद्भगवद्गीता (२.४७) के अनुसार निष्काम कर्म और सात्विक पुरुषार्थ से चित्त की शुद्धि होती है। कृपया अपना प्रश्न पुनः पूछें।'
       };
       setMessages(prev => [...prev, fallbackMsg]);
