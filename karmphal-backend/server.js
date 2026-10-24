@@ -61,7 +61,7 @@ app.use(bodyParser.urlencoded({ extended: true, limit: '1mb' }));
 // Global Rate Limiting
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 200, // 200 requests per 15 minutes per IP
+  max: process.env.NODE_ENV === 'test' ? 10000 : 200, // High ceiling for test suites
   message: { error: 'RATE_LIMIT', message: 'Too many requests from this IP, please try again after 15 minutes' },
   standardHeaders: true,
   legacyHeaders: false,
@@ -71,7 +71,7 @@ app.use('/api/', globalLimiter);
 // Auth Rate Limiting on /api/auth/*
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 30, // Max 30 attempts per 15 minutes
+  max: process.env.NODE_ENV === 'test' ? 1000 : 30, // Max 30 attempts per 15 minutes
   message: { error: 'AUTH_RATE_LIMIT', message: 'Too many authentication attempts. Please try again after 15 minutes.' },
   standardHeaders: true,
   legacyHeaders: false,

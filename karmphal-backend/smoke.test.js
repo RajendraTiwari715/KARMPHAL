@@ -3,14 +3,15 @@ const assert = require('assert');
 const jwt = require('jsonwebtoken');
 
 let server;
-const BASE_URL = 'http://127.0.0.1:5000';
+const TEST_PORT = process.env.TEST_PORT || '5055';
+const BASE_URL = `http://127.0.0.1:${TEST_PORT}`;
 const JWT_SECRET = process.env.JWT_SECRET || 'abb1b2019a00844a9fba5c837b8707fa3b9f5c4aea9e8ea083eb9ed875c7e5c4';
 
 async function runTests() {
-  console.log('🚀 Starting backend server for security & auth test suite...');
+  console.log(`🚀 Starting backend server on port ${TEST_PORT} for security & test suite...`);
   server = spawn('node', ['server.js'], {
     stdio: 'inherit',
-    env: { ...process.env, JWT_SECRET }
+    env: { ...process.env, PORT: TEST_PORT, JWT_SECRET, NODE_ENV: 'test', CHAT_RETENTION_LIMIT: '15' }
   });
 
   // Wait for server to start
@@ -257,12 +258,95 @@ async function runTests() {
     assert.strictEqual(historyData[0].sender, 'user');
     assert.strictEqual(historyData[1].sender, 'model');
     assert.strictEqual(historyData[2].sender, 'model', 'acharya must be saved as normalized model in DB');
+    assert.ok(historyData[0].created_at, 'Row must include created_at timestamp');
     console.log('✅ Chat history sender validation, alias normalization (acharya -> model), and 400 error verified');
 
     // ----------------------------------------------------
-    // TEST 9: Acharya AI Chatbot End-to-End with JWT
+    // TEST 9: Chat History Pagination & Cursor Verification
     // ----------------------------------------------------
-    console.log('\n[9/9] Testing Acharya AI chat end-to-end with verified JWT...');
+    console.log('\n[9/11] Testing Chat History Pagination & Cursor...');
+    // User B currently has 3 messages (IDs e.g. 2, 3, 4).
+    // Test limit=2
+    const paginatedRes = await fetch(`${BASE_URL}/api/user/chat-history?limit=2`, {
+      headers: { 'Authorization': `Bearer ${tokenB}` }
+    });
+    assert.strictEqual(paginatedRes.status, 200);
+    const paginatedData = await paginatedRes.json();
+    assert.strictEqual(paginatedData.length, 2, 'Limit 2 should return 2 latest messages');
+    // Test before cursor
+    const oldestVisibleId = paginatedData[0].id;
+    const beforeRes = await fetch(`${BASE_URL}/api/user/chat-history?limit=2&before=${oldestVisibleId}`, {
+      headers: { 'Authorization': `Bearer ${tokenB}` }
+    });
+    assert.strictEqual(beforeRes.status, 200);
+    const beforeData = await beforeRes.json();
+    assert.strictEqual(beforeData.length, 1, 'Before cursor should return remaining older message');
+    assert.strictEqual(beforeData[0].text, 'शिष्य का प्रश्न');
+    console.log('✅ Chat history pagination and cursor filtering verified');
+
+    // ----------------------------------------------------
+    // TEST 10: Retention Policy & Clear Conversation (DELETE)
+    // ----------------------------------------------------
+    console.log('\n[10/11] Testing Retention Policy and DELETE /api/user/chat-history...');
+    // Test Retention: insert 20 messages for User B (retention limit is 15 in test mode)
+    for (let i = 0; i < 20; i++) {
+      await fetch(`${BASE_URL}/api/user/chat-history`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenB}` },
+        body: JSON.stringify({ sender: 'user', text: `मैसेज ${i}` })
+      });
+    }
+    const retentionRes = await fetch(`${BASE_URL}/api/user/chat-history?limit=50`, {
+      headers: { 'Authorization': `Bearer ${tokenB}` }
+    });
+    const retentionData = await retentionRes.json();
+    assert.strictEqual(retentionData.length, 15, 'Retention policy must truncate to 15 maximum rows in test mode');
+
+    // Test DELETE /api/user/chat-history for User B
+    const deleteChatRes = await fetch(`${BASE_URL}/api/user/chat-history`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${tokenB}` }
+    });
+    assert.strictEqual(deleteChatRes.status, 200);
+    const deleteChatData = await deleteChatRes.json();
+    assert.strictEqual(deleteChatData.success, true);
+    assert.strictEqual(deleteChatData.deletedCount, 15);
+
+    // Verify User B history is now 0
+    const emptyHistoryRes = await fetch(`${BASE_URL}/api/user/chat-history`, {
+      headers: { 'Authorization': `Bearer ${tokenB}` }
+    });
+    const emptyHistoryData = await emptyHistoryRes.json();
+    assert.strictEqual(emptyHistoryData.length, 0, 'User B chat history must be completely empty');
+
+    // Verify User A Isolation (create User C to test cross-user isolation)
+    const guestCRes = await fetch(`${BASE_URL}/api/auth/guest`, { method: 'POST' });
+    const { token: tokenC } = await guestCRes.json();
+    await fetch(`${BASE_URL}/api/user/chat-history`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenC}` },
+      body: JSON.stringify({ sender: 'user', text: 'गुप्त सन्देश यूजर सी' })
+    });
+    // User B fetches history: must still be 0, never sees User C
+    const userBCheckRes = await fetch(`${BASE_URL}/api/user/chat-history`, {
+      headers: { 'Authorization': `Bearer ${tokenB}` }
+    });
+    const userBCheckData = await userBCheckRes.json();
+    assert.strictEqual(userBCheckData.length, 0, 'User B must NEVER see User C messages');
+
+    // User C fetches history: sees only their 1 message
+    const userCCheckRes = await fetch(`${BASE_URL}/api/user/chat-history`, {
+      headers: { 'Authorization': `Bearer ${tokenC}` }
+    });
+    const userCCheckData = await userCCheckRes.json();
+    assert.strictEqual(userCCheckData.length, 1);
+    assert.strictEqual(userCCheckData[0].text, 'गुप्त सन्देश यूजर सी');
+    console.log('✅ Retention policy (100 cap), Clear conversation (DELETE), and cross-user isolation verified');
+
+    // ----------------------------------------------------
+    // TEST 11: Acharya AI Chatbot End-to-End with JWT
+    // ----------------------------------------------------
+    console.log('\n[11/11] Testing Acharya AI chat end-to-end with verified JWT...');
     const aiRes = await fetch(`${BASE_URL}/api/ai/acharya`, {
       method: 'POST',
       headers: {
@@ -279,7 +363,7 @@ async function runTests() {
     assert.ok(aiData.text && aiData.text.length > 10, 'Expected valid Acharya answer');
     console.log('✅ Acharya AI response received successfully:', aiData.text.slice(0, 90), '...');
 
-    console.log('\n🎉 ALL 8 SECURITY TESTS PASSED WITH 100% SUCCESS!');
+    console.log('\n🎉 ALL 11 BACKEND SECURITY & CHAT TESTS PASSED WITH 100% SUCCESS!');
   } catch (err) {
     console.error('\n❌ Security tests failed:', err);
     process.exitCode = 1;

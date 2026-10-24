@@ -74,14 +74,49 @@ router.post('/punya', (req, res, next) => {
   }
 });
 
+const CHAT_RETENTION_LIMIT = parseInt(process.env.CHAT_RETENTION_LIMIT, 10) || 100; // Retain maximum N messages per user (default 100)
+
 /**
  * GET /api/user/chat-history
  * Retrieves chat history scoped strictly to req.user.id
+ * Supports ?limit=50&before=<cursor_id>
+ * Ordered chronologically by timestamp / created_at ASC
  */
 router.get('/chat-history', (req, res, next) => {
   try {
     const userId = req.user.id;
-    const history = db.prepare('SELECT sender, text, timestamp FROM ChatHistory WHERE userId = ? ORDER BY id ASC').all(userId);
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 50, 1), 100);
+    const before = req.query.before ? parseInt(req.query.before, 10) : null;
+
+    let rows;
+    if (before && !isNaN(before)) {
+      rows = db.prepare(`
+        SELECT id, sender, text, timestamp, timestamp AS created_at 
+        FROM ChatHistory 
+        WHERE userId = ? AND id < ? 
+        ORDER BY id DESC 
+        LIMIT ?
+      `).all(userId, before, limit);
+    } else {
+      rows = db.prepare(`
+        SELECT id, sender, text, timestamp, timestamp AS created_at 
+        FROM ChatHistory 
+        WHERE userId = ? 
+        ORDER BY id DESC 
+        LIMIT ?
+      `).all(userId, limit);
+    }
+
+    // Reverse to ascending (chronological) order for chat stream
+    const history = rows.reverse();
+    const hasMore = rows.length === limit;
+    const oldestCursor = history.length > 0 ? history[0].id : null;
+
+    res.set('X-Has-More', String(hasMore));
+    if (oldestCursor) {
+      res.set('X-Next-Cursor', String(oldestCursor));
+    }
+
     res.json(history);
   } catch (err) {
     next(err);
@@ -91,6 +126,7 @@ router.get('/chat-history', (req, res, next) => {
 /**
  * POST /api/user/chat-history
  * Stores a chat message scoped strictly to req.user.id
+ * Applies retention policy to prevent DB bloat
  */
 router.post('/chat-history', (req, res, next) => {
   try {
@@ -98,10 +134,36 @@ router.post('/chat-history', (req, res, next) => {
     const validatedData = chatHistorySchema.parse(req.body);
     const { sender, text } = validatedData;
     
-    db.prepare('INSERT INTO ChatHistory (userId, sender, text) VALUES (?, ?, ?)')
+    const insertResult = db.prepare('INSERT INTO ChatHistory (userId, sender, text) VALUES (?, ?, ?)')
       .run(userId, sender, text);
+
+    // Retention policy: Keep only the most recent N messages for this user
+    db.prepare(`
+      DELETE FROM ChatHistory 
+      WHERE userId = ? 
+        AND id NOT IN (
+          SELECT id FROM ChatHistory 
+          WHERE userId = ? 
+          ORDER BY id DESC 
+          LIMIT ?
+        )
+    `).run(userId, userId, CHAT_RETENTION_LIMIT);
       
-    res.json({ success: true });
+    res.json({ success: true, id: insertResult.lastInsertRowid });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * DELETE /api/user/chat-history
+ * Clears chat history scoped strictly to req.user.id
+ */
+router.delete('/chat-history', (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const result = db.prepare('DELETE FROM ChatHistory WHERE userId = ?').run(userId);
+    res.json({ success: true, message: 'Chat history cleared successfully', deletedCount: result.changes });
   } catch (err) {
     next(err);
   }
