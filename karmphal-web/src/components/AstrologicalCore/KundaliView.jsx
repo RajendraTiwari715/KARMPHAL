@@ -7,8 +7,10 @@ import { hardwareService } from '../../services/hardwareService';
 import { Capacitor } from '@capacitor/core';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
+import { useToast } from '../../context/useToast';
 
 export default function KundaliView({ onBack }) {
+  const toast = useToast();
   const [formData, setFormData] = useState({
     name: 'राहुल शर्मा',
     dob: '1998-08-15',
@@ -37,13 +39,13 @@ export default function KundaliView({ onBack }) {
         
         // This is a placeholder since we don't have true multimodality on this route yet.
         // We simulate filling the form based on scanned data.
-        alert('Kundali scanned successfully! Please review extracted details (Simulated).');
+        toast.info('कुण्डली चित्र प्राप्त हुआ। कृपया नीचे दिए गए जन्म विवरण की समीक्षा करें।');
       } else {
-        alert(`Scan failed: ${result.error}`);
+        toast.error(result.error ? `स्कैन विफल रहा: ${result.error}` : 'स्कैन विफल रहा। कृपया पुनः प्रयास करें।');
       }
     } catch (e) {
       console.error(e);
-      alert('Camera error occurred.');
+      toast.error('कैमरा एक्सेस त्रुटि: कृपया कैमरा अनुमतियों की जांच करें।');
     } finally {
       setIsScanning(false);
     }
@@ -117,12 +119,13 @@ export default function KundaliView({ onBack }) {
         
         const res = await hardwareService.saveBase64ToDownloads(base64Pdf, 'Kundali_Report.pdf');
         if (res.success) {
-          alert('PDF Saved to Documents: ' + res.uri);
+          toast.success(res.uri ? `कुण्डली PDF सुरक्षित: ${res.uri}` : 'कुण्डली PDF डॉक्युमेंट्स में सुरक्षित की गई।');
         } else {
-          alert('Failed to save PDF: ' + res.error);
+          toast.error(`PDF सुरक्षित करने में त्रुटि: ${res.error || 'अज्ञात त्रुटि'}`);
         }
       } catch (err) {
         console.error('PDF Export failed:', err);
+        toast.error('PDF निर्यात विफल रहा। कृपया पुनः प्रयास करें।');
       } finally {
         setIsExporting(false);
       }

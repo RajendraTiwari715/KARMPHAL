@@ -4,6 +4,11 @@
   "description": "Karmphal - Vedic Ephemeris & Spiritual Life-Management System",
   "private": true,
   "scripts": {
+    "dev": "npm --prefix karmphal-web run dev",
+    "dev:web": "npm --prefix karmphal-web run dev",
+    "dev:backend": "npm --prefix karmphal-backend run dev",
+    "build": "npm --prefix karmphal-web run build",
+    "test": "npm --prefix karmphal-backend run test",
     "lint": "npm --prefix karmphal-web run lint",
     "prepare": "husky"
   },

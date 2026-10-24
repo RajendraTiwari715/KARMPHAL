@@ -3,8 +3,10 @@ import { SACRED_BOOKS } from '../services/scripturesData';
 import { BookOpen, Sparkles, ArrowLeft, Search, Copy, Check, ChevronRight, Download, Library, Globe, CloudOff, Loader } from 'lucide-react';
 import { libraryService } from '../services/libraryService';
 import PDFReader from '../components/PDFReader';
+import { useToast } from '../context/useToast';
 
 export default function GyanSection() {
+  const toast = useToast();
   // Modes: 'curated' | 'elibrary'
   const [viewMode, setViewMode] = useState('curated');
 
@@ -67,8 +69,9 @@ export default function GyanSection() {
     try {
       await libraryService.downloadAndCacheBook(book.id);
       setDownloadedBooks(prev => ({ ...prev, [book.id]: true }));
+      toast.success(`'${book.title || 'ग्रन्थ'}' ऑफ़लाइन पठन हेतु सहेजा गया।`);
     } catch {
-      alert('डाउनलोड विफल रहा। कृपया बाद में पुनः प्रयास करें।');
+      toast.error('डाउनलोड विफल रहा। कृपया नेटवर्क कनेक्शन जांचें व पुनः प्रयास करें।');
     } finally {
       setDownloadingBooks(prev => ({ ...prev, [book.id]: false }));
     }

@@ -6,8 +6,10 @@ import { hardwareService } from '../../services/hardwareService';
 import { Capacitor } from '@capacitor/core';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { useToast } from '../../context/useToast';
 
 export default function VastuView({ onBack }) {
+  const toast = useToast();
   const [selectedZone, setSelectedZone] = useState(VASTU_ZONES_16[0]); // N (उत्तर)
   const [roomType, setRoomType] = useState('pujaRoom');
   const [roomPlacementZone, setRoomPlacementZone] = useState('NE');
@@ -54,15 +56,17 @@ export default function VastuView({ onBack }) {
         const base64Pdf = pdf.output('datauristring');
         const res = await hardwareService.saveBase64ToDownloads(base64Pdf, 'Vastu_Audit_Report.pdf');
         if (res.success) {
-          alert('PDF Saved to Documents: ' + res.uri);
+          toast.success(res.uri ? `वास्तु रिपोर्ट सुरक्षित: ${res.uri}` : 'वास्तु रिपोर्ट PDF डॉक्युमेंट्स में सुरक्षित की गई।');
         } else {
-          alert('Failed to save PDF: ' + res.error);
+          toast.error(`PDF सुरक्षित करने में त्रुटि: ${res.error || 'अज्ञात त्रुटि'}`);
         }
       } else {
         pdf.save(`Vastu_Audit_Report.pdf`);
+        toast.success('वास्तु रिपोर्ट PDF डाउनलोड आरम्भ हुआ।');
       }
     } catch (err) {
       console.error('PDF Export failed:', err);
+      toast.error('PDF निर्यात विफल रहा। कृपया पुनः प्रयास करें।');
     } finally {
       setIsExporting(false);
     }
