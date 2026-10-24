@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "oxlint",
+    "optimize:images": "node scripts/optimize-images.mjs",
     "verify:library": "node scripts/verify_library_books.mjs",
     "test": "vite-node tests/markdown.test.js && vite-node tests/anticheat_and_audio.test.js && node tests/library_memory.test.js && vite-node tests/pdf_report.test.js && vite-node tests/japa_profiler.test.js && vite-node tests/panchang_performance.test.js",
     "preview": "vite preview"
@@ -39,6 +40,7 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.4",
     "oxlint": "^1.75.0",
+    "sharp": "^0.35.5",
     "vite": "^8.2.0",
     "vite-node": "^6.0.0"
   }

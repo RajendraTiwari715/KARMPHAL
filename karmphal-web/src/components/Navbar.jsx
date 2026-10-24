@@ -3,7 +3,7 @@ import { Volume2, VolumeX } from 'lucide-react';
 import { languageService } from '../services/languageService';
 import { audioService } from '../services/audioService';
 import ProfileModal from './ProfileModal';
-import appLogo from '../assets/app_logo.jpg';
+import appLogo from '../assets/app_logo.webp';
 import { GuruIcon, GyanIcon, SadhanaIcon, JyotishIcon, KarmaIcon } from './SectionIcons';
 
 function Navbar({ activeSection, setActiveSection, panchangData: _panchangData }) {
@@ -58,6 +58,9 @@ function Navbar({ activeSection, setActiveSection, panchangData: _panchangData }
               <img 
                 src={appLogo} 
                 alt="Karmphal Divine OM Logo" 
+                width="56"
+                height="56"
+                loading="eager"
                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
               />
               <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-[#E0A96D] border-2 border-[#120A05] animate-ping"></span>

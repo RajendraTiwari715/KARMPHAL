@@ -3,6 +3,7 @@ import { Send, Copy, Check, Trash2, Loader2 } from 'lucide-react';
 import { useChat } from '../../context/useChat';
 import { useToast, useConfirm } from '../../context/useToast';
 import AcharyaMarkdown from './AcharyaMarkdown';
+import guruAvatar from '../../assets/guru_avatar.webp';
 
 export default function SanatanAIAcharya({ panchangData }) {
   const {
@@ -78,8 +79,15 @@ export default function SanatanAIAcharya({ panchangData }) {
       <div className="glass-card p-3.5 sm:p-6 flex flex-col h-[540px] sm:h-[620px] md:h-[660px] border border-[#C58B4E]/30 shadow-2xl relative rounded-2xl sm:rounded-3xl">
         {/* Top Header with Clear Conversation Action */}
         <div className="flex items-center justify-between pb-3 mb-2 border-b border-[#C58B4E]/20">
-          <div className="flex items-center gap-2">
-            <span className="text-base sm:text-lg animate-diya">🪔</span>
+          <div className="flex items-center gap-2.5">
+            <img 
+              src={guruAvatar} 
+              alt="आचार्य जी अवतार" 
+              width="44" 
+              height="44" 
+              loading="lazy" 
+              className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl object-cover border border-[#C58B4E]/50 shadow-md shrink-0" 
+            />
             <div>
               <h3 className="font-dharmik text-xs sm:text-sm font-bold text-[#F3CA9D]">
                 सनातन धर्म संवाद एवं शास्त्र मार्गदर्शन
@@ -178,7 +186,14 @@ export default function SanatanAIAcharya({ panchangData }) {
                     {!isUser && (
                       <div className="flex items-center justify-between gap-2 mb-1.5 pb-1 border-b border-[#C58B4E]/20">
                         <span className="font-dharmik font-bold text-[#F3CA9D] text-xs sm:text-sm flex items-center gap-1.5">
-                          <span className="animate-diya text-xs sm:text-sm">🪔</span>
+                          <img 
+                            src={guruAvatar} 
+                            alt="आचार्य जी" 
+                            width="20" 
+                            height="20" 
+                            loading="lazy" 
+                            className="w-5 h-5 rounded-full object-cover border border-[#C58B4E]/50 shadow shrink-0" 
+                          />
                           <span>आचार्य जी</span>
                         </span>
 
