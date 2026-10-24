@@ -6,7 +6,7 @@ import { useProfile } from '../context/useProfile';
 import { apiClient } from '../services/apiClient';
 
 function ProfileModal({ isOpen, onClose }) {
-  const { punyaLedger } = useProfile();
+  const { punyaLedger, currentStreak, location, updateCity } = useProfile();
 
   const currentLang = languageService.getLang();
 
@@ -15,7 +15,7 @@ function ProfileModal({ isOpen, onClose }) {
     name: 'साधक',
     phoneOrEmail: 'satyendra@karmphal.app',
     gotra: 'कश्यप (Kashyapa)',
-    city: 'वाराणसी (Varanasi)',
+    city: location?.cityName || 'वाराणसी (Varanasi)',
     isLoggedIn: true
   });
   const [isMuted, setIsMuted] = useState(audioService.isSoundMuted());
@@ -23,6 +23,9 @@ function ProfileModal({ isOpen, onClose }) {
   useEffect(() => {
     if (isOpen) {
       setIsMuted(audioService.isSoundMuted());
+      if (location?.cityName) {
+        setUserData(prev => ({ ...prev, city: location.cityName }));
+      }
       apiClient.get('/api/user/profile')
         .then(data => {
           if (data && data.name) {
@@ -31,7 +34,7 @@ function ProfileModal({ isOpen, onClose }) {
         })
         .catch(err => console.warn('Failed to load profile', err.message));
     }
-  }, [isOpen]);
+  }, [isOpen, location]);
 
   const handleToggleSound = () => {
     const nextMuted = audioService.toggleMute();
@@ -45,6 +48,9 @@ function ProfileModal({ isOpen, onClose }) {
 
   const handleSaveProfile = (e) => {
     e?.preventDefault();
+    if (userData.city) {
+      updateCity(userData.city);
+    }
     apiClient.post('/api/user/profile', {
       name: userData.name,
       gotra: userData.gotra,
@@ -183,7 +189,7 @@ function ProfileModal({ isOpen, onClose }) {
               <Sparkles className="w-3.5 h-3.5" />
               <span>कुल पुण्य अर्जन</span>
             </div>
-            <div className="text-xl font-bold font-mono text-[#F3CA9D]">+{appState.punyaLedger || 108} pts</div>
+            <div className="text-xl font-bold font-mono text-[#F3CA9D]">+{punyaLedger || 108} pts</div>
             <span className="text-[10px] text-[#C58B4E] block mt-0.5">साधना पद: <strong className="text-[#F7E7D6]">{rank}</strong></span>
           </div>
 
@@ -192,7 +198,7 @@ function ProfileModal({ isOpen, onClose }) {
               <Flame className="w-3.5 h-3.5" />
               <span>साधना निरन्तरता</span>
             </div>
-            <div className="text-xl font-bold font-mono text-[#F3CA9D]">{appState.currentStreak || 3} दिवस</div>
+            <div className="text-xl font-bold font-mono text-[#F3CA9D]">{currentStreak || 3} दिवस</div>
             <span className="text-[10px] text-emerald-400 block mt-0.5">नित्य सङ्कल्प सक्रिय</span>
           </div>
         </div>

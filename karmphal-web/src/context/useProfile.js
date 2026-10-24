@@ -11,7 +11,10 @@ export const useProfile = () => {
       currentStreak: s.currentStreak,
       bestStreak: s.bestStreak,
       lastCheckInDate: s.lastCheckInDate,
-      addPunya: (pts, rsn) => storageService.addPunya(pts, rsn)
+      location: null,
+      addPunya: (pts, rsn) => storageService.addPunya(pts, rsn),
+      updateLocation: () => {},
+      updateCity: () => {}
     };
   }
   return context;

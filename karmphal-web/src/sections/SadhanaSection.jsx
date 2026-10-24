@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
-  Video, ChevronRight, ArrowLeft, Copy, Check 
+  Video, ChevronRight, ArrowLeft, Copy, Check, MapPin 
 } from 'lucide-react';
 import { computePanchang } from '../services/ephemerisEngine';
+import { locationService } from '../services/locationService';
+import { useProfile } from '../context/useProfile';
+import LocationPickerModal from '../components/LocationPickerModal';
 import { 
   SACRED_ARTIS, SACRED_CHALISAS, SACRED_MANTRAS_LIST, 
   SACRED_LIVE_DARSHAN, SACRED_STOTRAS 
@@ -14,14 +17,49 @@ export default function SadhanaSection() {
   const [activeModal, setActiveModal] = useState(null); // 'arti', 'chalisa', 'mantra', 'live', 'stotra_detail', 'japa_mala', 'puja_vidhan'
   const [selectedItem, setSelectedItem] = useState(null);
   const [copiedId, setCopiedId] = useState(null);
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
 
-  const now = new Date();
-  const panchang = computePanchang(now, 28.6139, 77.2090);
+  // 1. Read location from profile context or fallback to locationService
+  const { location } = useProfile();
+  const activeLocation = location || locationService.getLocation();
+  const lat = activeLocation.lat;
+  const lon = activeLocation.lon;
 
-  const dateFormatted = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-  const tithiFormatted = panchang.tithi?.name || 'Dwadashi';
-  const rashiFormatted = panchang.planets?.[2]?.signSanskrit || 'Mithun';
-  const nakshatraFormatted = panchang.nakshatra?.name || 'Ashwini';
+  // 2. Ask user once via location picker if location is missing/default and not prompted before
+  useEffect(() => {
+    if (!locationService.hasBeenPrompted() && activeLocation.isDefaultLocation) {
+      locationService.requestGeolocation().then(res => {
+        if (!res.success) {
+          setShowLocationPicker(true);
+        }
+      });
+      locationService.markPrompted();
+    }
+  }, [activeLocation.isDefaultLocation]);
+
+  // 3. Single 1-minute interval for intra-day time changes outside the render path
+  const [minuteTime, setMinuteTime] = useState(() => new Date());
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setMinuteTime(new Date());
+    }, 60000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // 4. Day granularity key (YYYY-MM-DD)
+  const dayKey = `${minuteTime.getFullYear()}-${String(minuteTime.getMonth() + 1).padStart(2, '0')}-${String(minuteTime.getDate()).padStart(2, '0')}`;
+
+  // 5. Memoize daily panchang keyed on dayKey and coordinates
+  const panchang = useMemo(() => {
+    return computePanchang(new Date(dayKey), lat, lon);
+  }, [dayKey, lat, lon]);
+
+  const dateFormatted = minuteTime.toLocaleDateString('hi-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+  const tithiFormatted = panchang.tithi?.name || 'द्वादशी';
+  const tithiEndFormatted = panchang.tithi?.endTime ? `(समाप्ति: ${panchang.tithi.endTime})` : '';
+  const rashiFormatted = panchang.planets?.[2]?.signSanskrit || 'मिथुन';
+  const nakshatraFormatted = panchang.nakshatra?.name || 'अश्विनी';
+  const nakshatraEndFormatted = panchang.nakshatra?.endTime ? `(समाप्ति: ${panchang.nakshatra.endTime})` : '';
 
   const handleOpenAction = (actionType) => {
     setActiveModal(actionType);
@@ -312,6 +350,31 @@ export default function SadhanaSection() {
         <div className="absolute -bottom-12 -left-12 w-48 h-48 rounded-full border border-[#C58B4E]/10 pointer-events-none"></div>
 
         <div className="relative z-10 space-y-5">
+          {/* Location Bar with visible default indicator & Change Button */}
+          <div className="flex items-center justify-between pb-3 border-b border-[#C58B4E]/30 text-xs">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <MapPin className="w-4 h-4 text-[#E0A96D] shrink-0" />
+              <span className="font-bold text-[#F7E7D6]">
+                {activeLocation.cityName}
+              </span>
+              {activeLocation.isDefaultLocation ? (
+                <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-semibold">
+                  पूर्वनिर्धारित (दिल्ली)
+                </span>
+              ) : (
+                <span className="text-[10px] text-slate-400 font-mono">
+                  ({lat.toFixed(2)}° N, {lon.toFixed(2)}° E)
+                </span>
+              )}
+            </div>
+            <button
+              onClick={() => setShowLocationPicker(true)}
+              className="px-2.5 py-1 rounded-xl bg-black/40 border border-[#C58B4E]/40 text-[#E0A96D] hover:text-[#FFF] hover:border-[#E0A96D] text-[11px] font-bold transition-colors shrink-0"
+            >
+              स्थान बदलें
+            </button>
+          </div>
+
           <h2 className="text-center font-serif text-xl sm:text-2xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-[#F3CA9D] via-[#E0A96D] to-[#C58B4E] drop-shadow">
             आज का पञ्चाङ्ग
           </h2>
@@ -326,7 +389,12 @@ export default function SadhanaSection() {
             <div className="flex items-center gap-3 text-[#F3CA9D]">
               <span className="text-base sm:text-lg">🌙</span>
               <span className="font-medium text-[#D4A373]">तिथि:</span>
-              <span className="font-bold text-[#F7E7D6] ml-auto">{tithiFormatted}</span>
+              <div className="ml-auto text-right">
+                <span className="font-bold text-[#F7E7D6] block">{tithiFormatted}</span>
+                {tithiEndFormatted && (
+                  <span className="text-[10px] text-[#C58B4E] block">{tithiEndFormatted}</span>
+                )}
+              </div>
             </div>
 
             <div className="flex items-center gap-3 text-[#F3CA9D]">
@@ -338,7 +406,12 @@ export default function SadhanaSection() {
             <div className="flex items-center gap-3 text-[#F3CA9D]">
               <span className="text-base sm:text-lg">🌟</span>
               <span className="font-medium text-[#D4A373]">नक्षत्र:</span>
-              <span className="font-bold text-[#F7E7D6] ml-auto">{nakshatraFormatted}</span>
+              <div className="ml-auto text-right">
+                <span className="font-bold text-[#F7E7D6] block">{nakshatraFormatted}</span>
+                {nakshatraEndFormatted && (
+                  <span className="text-[10px] text-[#C58B4E] block">{nakshatraEndFormatted}</span>
+                )}
+              </div>
             </div>
             
             <div className="flex items-center gap-3 text-[#F3CA9D]">
@@ -355,6 +428,10 @@ export default function SadhanaSection() {
           </div>
           
           <div className="mt-4 pt-4 border-t border-[#C58B4E]/20 space-y-2 text-[11px] sm:text-xs">
+            <div className="flex items-center justify-between">
+              <span className="text-[#C58B4E] font-bold">सूर्योदय / सूर्यास्त:</span>
+              <span className="text-amber-200 font-mono">🌅 {panchang.muhurtas?.sunrise} | 🌇 {panchang.muhurtas?.sunset}</span>
+            </div>
             <div className="flex items-center justify-between">
               <span className="text-[#C58B4E] font-bold">ब्रह्म मुहूर्त:</span>
               <span className="text-emerald-300 font-mono">{panchang.muhurtas?.brahmaMuhurta}</span>
@@ -532,6 +609,12 @@ export default function SadhanaSection() {
           <ChevronRight className="w-5 h-5 text-[#C58B4E] group-hover:translate-x-1 transition-transform" />
         </div>
       </div>
+
+      {/* Location Picker Modal */}
+      <LocationPickerModal
+        isOpen={showLocationPicker}
+        onClose={() => setShowLocationPicker(false)}
+      />
     </div>
   );
 }

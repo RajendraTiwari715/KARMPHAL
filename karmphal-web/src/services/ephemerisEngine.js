@@ -105,15 +105,55 @@ export const CITY_COORDINATES = [
   { name: 'jalgaon', lat: 21.0077, lon: 75.5626 },
   { name: 'udaipur', lat: 24.5854, lon: 73.7125 },
   { name: 'maheshtala', lat: 22.5085, lon: 88.2526 },
-  { name: 'trupati', lat: 13.6288, lon: 79.4192 },
+  { name: 'ayodhya', lat: 26.7922, lon: 82.1998 },
+  { name: 'haridwar', lat: 29.9457, lon: 78.1642 },
+  { name: 'mathura', lat: 27.4924, lon: 77.6737 },
   { name: 'new york', lat: 40.7128, lon: -74.0060 },
   { name: 'london', lat: 51.5074, lon: -0.1278 },
   { name: 'sydney', lat: -33.8688, lon: 151.2093 }
 ];
 
+const HINDI_CITY_MAP = {
+  'वाराणसी': 'varanasi',
+  'काशी': 'varanasi',
+  'बनारस': 'varanasi',
+  'मुम्बई': 'mumbai',
+  'मुंबई': 'mumbai',
+  'बम्बई': 'mumbai',
+  'दिल्ली': 'delhi',
+  'नई दिल्ली': 'delhi',
+  'उज्जैन': 'ujjain',
+  'हरिद्वार': 'haridwar',
+  'अयोध्या': 'ayodhya',
+  'प्रयागराज': 'allahabad',
+  'इलाहाबाद': 'allahabad',
+  'कोलकाता': 'kolkata',
+  'कलकत्ता': 'kolkata',
+  'चेन्नई': 'chennai',
+  'मद्रास': 'chennai',
+  'बेंगलुरु': 'bangalore',
+  'बैंगलोर': 'bangalore',
+  'जयपुर': 'jaipur',
+  'पटना': 'patna',
+  'पुणे': 'pune',
+  'अहमदाबाद': 'ahmedabad',
+  'लखनऊ': 'lucknow',
+  'कानपुर': 'kanpur',
+  'मथुरा': 'mathura'
+};
+
 export function getCoordinatesForCity(cityName) {
   if (!cityName) return { lat: 28.6139, lon: 77.2090 };
   const query = cityName.toLowerCase().trim();
+
+  // Check Hindi map
+  for (const [hindiName, engKey] of Object.entries(HINDI_CITY_MAP)) {
+    if (query.includes(hindiName)) {
+      const match = CITY_COORDINATES.find(c => c.name === engKey);
+      if (match) return match;
+    }
+  }
+
   const match = CITY_COORDINATES.find(c => query.includes(c.name));
   return match || { lat: 28.6139, lon: 77.2090 }; // Default Delhi
 }
@@ -337,9 +377,28 @@ export function computePanchang(date = new Date(), lat = 28.6139, lon = 77.2090)
   const dayIndex = date.getDay();
   const currentVara = varas[dayIndex];
 
-  // Muhurtas based on Local Sunrise / Sunset (Default approx 6:00 AM to 6:30 PM)
-  const sunriseMinutes = 6 * 60 + 12; // 06:12 AM
-  const sunsetMinutes = 18 * 60 + 44; // 06:44 PM
+  // Solar calculation for accurate local Sunrise & Sunset based on latitude and longitude
+  const rad = Math.PI / 180;
+  const startOfYear = new Date(date.getFullYear(), 0, 0);
+  const diffTime = date - startOfYear;
+  const dayOfYear = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+  const declination = 23.44 * Math.sin(rad * ((360 / 365) * (dayOfYear - 81)));
+  const decRad = declination * rad;
+  const latRad = lat * rad;
+
+  const cosH0 = (Math.sin(-0.833 * rad) - Math.sin(latRad) * Math.sin(decRad)) / 
+                (Math.cos(latRad) * Math.cos(decRad));
+  const clampedCosH0 = Math.max(-1, Math.min(1, cosH0));
+  const H0 = Math.acos(clampedCosH0) * (180 / Math.PI);
+
+  const B = (360 / 365) * (dayOfYear - 81) * rad;
+  const eqTime = 9.87 * Math.sin(2 * B) - 7.53 * Math.cos(B) - 1.5 * Math.sin(B);
+
+  // Solar noon in IST (standard reference meridian 82.5° E, UTC+5:30)
+  const solarNoonMinutes = 12 * 60 + (82.5 - lon) * 4 - eqTime;
+  const sunriseMinutes = Math.round(solarNoonMinutes - H0 * 4);
+  const sunsetMinutes = Math.round(solarNoonMinutes + H0 * 4);
   const diurnalDuration = sunsetMinutes - sunriseMinutes; // D = T_set - T_rise
   const oneMuhurta = diurnalDuration / 15;
 
@@ -366,10 +425,47 @@ export function computePanchang(date = new Date(), lat = 28.6139, lon = 77.2090)
     return `${displayH.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${ampm}`;
   };
 
+  const formatClockTime = (d) => {
+    const h = d.getHours();
+    const m = d.getMinutes();
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const displayH = h % 12 === 0 ? 12 : h % 12;
+    return `${displayH.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${ampm}`;
+  };
+
+  // Intra-day end time calculation:
+  // Tithi span = 12 deg. Relative Moon-Sun speed = ~12.1907 deg / day
+  const elapsedInTithi = diff % 12;
+  const remainingTithiDegrees = 12 - elapsedInTithi;
+  const remainingTithiMinutes = Math.round((remainingTithiDegrees / 12.1907) * 24 * 60);
+  const tithiEndTime = new Date(date.getTime() + remainingTithiMinutes * 60000);
+
+  // Nakshatra span = 13.3333 deg (360/27). Moon speed = ~13.1763 deg / day
+  const elapsedInNak = moonLong % (360 / 27);
+  const remainingNakDegrees = (360 / 27) - elapsedInNak;
+  const remainingNakMinutes = Math.round((remainingNakDegrees / 13.1763) * 24 * 60);
+  const nakshatraEndTime = new Date(date.getTime() + remainingNakMinutes * 60000);
+
   return {
     date: date.toDateString(),
-    tithi: { number: tithiNumber, name: tithiName, isShukla, paksha: isShukla ? 'शुक्ल पक्ष' : 'कृष्ण पक्ष' },
-    nakshatra: { name: nakshatra.name, pada: nakshatraPada, lord: nakshatra.lord, deity: nakshatra.deity },
+    tithi: { 
+      number: tithiNumber, 
+      name: tithiName, 
+      isShukla, 
+      paksha: isShukla ? 'शुक्ल पक्ष' : 'कृष्ण पक्ष',
+      endTime: formatClockTime(tithiEndTime),
+      endTimestamp: tithiEndTime.toISOString(),
+      remainingMinutes: remainingTithiMinutes
+    },
+    nakshatra: { 
+      name: nakshatra.name, 
+      pada: nakshatraPada, 
+      lord: nakshatra.lord, 
+      deity: nakshatra.deity,
+      endTime: formatClockTime(nakshatraEndTime),
+      endTimestamp: nakshatraEndTime.toISOString(),
+      remainingMinutes: remainingNakMinutes
+    },
     yoga: { name: yogaName, index: yogaIndex + 1 },
     karana: { name: karanaName, number: halfTithi },
     vara: currentVara,
