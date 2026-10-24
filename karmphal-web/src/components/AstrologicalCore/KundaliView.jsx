@@ -1,17 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { ArrowLeft, Compass, ShieldAlert, Download, RefreshCcw, Camera } from 'lucide-react';
 import { computePlanetaryPositions, getCoordinatesForCity, computeVimshottariDasha, analyzeDoshas } from '../../services/ephemerisEngine';
 import { audioService } from '../../services/audioService';
 import { geminiService } from '../../services/geminiService';
 import { hardwareService } from '../../services/hardwareService';
 import { Capacitor } from '@capacitor/core';
-import { jsPDF } from 'jspdf';
-import html2canvas from 'html2canvas';
 import { useToast } from '../../context/useToast';
 import { apiClient } from '../../services/apiClient';
+import KundaliPrintReport from './KundaliPrintReport';
+import { pdfReportService } from '../../services/pdfReportService';
 
 export default function KundaliView({ onBack }) {
   const toast = useToast();
+  const printContainerRef = useRef(null);
   const [formData, setFormData] = useState({
     name: 'राहुल शर्मा',
     dob: '1998-08-15',
@@ -119,44 +120,30 @@ export default function KundaliView({ onBack }) {
 
   const handleDownloadPDF = async () => {
     audioService.playBeadClick();
-    
-    if (Capacitor.isNativePlatform()) {
-      setIsExporting(true);
-      try {
-        const reportElement = document.getElementById('kundali-report');
-        if (!reportElement) return;
 
-        const canvas = await html2canvas(reportElement, { 
-          scale: 2,
-          useCORS: true,
-          logging: false,
-          backgroundColor: '#111111'
-        });
-        const imgData = canvas.toDataURL('image/png');
-        
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-        
-        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-        const base64Pdf = pdf.output('datauristring');
-        
-        const res = await hardwareService.saveBase64ToDownloads(base64Pdf, 'Kundali_Report.pdf');
-        if (res.success) {
-          toast.success(res.uri ? `कुण्डली PDF सुरक्षित: ${res.uri}` : 'कुण्डली PDF डॉक्युमेंट्स में सुरक्षित की गई।');
-        } else {
-          toast.error(`PDF सुरक्षित करने में त्रुटि: ${res.error || 'अज्ञात त्रुटि'}`);
-        }
-      } catch (err) {
-        console.error('PDF Export failed:', err);
-        toast.error('PDF निर्यात विफल रहा। कृपया पुनः प्रयास करें।');
-      } finally {
-        setIsExporting(false);
+    if (!printContainerRef.current) {
+      toast.error('प्रिंट प्रतिवेदन लोड नहीं हुआ है। कृपया कुण्डली पुनः देखें।');
+      return;
+    }
+
+    setIsExporting(true);
+    toast.info('वैदिक जन्म पत्रिका PDF तैयार की जा रही है...');
+
+    try {
+      const result = await pdfReportService.exportKundaliPdf(printContainerRef.current, {
+        name: formData.name
+      });
+
+      if (result.success) {
+        toast.success(result.message);
+      } else {
+        toast.error(result.message || 'PDF निर्यात विफल रहा।');
       }
-    } else {
-      setTimeout(() => {
-        window.print();
-      }, 150);
+    } catch (err) {
+      console.error('PDF Export failed:', err);
+      toast.error(`PDF निर्माण में त्रुटि: ${err.message || 'अज्ञात त्रुटि'}`);
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -352,7 +339,7 @@ export default function KundaliView({ onBack }) {
             </div>
           </div>
           
-          <div id="kundali-report" className="print-report bg-white dark:bg-[#111] text-black dark:text-white rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-800 p-8 sm:p-12 overflow-hidden relative">
+          <div id="kundali-report" className="no-print bg-white dark:bg-[#111] text-black dark:text-white rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-800 p-8 sm:p-12 overflow-hidden relative">
             
             {/* PAGE 1: Summary & Basic Details */}
             <div className="page-section min-h-[900px] flex flex-col page-break-after">
@@ -590,6 +577,20 @@ export default function KundaliView({ onBack }) {
             </div>
             
           </div>
+        </div>
+      )}
+
+      {/* Dedicated Print-Only & PDF Export Report Component */}
+      {isGenerated && calculatedData && (
+        <div className="kundali-pdf-offscreen-wrapper">
+          <KundaliPrintReport
+            containerRef={printContainerRef}
+            formData={formData}
+            calculatedData={calculatedData}
+            chartType={chartType}
+            doshas={doshas}
+            aiReading={aiReading}
+          />
         </div>
       )}
     </div>

@@ -76,32 +76,102 @@
   -webkit-backface-visibility: hidden;
 }
 
+/* Offscreen container for pixel-perfect PDF capture */
+.kundali-pdf-offscreen-wrapper {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  width: 794px;
+  overflow: visible;
+  pointer-events: none;
+  opacity: 1;
+  z-index: -50;
+}
+
 @media print {
-  body {
-    background: white !important;
-    color: black !important;
-    font-size: 11pt;
+  @page {
+    size: A4 portrait;
+    margin: 6mm;
   }
-  .glass-card, .glass-card-gold {
-    background: transparent !important;
-    border: 1px solid #e5e5ea !important;
+
+  html, body {
+    background: #ffffff !important;
+    color: #111827 !important;
+    font-size: 10pt;
+    font-family: 'Noto Sans Devanagari', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide navigation, buttons, app chrome, and backgrounds */
+  nav,
+  header:not(.print-header),
+  footer:not(.print-footer),
+  button,
+  .no-print,
+  [role="navigation"],
+  .toast-container,
+  [class*="backdrop-blur"] {
+    display: none !important;
+  }
+
+  /* Eliminate background images and dark themes */
+  div[style*="background-image"],
+  .min-h-screen,
+  main {
+    background-image: none !important;
+    background: #ffffff !important;
+    color: #111827 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
     box-shadow: none !important;
-    color: black !important;
+  }
+
+  .glass-card, .glass-card-gold {
+    background: #ffffff !important;
+    border: 1px solid #e5e7eb !important;
+    box-shadow: none !important;
+    color: #111827 !important;
     backdrop-filter: none !important;
     page-break-inside: avoid;
   }
-  .no-print {
-    display: none !important;
-  }
+
   .print-only {
     display: block !important;
   }
+
+  .kundali-pdf-offscreen-wrapper {
+    position: static !important;
+    left: auto !important;
+    top: auto !important;
+    width: 100% !important;
+    display: block !important;
+    margin: 0 auto !important;
+  }
+
+  .page-break-after {
+    page-break-after: always !important;
+    break-after: page !important;
+  }
+
+  .page-break-inside-avoid {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
   * {
-    color: black !important;
+    color: inherit;
     text-shadow: none !important;
   }
-  svg {
-    stroke: black !important;
+
+  table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+  }
+
+  th, td {
+    border-color: #d1d5db !important;
   }
 }
 
