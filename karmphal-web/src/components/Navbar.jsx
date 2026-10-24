@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { Volume2, VolumeX } from 'lucide-react';
 import { languageService } from '../services/languageService';
+import { audioService } from '../services/audioService';
 import ProfileModal from './ProfileModal';
 import appLogo from '../assets/app_logo.jpg';
 import { GuruIcon, GyanIcon, SadhanaIcon, JyotishIcon, KarmaIcon } from './SectionIcons';
@@ -7,11 +9,27 @@ import { GuruIcon, GyanIcon, SadhanaIcon, JyotishIcon, KarmaIcon } from './Secti
 export default function Navbar({ activeSection, setActiveSection, panchangData: _panchangData }) {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [, setLang] = useState(languageService.getLang());
+  const [isMuted, setIsMuted] = useState(audioService.isSoundMuted());
 
   useEffect(() => {
     const unsub = languageService.subscribe(lang => setLang(lang));
-    return () => unsub();
+    const handleMuteChange = (e) => {
+      setIsMuted(e.detail?.isMuted ?? audioService.isSoundMuted());
+    };
+    window.addEventListener('karmphal_audio_mute_changed', handleMuteChange);
+    return () => {
+      unsub();
+      window.removeEventListener('karmphal_audio_mute_changed', handleMuteChange);
+    };
   }, []);
+
+  const handleToggleSound = () => {
+    const nextMuted = audioService.toggleMute();
+    setIsMuted(nextMuted);
+    if (!nextMuted) {
+      audioService.playTempleBell(660, 0.5);
+    }
+  };
 
   const t = languageService.t();
 
@@ -55,6 +73,36 @@ export default function Navbar({ activeSection, setActiveSection, panchangData: 
                 {t.brandSubtitle}
               </p>
             </div>
+          </div>
+
+          {/* Right Action Icons: Sound Mute Toggle & Profile Button */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleToggleSound}
+              title={isMuted ? "ध्वनि चालू करें (Unmute Bell & Chimes)" : "ध्वनि म्यूट करें (Mute Sound)"}
+              className={`px-3 py-2 rounded-2xl border transition-all cursor-pointer flex items-center gap-1.5 ${
+                isMuted 
+                  ? 'bg-rose-950/40 border-rose-500/40 text-rose-300 hover:border-rose-400' 
+                  : 'bg-black/30 border-[#C58B4E]/40 text-[#E0A96D] hover:border-[#E0A96D] shadow-sm'
+              }`}
+            >
+              {isMuted ? (
+                <VolumeX className="w-4 h-4 text-rose-400" />
+              ) : (
+                <Volume2 className="w-4 h-4 text-amber-300" />
+              )}
+              <span className="text-[11px] font-bold font-dharmik hidden sm:inline">
+                {isMuted ? 'म्यूट' : 'नाद सक्रिय'}
+              </span>
+            </button>
+
+            <button
+              onClick={() => setIsProfileOpen(true)}
+              className="px-3 py-2 rounded-2xl border border-[#C58B4E]/30 bg-black/30 text-[#F3CA9D] hover:border-[#E0A96D] transition-all cursor-pointer flex items-center gap-1.5"
+              title="साधना प्रोफाइल एवं विन्यास"
+            >
+              <span className="text-xs font-bold font-dharmik">ॐ विन्यास</span>
+            </button>
           </div>
         </div>
 

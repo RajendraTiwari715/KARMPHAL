@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "oxlint",
-    "test": "vite-node tests/markdown.test.js",
+    "test": "vite-node tests/markdown.test.js && vite-node tests/anticheat_and_audio.test.js",
     "preview": "vite preview"
   },
   "dependencies": {

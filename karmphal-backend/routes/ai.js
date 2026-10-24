@@ -3,7 +3,7 @@ const router = express.Router();
 const rateLimit = require('express-rate-limit');
 const { callGemini } = require('../services/gemini.service');
 const { requireAuth } = require('../middlewares/auth');
-const { chatSchema, kundaliSchema, vivahMilanSchema } = require('../schemas/ai.schema');
+const { chatSchema, kundaliSchema, vivahMilanSchema, extractKundaliRequestSchema, extractedKundaliOutputSchema } = require('../schemas/ai.schema');
 
 // 1. Enforce Authentication on all AI endpoints
 router.use(requireAuth);
@@ -153,6 +153,83 @@ Theological Safety & Rules: Respectful, wise, positive, and guru-like. STRICTLY 
 
     const responseObj = await callGemini([{ role: 'user', parts: [{ text: userPrompt }] }], systemInstruction, generationConfig);
     res.json({ text: responseObj.text });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * POST /api/ai/extract-kundali
+ * Multimodal OCR birth details extraction from kundali image
+ * Returns strict validated JSON: { name, dob, tob, place, notes }
+ */
+router.post('/extract-kundali', async (req, res, next) => {
+  try {
+    const validatedReq = extractKundaliRequestSchema.parse(req.body);
+    const { imageBase64, mimeType } = validatedReq;
+
+    // Clean base64 data if data URL prefix exists
+    const cleanBase64 = imageBase64.replace(/^data:image\/[a-z0-9+]+;base64,/, '').trim();
+
+    const systemInstruction = `You are an expert Vedic Astrology document OCR extraction engine.
+Examine the provided image of a birth chart (Janma Kundali / पत्रिका / जन्म चक्र).
+Extract the native's birth details with extreme precision.
+You MUST output ONLY a valid JSON object matching this schema:
+{
+  "name": "Full name of the native, or empty string if not found",
+  "dob": "Date of birth in YYYY-MM-DD format (convert Vikrami Samvat or words if given), or empty string if not found",
+  "tob": "Time of birth in 24-hour HH:MM format (e.g. 08:30 or 19:45), or empty string if not found",
+  "place": "Birth city, town, or state, or empty string if not found",
+  "notes": "Brief 1-sentence note in Hindi describing the chart or deity invocation found"
+}
+If a field is missing, illegible, or unstated in the image, set its value to "" (empty string). NEVER make up or hallucinate birth data.`;
+
+    const userPrompt = 'Extract birth details (Name, DOB, Time of Birth, Place of Birth) from this Kundali image into strict JSON.';
+
+    const contents = [
+      {
+        role: 'user',
+        parts: [
+          { text: userPrompt },
+          {
+            inlineData: {
+              mimeType: mimeType || 'image/jpeg',
+              data: cleanBase64
+            }
+          }
+        ]
+      }
+    ];
+
+    const generationConfig = {
+      temperature: 0.1,
+      responseMimeType: 'application/json'
+    };
+
+    let extractedData = { name: '', dob: '', tob: '', place: '', notes: '' };
+
+    try {
+      const responseObj = await callGemini(contents, systemInstruction, generationConfig);
+      if (responseObj?.text) {
+        const cleanedText = responseObj.text.replace(/```json\s*/i, '').replace(/```\s*$/, '').trim();
+        const parsed = JSON.parse(cleanedText);
+        extractedData = extractedKundaliOutputSchema.parse(parsed);
+      }
+    } catch (aiErr) {
+      console.warn('[extract-kundali] AI extraction issue:', aiErr.message);
+      extractedData = extractedKundaliOutputSchema.parse({
+        name: '',
+        dob: '',
+        tob: '',
+        place: '',
+        notes: 'चित्र से विवरण स्पष्ट नहीं हो सका। कृपया विवरण की स्वयं समीक्षा करें।'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: extractedData
+    });
   } catch (err) {
     next(err);
   }

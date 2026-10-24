@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { User, Globe, Sparkles, Flame, Check, X, Edit3, Save, CheckCircle } from 'lucide-react';
+import { User, Globe, Sparkles, Flame, Check, X, Edit3, Save, CheckCircle, Volume2, VolumeX, Bell } from 'lucide-react';
 import { languageService } from '../services/languageService';
+import { audioService } from '../services/audioService';
 import { useApp } from '../context/useApp';
 import { apiClient } from '../services/apiClient';
 
@@ -17,9 +18,11 @@ export default function ProfileModal({ isOpen, onClose }) {
     city: 'वाराणसी (Varanasi)',
     isLoggedIn: true
   });
+  const [isMuted, setIsMuted] = useState(audioService.isSoundMuted());
 
   useEffect(() => {
     if (isOpen) {
+      setIsMuted(audioService.isSoundMuted());
       apiClient.get('/api/user/profile')
         .then(data => {
           if (data && data.name) {
@@ -29,6 +32,14 @@ export default function ProfileModal({ isOpen, onClose }) {
         .catch(err => console.warn('Failed to load profile', err.message));
     }
   }, [isOpen]);
+
+  const handleToggleSound = () => {
+    const nextMuted = audioService.toggleMute();
+    setIsMuted(nextMuted);
+    if (!nextMuted) {
+      audioService.playTempleBell(528, 0.8);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -220,6 +231,54 @@ export default function ProfileModal({ isOpen, onClose }) {
                 </div>
               );
             })}
+          </div>
+        </div>
+
+        {/* Audio & Sacred Chimes Settings */}
+        <div className="space-y-3 mb-6">
+          <div className="flex items-center gap-2 text-xs font-bold text-[#F3CA9D]">
+            <Bell className="w-4 h-4 text-[#E0A96D]" />
+            <span>ध्वनि एवं घण्टा नाद विन्यास (Sound & Chimes)</span>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-black/40 border border-[#C58B4E]/30 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-xs font-bold text-[#F7E7D6]">साधना ध्वनि (Sacred Chimes)</div>
+                <div className="text-[11px] text-[#C58B4E]">मन्दिर घण्टा, शंख एवं मनका नाद</div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleToggleSound}
+                className={`px-3 py-1.5 rounded-xl border font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer ${
+                  isMuted 
+                    ? 'bg-rose-950/40 border-rose-500/40 text-rose-300' 
+                    : 'bg-emerald-950/40 border-emerald-500/40 text-emerald-300'
+                }`}
+              >
+                {isMuted ? <VolumeX className="w-3.5 h-3.5 text-rose-400" /> : <Volume2 className="w-3.5 h-3.5 text-emerald-400" />}
+                <span>{isMuted ? 'म्यूट (Muted)' : 'सक्रिय (Active)'}</span>
+              </button>
+            </div>
+
+            {/* Test Audio Buttons */}
+            <div className="flex items-center gap-2 pt-2 border-t border-[#C58B4E]/15">
+              <button
+                type="button"
+                onClick={() => audioService.playTempleBell(528, 2.5)}
+                className="flex-1 py-1.5 px-2.5 rounded-xl border border-[#C58B4E]/25 bg-black/30 hover:bg-[#C58B4E]/20 text-[11px] text-[#F3CA9D] font-medium transition-colors cursor-pointer"
+              >
+                🔔 मन्दिर घण्टा नाद
+              </button>
+              <button
+                type="button"
+                onClick={() => audioService.playShankh()}
+                className="flex-1 py-1.5 px-2.5 rounded-xl border border-[#C58B4E]/25 bg-black/30 hover:bg-[#C58B4E]/20 text-[11px] text-[#F3CA9D] font-medium transition-colors cursor-pointer"
+              >
+                🐚 दिव्य शंख नाद
+              </button>
+            </div>
           </div>
         </div>
 

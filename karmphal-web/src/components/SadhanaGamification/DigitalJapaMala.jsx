@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Flame, ShieldCheck, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
 import { audioService } from '../../services/audioService';
 import { useApp } from '../../context/useApp';
@@ -21,14 +21,93 @@ export default function DigitalJapaMala() {
 
   const [beadCount, setBeadCount] = useState(0);
   const [malaCycle, setMalaCycle] = useState(0);
-  const antiCheatStatus = 'pure';
+
+  // Akshar Vega Rakshak (Real Anti-Cheat State & Refs)
+  const [antiCheatStatus, setAntiCheatStatus] = useState('pure'); // 'pure' | 'throttled' | 'mechanical'
+  const [antiCheatNotice, setAntiCheatNotice] = useState(null);
+
+  const tapHistoryRef = useRef([]); // Stores { timestamp, delta }
+  const pointsAwardedWindowRef = useRef([]); // Stores { timestamp, points }
+  const warningTimerRef = useRef(null);
 
   const handleBeadChant = () => {
+    const now = Date.now();
+    const history = tapHistoryRef.current;
+    const lastTap = history.length > 0 ? history[history.length - 1] : null;
+
+    // 1. Minimum Interval Gate: Reject taps closer than 250ms
+    if (lastTap) {
+      const delta = now - lastTap.timestamp;
+      if (delta < 250) {
+        setAntiCheatStatus('throttled');
+        setAntiCheatNotice('अति-तीव्र वेग: मन्त्र जप में एकाग्रता और धैर्य आवश्यक है (न्यूनतम २५०ms अन्तराल)।');
+        if (warningTimerRef.current) clearTimeout(warningTimerRef.current);
+        warningTimerRef.current = setTimeout(() => {
+          setAntiCheatNotice(null);
+          setAntiCheatStatus('pure');
+        }, 3000);
+        return; // REJECT TAP completely
+      }
+      history.push({ timestamp: now, delta });
+      if (history.length > 30) {
+        history.shift();
+      }
+    } else {
+      history.push({ timestamp: now, delta: null });
+    }
+
+    // 2. Uniformity / Low Variance Detection (Detect auto-clickers / bots)
+    const validDeltas = history.filter(t => t.delta !== null).map(t => t.delta);
+    if (validDeltas.length >= 12) {
+      const recentDeltas = validDeltas.slice(-20);
+      const mean = recentDeltas.reduce((a, b) => a + b, 0) / recentDeltas.length;
+      const variance = recentDeltas.reduce((acc, d) => acc + Math.pow(d - mean, 2), 0) / recentDeltas.length;
+      const stdDev = Math.sqrt(variance);
+
+      // Auto-clickers click with near-zero interval variation (stdDev < 14ms)
+      if (stdDev < 14 && mean < 1500) {
+        setAntiCheatStatus('mechanical');
+        setAntiCheatNotice('यांत्रिक लय संसूचित: कृत्रिम/स्वचालित क्लिकिंग प्रतिबन्धित है। सात्विक भाव से स्वयं जप करें।');
+        if (warningTimerRef.current) clearTimeout(warningTimerRef.current);
+        warningTimerRef.current = setTimeout(() => {
+          setAntiCheatNotice(null);
+          setAntiCheatStatus('pure');
+        }, 4000);
+        return; // REJECT TAP
+      }
+    }
+
+    // 3. Rate-Cap Points per minute
+    const ONE_MINUTE = 60000;
+    pointsAwardedWindowRef.current = pointsAwardedWindowRef.current.filter(p => now - p.timestamp < ONE_MINUTE);
+    const recentPoints = pointsAwardedWindowRef.current.reduce((acc, p) => acc + p.points, 0);
+
+    // All anti-cheat checks passed!
+    setAntiCheatStatus('pure');
+
+    // Play tactile bead chime
+    audioService.playBeadClick();
+
     setBeadCount(prev => {
       const next = prev + 1;
       if (next >= 108) {
         setMalaCycle(m => m + 1);
-        addPunya(108, '१ माला जप पूर्ण');
+
+        // 108th Meru Gong & Sacred Shankh Naad
+        audioService.playMeruGong();
+        audioService.playShankh();
+
+        // Capped Punya points per minute (max 60 points/min from continuous japa)
+        const maxMalaPoints = 108;
+        const availablePointsQuota = Math.max(0, 120 - recentPoints);
+        const pointsToAward = Math.min(maxMalaPoints, availablePointsQuota);
+
+        if (pointsToAward > 0) {
+          addPunya(pointsToAward, '१ माला जप पूर्ण');
+          pointsAwardedWindowRef.current.push({ timestamp: now, points: pointsToAward });
+        } else {
+          setAntiCheatNotice('प्रति-मिनट जप पुण्य सीमा: सात्विक गति से मन्त्र साधना जारी रखें।');
+        }
         return 0;
       }
       return next;
@@ -38,6 +117,9 @@ export default function DigitalJapaMala() {
   const resetMala = () => {
     setBeadCount(0);
     setMalaCycle(0);
+    tapHistoryRef.current = [];
+    setAntiCheatStatus('pure');
+    setAntiCheatNotice(null);
   };
 
   // Swadhyaya Timer logic
@@ -65,7 +147,9 @@ export default function DigitalJapaMala() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <Badge variant="gold">१०८ मनके पारम्परिक जप माला</Badge>
-              <Badge variant="saffron">अक्षर वेग रक्षक तकनीक</Badge>
+              <Badge variant={antiCheatStatus === 'pure' ? 'emerald' : 'rose'} icon={ShieldCheck}>
+                अक्षर वेग रक्षक (सक्रिय)
+              </Badge>
             </div>
             <h2 className="text-2xl sm:text-3xl font-dharmik font-bold text-amber-200 flex items-center gap-2">
               <Flame className="w-6 h-6 text-amber-400" />
@@ -147,6 +231,14 @@ export default function DigitalJapaMala() {
             </button>
           </div>
 
+          {/* Gentle Anti-Cheat Notification Banner */}
+          {antiCheatNotice && (
+            <div className="w-full my-3 p-3 rounded-2xl bg-amber-950/60 border border-amber-500/50 text-amber-200 text-xs flex items-center gap-2.5 animate-fade-in shadow-xl text-left">
+              <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+              <span className="font-medium leading-relaxed">{antiCheatNotice}</span>
+            </div>
+          )}
+
           {/* Status & Anti-cheat indicator */}
           <div className="w-full flex items-center justify-between text-xs pt-4 border-t border-slate-800">
             <div className="flex items-center gap-1.5">
@@ -154,13 +246,17 @@ export default function DigitalJapaMala() {
               <span className="text-slate-300 font-medium">सम्पूर्ण माला चक्र: <strong className="text-amber-300">{malaCycle}</strong></span>
             </div>
 
-            {antiCheatStatus === 'mechanical_violation' ? (
+            {antiCheatStatus === 'throttled' ? (
               <Badge variant="rose" icon={AlertTriangle}>
-                अति-तीव्र वेग (चेतावनी)
+                अति-तीव्र वेग (&lt;२५०ms थ्रॉटल्ड)
+              </Badge>
+            ) : antiCheatStatus === 'mechanical' ? (
+              <Badge variant="rose" icon={AlertTriangle}>
+                यांत्रिक आवृत्ति संसूचित (Robotic)
               </Badge>
             ) : (
               <Badge variant="emerald" icon={ShieldCheck}>
-                शुद्ध वेग प्रमाणित
+                अक्षर वेग रक्षक: शुद्ध वेग प्रमाणित
               </Badge>
             )}
           </div>

@@ -48,8 +48,23 @@ const vivahMilanSchema = z.object({
   }).optional()
 });
 
+const extractKundaliRequestSchema = z.object({
+  imageBase64: z.string().min(20, 'Image data is required'),
+  mimeType: z.string().optional().default('image/jpeg')
+});
+
+const extractedKundaliOutputSchema = z.object({
+  name: z.string().optional().default(''),
+  dob: z.string().optional().default(''),
+  tob: z.string().optional().default(''),
+  place: z.string().optional().default(''),
+  notes: z.string().optional().default('')
+});
+
 module.exports = {
   chatSchema,
   kundaliSchema,
-  vivahMilanSchema
+  vivahMilanSchema,
+  extractKundaliRequestSchema,
+  extractedKundaliOutputSchema
 };

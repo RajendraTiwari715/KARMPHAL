@@ -8,6 +8,7 @@ import { Capacitor } from '@capacitor/core';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import { useToast } from '../../context/useToast';
+import { apiClient } from '../../services/apiClient';
 
 export default function KundaliView({ onBack }) {
   const toast = useToast();
@@ -33,19 +34,42 @@ export default function KundaliView({ onBack }) {
     setIsScanning(true);
     try {
       const result = await hardwareService.scanKundaliPhoto();
-      if (result.success) {
-        // Send base64 image to Gemini for birth details extraction
-        await geminiService.generateResponse('Extract birth details (Name, DOB, Time, Place) from this kundali image.', [], null, result.base64);
+      if (result.success && result.base64) {
+        toast.info('कुण्डली चित्र का AI द्वारा विश्लेषण हो रहा है...');
         
-        // This is a placeholder since we don't have true multimodality on this route yet.
-        // We simulate filling the form based on scanned data.
-        toast.info('कुण्डली चित्र प्राप्त हुआ। कृपया नीचे दिए गए जन्म विवरण की समीक्षा करें।');
+        // Real server-side Gemini multimodal OCR extraction
+        const response = await apiClient.post('/api/ai/extract-kundali', {
+          imageBase64: result.base64,
+          mimeType: result.format || 'image/jpeg'
+        });
+
+        if (response?.data) {
+          const { name, dob, tob, place, notes } = response.data;
+          let fieldsFilledCount = 0;
+
+          setFormData(prev => {
+            const next = { ...prev };
+            if (name && name.trim()) { next.name = name.trim(); fieldsFilledCount++; }
+            if (dob && dob.trim()) { next.dob = dob.trim(); fieldsFilledCount++; }
+            if (tob && tob.trim()) { next.time = tob.trim(); fieldsFilledCount++; }
+            if (place && place.trim()) { next.place = place.trim(); fieldsFilledCount++; }
+            return next;
+          });
+
+          if (fieldsFilledCount > 0) {
+            toast.success(`कुण्डली से ${fieldsFilledCount} विवरण मिले! कृपया नीचे समीक्षा करें।`);
+          } else {
+            toast.info(notes || 'चित्र से पूर्ण विवरण नहीं मिल सका। कृपया विवरण की समीक्षा करें व स्वयं भरें।');
+          }
+        } else {
+          toast.info('चित्र से विवरण प्राप्त नहीं हो सका। कृपया स्वयं विवरण भरें।');
+        }
       } else {
-        toast.error(result.error ? `स्कैन विफल रहा: ${result.error}` : 'स्कैन विफल रहा। कृपया पुनः प्रयास करें।');
+        toast.error(result.error ? `स्कैन विफल रहा: ${result.error}` : 'स्कैन रद्द किया गया।');
       }
     } catch (e) {
-      console.error(e);
-      toast.error('कैमरा एक्सेस त्रुटि: कृपया कैमरा अनुमतियों की जांच करें।');
+      console.error('Kundali scan error:', e);
+      toast.error('कुण्डली स्कैन या AI विश्लेषण विफल रहा। कृपया विवरण स्वयं भरें।');
     } finally {
       setIsScanning(false);
     }

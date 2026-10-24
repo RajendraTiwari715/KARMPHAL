@@ -57,18 +57,33 @@ router.post('/profile', (req, res, next) => {
 router.post('/punya', (req, res, next) => {
   try {
     const userId = req.user.id;
-    const user = db.prepare('SELECT id FROM Users WHERE id = ?').get(userId);
+    const user = db.prepare('SELECT id, totalPunya, sadhanaStreak, updatedAt FROM Users WHERE id = ?').get(userId);
     if (!user) {
       return res.status(404).json({ error: 'NOT_FOUND', message: 'User not found' });
     }
 
     const validatedData = punyaSyncSchema.parse(req.body);
-    const { totalPunya, sadhanaStreak } = validatedData;
+    let { totalPunya, sadhanaStreak } = validatedData;
+    
+    // Server-side Anti-Cheat / Rate-Capping:
+    // Cap abnormal spikes in totalPunya (max ~10 punya/sec, base allowable delta 150)
+    const currentPunya = user.totalPunya || 0;
+    const delta = totalPunya - currentPunya;
+    if (delta > 0 && user.updatedAt) {
+      const lastUpdate = new Date(user.updatedAt).getTime();
+      if (!isNaN(lastUpdate)) {
+        const elapsedSeconds = Math.max(1, (Date.now() - lastUpdate) / 1000);
+        const maxAllowedDelta = Math.max(150, Math.floor(elapsedSeconds * 10));
+        if (delta > maxAllowedDelta) {
+          totalPunya = currentPunya + maxAllowedDelta;
+        }
+      }
+    }
     
     db.prepare('UPDATE Users SET totalPunya = ?, sadhanaStreak = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ?')
       .run(totalPunya, sadhanaStreak, userId);
       
-    res.json({ success: true, message: 'Punya synced successfully' });
+    res.json({ success: true, totalPunya, sadhanaStreak, message: 'Punya synced successfully' });
   } catch (err) {
     next(err);
   }
