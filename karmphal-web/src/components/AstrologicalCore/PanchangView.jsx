@@ -21,7 +21,7 @@ const HINDU_FESTIVALS = [
 ];
 
 export default function PanchangView({ onBack, panchangData }) {
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const [currentTime, setCurrentTime] = useState(() => new Date());
   const [isExporting, setIsExporting] = useState(false);
   const panchang = panchangData || computePanchang(currentTime, 28.6139, 77.2090);
 

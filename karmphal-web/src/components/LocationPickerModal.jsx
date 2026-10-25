@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MapPin, Search, Navigation, Check, X, Compass, AlertCircle } from 'lucide-react';
 import { locationService, MAJOR_CITIES, DEFAULT_LOCATION } from '../services/locationService';
 import { CITY_COORDINATES } from '../services/ephemerisEngine';
@@ -11,6 +11,17 @@ export default function LocationPickerModal({ isOpen, onClose }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [isDetectingGps, setIsDetectingGps] = useState(false);
   const [gpsError, setGpsError] = useState(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 

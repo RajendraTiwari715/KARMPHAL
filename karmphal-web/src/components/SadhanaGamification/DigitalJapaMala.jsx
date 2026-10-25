@@ -4,6 +4,8 @@ import { audioService } from '../../services/audioService';
 import { useProfile } from '../../context/useProfile';
 import { useTasks } from '../../context/useTasks';
 import { storageService } from '../../services/storageService';
+import { evaluateJapaTap } from '../../services/japaAntiCheat';
+import { languageService } from '../../services/languageService';
 import { Button, Badge, Card } from '../shared';
 
 const MANTRAS = [
@@ -86,55 +88,32 @@ function DigitalJapaMala() {
   const [antiCheatStatus, setAntiCheatStatus] = useState('pure'); // 'pure' | 'throttled' | 'mechanical'
   const [antiCheatNotice, setAntiCheatNotice] = useState(null);
 
-  const tapHistoryRef = useRef([]); // Stores { timestamp, delta }
+  const tapHistoryRef = useRef([]); // Stores { timestamp, delta, x, y }
   const pointsAwardedWindowRef = useRef([]); // Stores { timestamp, points }
   const warningTimerRef = useRef(null);
 
-  const handleBeadChant = () => {
+  const handleBeadChant = (e) => {
     const now = Date.now();
-    const history = tapHistoryRef.current;
-    const lastTap = history.length > 0 ? history[history.length - 1] : null;
+    const currentLang = languageService.getLang();
+    const coords = e && (e.clientX !== undefined || e.touches?.[0]) ? {
+      x: e.clientX ?? e.touches[0].clientX,
+      y: e.clientY ?? e.touches[0].clientY
+    } : null;
 
-    // 1. Minimum Interval Gate: Reject taps closer than 250ms
-    if (lastTap) {
-      const delta = now - lastTap.timestamp;
-      if (delta < 250) {
-        setAntiCheatStatus('throttled');
-        setAntiCheatNotice('अति-तीव्र वेग: मन्त्र जप में एकाग्रता और धैर्य आवश्यक है (न्यूनतम २५०ms अन्तराल)।');
-        if (warningTimerRef.current) clearTimeout(warningTimerRef.current);
-        warningTimerRef.current = setTimeout(() => {
-          setAntiCheatNotice(null);
-          setAntiCheatStatus('pure');
-        }, 3000);
-        return; // REJECT TAP completely
-      }
-      history.push({ timestamp: now, delta });
-      if (history.length > 30) {
-        history.shift();
-      }
-    } else {
-      history.push({ timestamp: now, delta: null });
+    const evalResult = evaluateJapaTap(tapHistoryRef.current, now, coords, currentLang);
+
+    if (evalResult.notice) {
+      setAntiCheatNotice(evalResult.notice);
+      if (warningTimerRef.current) clearTimeout(warningTimerRef.current);
+      warningTimerRef.current = setTimeout(() => {
+        setAntiCheatNotice(null);
+      }, 3500);
     }
 
-    // 2. Uniformity / Low Variance Detection (Detect auto-clickers / bots)
-    const validDeltas = history.filter(t => t.delta !== null).map(t => t.delta);
-    if (validDeltas.length >= 12) {
-      const recentDeltas = validDeltas.slice(-20);
-      const mean = recentDeltas.reduce((a, b) => a + b, 0) / recentDeltas.length;
-      const variance = recentDeltas.reduce((acc, d) => acc + Math.pow(d - mean, 2), 0) / recentDeltas.length;
-      const stdDev = Math.sqrt(variance);
+    setAntiCheatStatus(evalResult.status);
 
-      // Auto-clickers click with near-zero interval variation (stdDev < 14ms)
-      if (stdDev < 14 && mean < 1500) {
-        setAntiCheatStatus('mechanical');
-        setAntiCheatNotice('यांत्रिक लय संसूचित: कृत्रिम/स्वचालित क्लिकिंग प्रतिबन्धित है। सात्विक भाव से स्वयं जप करें।');
-        if (warningTimerRef.current) clearTimeout(warningTimerRef.current);
-        warningTimerRef.current = setTimeout(() => {
-          setAntiCheatNotice(null);
-          setAntiCheatStatus('pure');
-        }, 4000);
-        return; // REJECT TAP
-      }
+    if (!evalResult.accepted) {
+      return; // Throttled or mechanical macro rejected
     }
 
     // 3. Rate-Cap Points per minute
@@ -299,6 +278,7 @@ function DigitalJapaMala() {
             {/* Inner Tap Button */}
             <button
               onClick={handleBeadChant}
+              aria-label="मनका स्पर्श - जप आगे बढ़ाएँ (Tap Bead to Advance Japa)"
               className="absolute w-40 h-40 rounded-full bg-gradient-to-br from-amber-500 via-orange-600 to-amber-700 flex flex-col items-center justify-center text-slate-950 shadow-2xl shadow-amber-500/40 hover:scale-105 active:scale-95 transition-transform border-4 border-amber-200 cursor-pointer"
             >
               <span className="font-mono text-3xl font-black">{beadCount}</span>

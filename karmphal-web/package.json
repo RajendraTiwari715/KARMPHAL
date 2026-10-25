@@ -10,7 +10,7 @@
     "lint": "oxlint",
     "optimize:images": "node scripts/optimize-images.mjs",
     "verify:library": "node scripts/verify_library_books.mjs",
-    "test": "vite-node tests/markdown.test.js && vite-node tests/anticheat_and_audio.test.js && node tests/library_memory.test.js && vite-node tests/pdf_report.test.js && vite-node tests/japa_profiler.test.js && vite-node tests/panchang_performance.test.js && vite-node tests/profile_settings_discoverability.test.js && vite-node tests/auth_single_flight.test.js",
+    "test": "vite-node tests/markdown.test.js && vite-node tests/anticheat_and_audio.test.js && node tests/library_memory.test.js && vite-node tests/pdf_report.test.js && vite-node tests/japa_profiler.test.js && vite-node tests/panchang_performance.test.js && vite-node tests/profile_settings_discoverability.test.js && vite-node tests/auth_single_flight.test.js && node tests/japa_anti_cheat.test.js && vite-node tests/error_boundary.test.jsx",
     "preview": "vite preview"
   },
   "dependencies": {

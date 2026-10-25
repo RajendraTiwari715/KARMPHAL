@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Navbar from './components/Navbar';
 import GuruSection from './sections/GuruSection';
 import GyanSection from './sections/GyanSection';
@@ -8,14 +8,28 @@ import KarmaSection from './sections/KarmaSection';
 import { computePanchang } from './services/ephemerisEngine';
 import { vedicAshramBg as bgImage } from './assets';
 
+import ErrorBoundary from './components/ErrorBoundary';
+
+// Resilience & Crash Demo: allows intentional crash simulation per section
+function ForcedErrorTester({ section }) {
+  if (typeof window !== 'undefined') {
+    const search = window.location?.search;
+    if (search) {
+      const urlParams = new URLSearchParams(search);
+      if (urlParams.get('forceCrash') === section) {
+        throw new Error(`[FORCED DEMO ERROR] Intentional crash in section: ${section}`);
+      }
+    }
+    if (window.__karmphalForceCrashSection === section) {
+      throw new Error(`[FORCED DEMO ERROR] Intentional crash in section: ${section}`);
+    }
+  }
+  return null;
+}
+
 export default function App() {
   const [activeSection, setActiveSection] = useState('guru'); // 'guru', 'gyan', 'sadhana', 'jyotish', 'karma'
-  const [panchangData, setPanchangData] = useState(null);
-
-  useEffect(() => {
-    const initialPanchang = computePanchang(new Date(), 28.6139, 77.2090);
-    setPanchangData(initialPanchang);
-  }, []);
+  const [panchangData, setPanchangData] = useState(() => computePanchang(new Date(), 28.6139, 77.2090));
 
   return (
     <div 
@@ -35,28 +49,43 @@ export default function App() {
 
         {/* Main Content Area */}
         <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-4 lg:px-6 py-3 sm:py-6 space-y-5 pb-24 md:pb-10">
-          {/* Render Active Section */}
+          {/* Render Active Section with Section-Level Error Boundaries */}
           {activeSection === 'guru' && (
-            <GuruSection panchangData={panchangData} />
+            <ErrorBoundary section="guru" onGoHome={() => setActiveSection('guru')}>
+              <ForcedErrorTester section="guru" />
+              <GuruSection panchangData={panchangData} />
+            </ErrorBoundary>
           )}
 
           {activeSection === 'gyan' && (
-            <GyanSection />
+            <ErrorBoundary section="gyan" onGoHome={() => setActiveSection('guru')}>
+              <ForcedErrorTester section="gyan" />
+              <GyanSection />
+            </ErrorBoundary>
           )}
 
           {activeSection === 'sadhana' && (
-            <SadhanaSection />
+            <ErrorBoundary section="sadhana" onGoHome={() => setActiveSection('guru')}>
+              <ForcedErrorTester section="sadhana" />
+              <SadhanaSection />
+            </ErrorBoundary>
           )}
 
           {activeSection === 'jyotish' && (
-            <JyotishSection
-              panchangData={panchangData}
-              setPanchangData={setPanchangData}
-            />
+            <ErrorBoundary section="jyotish" onGoHome={() => setActiveSection('guru')}>
+              <ForcedErrorTester section="jyotish" />
+              <JyotishSection
+                panchangData={panchangData}
+                setPanchangData={setPanchangData}
+              />
+            </ErrorBoundary>
           )}
 
           {activeSection === 'karma' && (
-            <KarmaSection />
+            <ErrorBoundary section="karma" onGoHome={() => setActiveSection('guru')}>
+              <ForcedErrorTester section="karma" />
+              <KarmaSection />
+            </ErrorBoundary>
           )}
         </main>
       </div>

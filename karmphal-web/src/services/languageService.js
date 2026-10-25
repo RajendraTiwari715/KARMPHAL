@@ -1,3 +1,5 @@
+import { useState, useEffect } from 'react';
+
 // Language & Localization System for Karmphal
 // Default: Shuddh Hindi (शुद्ध हिन्दी), Options: Sanskrit (संस्कृतम्) & English
 
@@ -369,17 +371,25 @@ export const TRANSLATIONS = {
 
 class LanguageService {
   constructor() {
-    this.currentLang = 'hi'; // Enforce Shuddh Hindi
+    const saved = typeof window !== 'undefined' && window.localStorage ? window.localStorage.getItem('karmphal_lang') : null;
+    this.currentLang = saved && ['hi', 'sa', 'en'].includes(saved) ? saved : 'hi';
     this.listeners = [];
   }
 
   getLang() {
-    return 'hi';
+    return this.currentLang;
   }
 
-  setLang(_lang) {
-    // Language locked to Hindi as per requirements
-    // Ignore any attempts to change language
+  setLang(lang) {
+    if (!['hi', 'sa', 'en'].includes(lang)) return;
+    this.currentLang = lang;
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.setItem('karmphal_lang', lang);
+      window.dispatchEvent(new CustomEvent('karmphal_language_changed', { detail: { lang } }));
+    }
+    for (const listener of this.listeners) {
+      listener(lang);
+    }
   }
 
   subscribe(listener) {
@@ -390,8 +400,25 @@ class LanguageService {
   }
 
   t() {
-    return TRANSLATIONS['hi'];
+    return TRANSLATIONS[this.currentLang] || TRANSLATIONS.hi;
   }
 }
 
 export const languageService = new LanguageService();
+
+export function useTranslation() {
+  const [lang, setLangState] = useState(() => languageService.getLang());
+
+  useEffect(() => {
+    const unsubscribe = languageService.subscribe((newLang) => {
+      setLangState(newLang);
+    });
+    return unsubscribe;
+  }, []);
+
+  return {
+    lang,
+    t: TRANSLATIONS[lang] || TRANSLATIONS.hi,
+    setLang: (newLang) => languageService.setLang(newLang)
+  };
+}

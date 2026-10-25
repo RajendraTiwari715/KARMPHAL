@@ -111,3 +111,41 @@ You will see network lifecycle events and console messages confirming successful
 - [x] Per-user rate limiting on AI endpoints (`keyGenerator` bound to `req.user.id`).
 - [x] Helmet security headers and strict CORS allowlists.
 - [x] `capacitor.config.json` configured with `androidScheme: "https"`.
+- [x] Graceful shutdown handling on SIGTERM/SIGINT with WAL checkpoint and database closure.
+- [x] Zero table full-scans via composite indexes on ChatHistory, SadhanaLogs, PunyaTransactions.
+
+---
+
+## 5. Automated Backup & Disaster Recovery
+
+### Online SQLite Backup
+The backend provides a non-blocking live backup utility using SQLite's native backup API:
+```bash
+cd karmphal-backend
+npm run backup
+```
+- Creates timestamped snapshots in `karmphal-backend/backups/karmphal-backup-YYYY-MM-DDTHH-mm-ss.db`.
+- Retains the 7 most recent backups and purges older ones.
+- Automated via cron:
+  ```bash
+  0 2 * * * cd /var/www/karmphal/karmphal-backend && npm run backup >> /var/log/karmphal-backup.log 2>&1
+  ```
+
+### Restoration Protocol
+1. Stop the backend process: `pm2 stop karmphal-backend` or `systemctl stop karmphal`
+2. Validate backup integrity:
+   ```bash
+   sqlite3 /path/to/backup.db "PRAGMA integrity_check;"
+   ```
+3. Copy the verified backup to replace the active database:
+   ```bash
+   cp /path/to/backup.db /var/data/karmphal.db
+   rm -f /var/data/karmphal.db-wal /var/data/karmphal.db-shm
+   ```
+4. Restart service and verify health:
+   ```bash
+   pm2 start karmphal-backend
+   curl -s http://localhost:5000/ready
+   # Expected: {"status":"ready","database":"connected"}
+   ```
+

@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { languageService } from '../../services/languageService';
 
 /**
  * KundaliPrintReport - Dedicated A4 print and PDF export layout component.
@@ -13,6 +14,16 @@ export default function KundaliPrintReport({
   aiReading,
   containerRef
 }) {
+  const currentLang = languageService.getLang();
+  const isEn = currentLang === 'en';
+
+  const [currentDateStr] = useState(() => new Date().toLocaleDateString(languageService.getLang() === 'en' ? 'en-US' : 'hi-IN', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  }));
+  const [now] = useState(() => new Date());
+
   if (!formData || !calculatedData) return null;
 
   const planets = calculatedData.planets || [];
@@ -62,12 +73,6 @@ export default function KundaliPrintReport({
     );
   };
 
-  const currentDateStr = new Date().toLocaleDateString('hi-IN', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric'
-  });
-
   return (
     <div
       ref={containerRef}
@@ -108,9 +113,11 @@ export default function KundaliPrintReport({
           <div className="text-center pb-3 border-b-2 border-amber-600 mb-4">
             <div className="text-2xl text-amber-700 font-bold">ॐ</div>
             <p className="text-xs font-semibold text-amber-800 tracking-wider">॥ श्री गणेशाय नमः ॥</p>
-            <h1 className="text-2xl font-bold text-amber-900 mt-1">श्री भृगु संहिता वैदिक जन्म पत्रिका</h1>
+            <h1 className="text-2xl font-bold text-amber-900 mt-1">
+              {isEn ? 'Shri Bhrigu Samhita Vedic Kundali Horoscope' : 'श्री भृगु संहिता वैदिक जन्म पत्रिका'}
+            </h1>
             <p className="text-sm font-semibold text-slate-700 mt-0.5">
-              जातक: <span className="text-amber-800 font-bold text-base">{formData.name}</span>
+              {isEn ? 'Native:' : 'जातक:'} <span className="text-amber-800 font-bold text-base">{formData.name}</span>
             </p>
           </div>
 
@@ -364,7 +371,7 @@ export default function KundaliPrintReport({
                 {dashaTimeline.map((dasha, idx) => {
                   const startDate = new Date(dasha.startDate);
                   const endDate = new Date(dasha.endDate);
-                  const isCurrent = new Date() >= startDate && new Date() <= endDate;
+                  const isCurrent = now >= startDate && now <= endDate;
                   return (
                     <div
                       key={idx}

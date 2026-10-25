@@ -16,39 +16,54 @@ import {
   MapPin, 
   Compass, 
   ShieldCheck, 
-  Info 
+  Info,
+  Download,
+  Upload
 } from 'lucide-react';
 import { languageService } from '../services/languageService';
 import { audioService } from '../services/audioService';
+import { storageService } from '../services/storageService';
 import { useProfile } from '../context/useProfile';
 import { apiClient } from '../services/apiClient';
 import LocationPickerModal from './LocationPickerModal';
 
 function ProfileModal({ isOpen, onClose, initialTab = 'profile' }) {
   const { punyaLedger, currentStreak, location, updateCity } = useProfile();
-  const currentLang = languageService.getLang();
+  const [currentLang, setCurrentLang] = useState(() => languageService.getLang());
+
+  useEffect(() => {
+    return languageService.subscribe((l) => setCurrentLang(l));
+  }, []);
 
   const [activeTab, setActiveTab] = useState(initialTab);
+  const [prevInitialTab, setPrevInitialTab] = useState(initialTab);
+  if (initialTab !== prevInitialTab) {
+    setPrevInitialTab(initialTab);
+    setActiveTab(initialTab);
+  }
   const [isLocationPickerOpen, setIsLocationPickerOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [userData, setUserData] = useState({
+  const [userData, setUserData] = useState(() => ({
     name: 'साधक',
     phoneOrEmail: 'satyendra@karmphal.app',
     gotra: 'कश्यप (Kashyapa)',
     city: location?.cityName || 'वाराणसी (Varanasi)',
     isLoggedIn: true
-  });
-  const [isMuted, setIsMuted] = useState(audioService.isSoundMuted());
+  }));
+  const [isMuted, setIsMuted] = useState(() => audioService.isSoundMuted());
+
+  useEffect(() => {
+    const handleMuteChange = (e) => {
+      if (e?.detail?.isMuted !== undefined) {
+        setIsMuted(e.detail.isMuted);
+      }
+    };
+    window.addEventListener('karmphal_audio_mute_changed', handleMuteChange);
+    return () => window.removeEventListener('karmphal_audio_mute_changed', handleMuteChange);
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
-      if (initialTab) {
-        setActiveTab(initialTab);
-      }
-      setIsMuted(audioService.isSoundMuted());
-      if (location?.cityName) {
-        setUserData(prev => ({ ...prev, city: location.cityName }));
-      }
       apiClient.get('/api/user/profile')
         .then(data => {
           if (data && data.name) {
@@ -56,7 +71,7 @@ function ProfileModal({ isOpen, onClose, initialTab = 'profile' }) {
               ...prev,
               name: data.name,
               gotra: data.gotra || prev.gotra,
-              city: data.city || prev.city
+              city: data.city || location?.cityName || prev.city
             }));
           }
         })
@@ -64,12 +79,63 @@ function ProfileModal({ isOpen, onClose, initialTab = 'profile' }) {
     }
   }, [isOpen, initialTab, location]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   const handleToggleSound = () => {
     const nextMuted = audioService.toggleMute();
     setIsMuted(nextMuted);
     if (!nextMuted) {
       audioService.playTempleBell(528, 0.8);
     }
+  };
+
+  const handleExportData = () => {
+    storageService.exportAllData();
+    window.dispatchEvent(new CustomEvent('karmphal:toast', {
+      detail: {
+        type: 'success',
+        title: 'डेटा बैकअप सम्पन्न',
+        message: 'समस्त साधना, जप एवं कुण्डली बैकअप (JSON) सुरक्षित डाउनलोड हो गया।'
+      }
+    }));
+  };
+
+  const handleImportFile = (e) => {
+    const file = e.target?.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target?.result;
+      const res = storageService.importAllData(content);
+      if (res.success) {
+        window.dispatchEvent(new CustomEvent('karmphal:toast', {
+          detail: {
+            type: 'success',
+            title: 'डेटा आयात सम्पन्न',
+            message: res.message
+          }
+        }));
+      } else {
+        window.dispatchEvent(new CustomEvent('karmphal:toast', {
+          detail: {
+            type: 'error',
+            title: 'आयात विफल',
+            message: res.error
+          }
+        }));
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
   };
 
   if (!isOpen) return null;
@@ -477,6 +543,48 @@ function ProfileModal({ isOpen, onClose, initialTab = 'profile' }) {
                     <p className="text-[11px] text-emerald-200 leading-relaxed">
                       आपकी जन्म तिथि, समय, जन्म स्थान, कुण्डली एवं साधना सम्बन्धी समस्त गणनाएं केवल आपके उपकरण (Device Local Storage) में सुरक्षित रहती हैं। कोई भी व्यक्तिगत डेटा किसी बाहरी सर्वर या तीसरे पक्ष को नहीं भेजा जाता।
                     </p>
+                  </div>
+
+                  {/* Device-Bound Account Recovery Notice & Export/Import Data */}
+                  <div className="p-3 rounded-xl bg-amber-950/40 border border-amber-500/40 space-y-2.5">
+                    <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#F3CA9D]">
+                      <ShieldCheck className="w-4 h-4 text-[#E0A96D]" />
+                      <span>उपकरण डेटा एवं बैकअप नीति (Device-Bound Data Notice)</span>
+                    </div>
+                    <p className="text-[11px] text-amber-200/90 leading-relaxed">
+                      इस एप्लिकेशन में कोई बाह्य ईमेल/पासवर्ड खाता नहीं है। आपका समस्त डेटा (पुण्य खाता, जप गणना, कुण्डली एवं साधना नियम) केवल आपके इसी उपकरण में सुरक्षित है। उपकरण बदलने अथवा ब्राउज़र डेटा हटाने से पूर्व अपना बैकअप निर्यात (Export) कर सुरक्षित रख लें।
+                    </p>
+                    <div className="flex flex-col sm:flex-row items-center gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={handleExportData}
+                        aria-label="मेरा डेटा JSON फाइल में निर्यात करें"
+                        className="w-full sm:flex-1 min-h-[44px] px-3 py-2 rounded-xl bg-gradient-to-r from-[#C58B4E] to-[#8C5318] text-[#120A05] font-bold text-xs hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
+                      >
+                        <Download className="w-4 h-4" />
+                        <span>डेटा निर्यात (Export JSON)</span>
+                      </button>
+
+                      <label 
+                        className="w-full sm:flex-1 min-h-[44px] px-3 py-2 rounded-xl bg-black/60 border border-[#C58B4E]/40 hover:border-[#E0A96D] text-[#F7E7D6] font-semibold text-xs active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.currentTarget.querySelector('input')?.click();
+                          }
+                        }}
+                      >
+                        <Upload className="w-4 h-4 text-[#E0A96D]" />
+                        <span>डेटा आयात (Import JSON)</span>
+                        <input
+                          type="file"
+                          accept=".json,application/json"
+                          onChange={handleImportFile}
+                          className="hidden"
+                          aria-label="JSON बैकअप फ़ाइल चुनें"
+                        />
+                      </label>
+                    </div>
                   </div>
 
                   <div className="text-[10px] text-center text-[#A67C52] pt-1">

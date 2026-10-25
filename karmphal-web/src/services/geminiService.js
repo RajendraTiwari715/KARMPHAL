@@ -3,7 +3,7 @@ import { NARAKAS_28 } from './narakasData';
 import { DREAM_MOTIFS } from './swapnaData';
 import { VASTU_ZONES_16 } from './vastuEngine';
 import { computePanchang } from './ephemerisEngine';
-import { resolveTheologicalInquiry } from './theologicalAIEngine';
+import { resolveTheologicalInquiry } from './theologicalEngine';
 import { apiClient } from './apiClient';
 
 class GeminiService {

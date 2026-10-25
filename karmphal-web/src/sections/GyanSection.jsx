@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { SACRED_BOOKS } from '../services/scripturesData';
-import { BookOpen, Sparkles, ArrowLeft, Search, Copy, Check, ChevronRight, Download, Library, Globe, CloudOff, Loader } from 'lucide-react';
+import { BookOpen, Sparkles, ArrowLeft, Search, Copy, Check, ChevronRight, Download, Library, Globe, CloudOff, Loader, RefreshCcw } from 'lucide-react';
 import { libraryService } from '../services/libraryService';
 import PDFReader from '../components/PDFReader';
 import { useToast } from '../context/useToast';
@@ -21,6 +21,7 @@ export default function GyanSection() {
   const [elibraryQuery, setElibraryQuery] = useState('');
   const [elibraryBooks, setElibraryBooks] = useState([]);
   const [isSearchingLib, setIsSearchingLib] = useState(false);
+  const [elibraryError, setElibraryError] = useState(null);
   const [downloadingBooks, setDownloadingBooks] = useState({});
   const [downloadedBooks, setDownloadedBooks] = useState({});
   const [readingBook, setReadingBook] = useState(null);
@@ -37,13 +38,6 @@ export default function GyanSection() {
     };
   }, []);
 
-  // Fetch initial e-library books
-  useEffect(() => {
-    if (viewMode === 'elibrary' && elibraryBooks.length === 0) {
-      searchELibrary(elibraryQuery);
-    }
-  }, [viewMode, elibraryBooks.length, elibraryQuery]);
-
   const checkDownloadedStatus = async (books) => {
     const statusObj = {};
     for (const b of books) {
@@ -54,16 +48,33 @@ export default function GyanSection() {
 
   const searchELibrary = async (query) => {
     setIsSearchingLib(true);
+    setElibraryError(null);
     try {
       const results = await libraryService.searchBooks(query);
       setElibraryBooks(results);
       await checkDownloadedStatus(results);
     } catch (err) {
       console.error(err);
+      setElibraryError('ग्रन्थ सूची लोड करने में बाधा आई। कृपया पुनः प्रयास करें।');
     } finally {
       setIsSearchingLib(false);
     }
   };
+
+  // Fetch initial e-library books
+  useEffect(() => {
+    let cancelled = false;
+    if (viewMode === 'elibrary' && elibraryBooks.length === 0) {
+      Promise.resolve().then(() => {
+        if (!cancelled) {
+          searchELibrary(elibraryQuery);
+        }
+      });
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, [viewMode, elibraryBooks.length, elibraryQuery]);
 
   const handleDownload = async (book) => {
     setDownloadingBooks(prev => ({ ...prev, [book.id]: true }));
@@ -259,38 +270,55 @@ export default function GyanSection() {
           </div>
 
           {/* Curated Books Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-            {filteredBooks.map(book => (
-              <div
-                key={book.id}
-                onClick={() => handleOpenBook(book)}
-                className="glass-card p-5 sm:p-6 flex flex-col justify-between cursor-pointer group hover:border-[#E0A96D] hover:scale-[1.02] transition-all relative overflow-hidden"
+          {filteredBooks.length === 0 ? (
+            <div className="glass-card p-8 text-center rounded-3xl border border-[#C58B4E]/30 bg-black/40 space-y-3 max-w-md mx-auto my-6">
+              <BookOpen className="w-10 h-10 text-[#E0A96D] mx-auto opacity-70" />
+              <h3 className="font-dharmik text-base font-bold text-[#F3CA9D]">कोई ग्रन्थ उपलब्ध नहीं</h3>
+              <p className="text-xs text-[#D4A373]">
+                दिए गए शीर्षक अथवा श्रेणी हेतु कोई परिणाम नहीं मिला। कृपया फ़िल्टर बदलें।
+              </p>
+              <button
+                type="button"
+                onClick={() => { setSearchQuery(''); setSelectedCategory('all'); }}
+                className="btn-gold text-xs px-4 py-2 mx-auto cursor-pointer"
               >
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="badge-gold text-[10px]">{book.category}</span>
-                    <span className="text-2xl group-hover:scale-110 transition-transform">{book.icon}</span>
+                समस्त ग्रन्थ देखें
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+              {filteredBooks.map(book => (
+                <div
+                  key={book.id}
+                  onClick={() => handleOpenBook(book)}
+                  className="glass-card p-5 sm:p-6 flex flex-col justify-between cursor-pointer group hover:border-[#E0A96D] hover:scale-[1.02] transition-all relative overflow-hidden"
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="badge-gold text-[10px]">{book.category}</span>
+                      <span className="text-2xl group-hover:scale-110 transition-transform">{book.icon}</span>
+                    </div>
+                    <h3 className="font-dharmik text-lg sm:text-xl font-bold text-[#F3CA9D] group-hover:text-[#FFF] transition-colors">
+                      {book.title}
+                    </h3>
+                    <p className="text-xs text-[#C58B4E] font-medium mt-0.5">
+                      {book.subtitle}
+                    </p>
+                    <p className="text-xs text-[#D4A373] mt-3 line-clamp-3 leading-relaxed font-sans">
+                      {book.summary}
+                    </p>
                   </div>
-                  <h3 className="font-dharmik text-lg sm:text-xl font-bold text-[#F3CA9D] group-hover:text-[#FFF] transition-colors">
-                    {book.title}
-                  </h3>
-                  <p className="text-xs text-[#C58B4E] font-medium mt-0.5">
-                    {book.subtitle}
-                  </p>
-                  <p className="text-xs text-[#D4A373] mt-3 line-clamp-3 leading-relaxed font-sans">
-                    {book.summary}
-                  </p>
+                  <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-xs">
+                    <span className="text-[#A67C52] text-[11px]">{book.totalAdhyayas}</span>
+                    <span className="text-[#E0A96D] font-bold flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                      <span>ग्रन्थ सार पढ़ें</span>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </span>
+                  </div>
                 </div>
-                <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-xs">
-                  <span className="text-[#A67C52] text-[11px]">{book.totalAdhyayas}</span>
-                  <span className="text-[#E0A96D] font-bold flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                    <span>ग्रन्थ सार पढ़ें</span>
-                    <ChevronRight className="w-3.5 h-3.5" />
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </>
       ) : (
         <>
@@ -322,18 +350,58 @@ export default function GyanSection() {
               <button 
                 onClick={() => searchELibrary(elibraryQuery)}
                 disabled={isSearchingLib || isOffline}
-                className="bg-gradient-to-r from-[#E0A96D] to-[#C58B4E] text-[#120A05] px-4 py-2 rounded-2xl font-bold text-sm disabled:opacity-50"
+                className="bg-gradient-to-r from-[#E0A96D] to-[#C58B4E] text-[#120A05] px-4 py-2 rounded-2xl font-bold text-sm disabled:opacity-50 cursor-pointer"
               >
                 खोजें
               </button>
             </div>
           </div>
 
-          {/* E-Library Results */}
+          {/* E-Library Skeletons, Error, Empty & Results */}
           {isSearchingLib ? (
-            <div className="flex flex-col items-center justify-center py-12 text-[#E0A96D] space-y-3">
-              <Loader className="w-8 h-8 animate-spin" />
-              <p className="text-sm font-dharmik">ग्रन्थ खोजे जा रहे हैं...</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 animate-pulse">
+              {[1, 2, 3, 4, 5, 6].map(i => (
+                <div key={i} className="glass-card p-5 rounded-2xl border border-[#C58B4E]/20 bg-black/40 space-y-3">
+                  <div className="flex gap-3">
+                    <div className="w-20 h-28 bg-[#C58B4E]/20 rounded-lg shrink-0" />
+                    <div className="space-y-2 flex-1">
+                      <div className="h-4 bg-[#C58B4E]/30 rounded w-3/4" />
+                      <div className="h-3 bg-[#C58B4E]/20 rounded w-1/2" />
+                      <div className="h-3 bg-[#C58B4E]/10 rounded w-full" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : elibraryError ? (
+            <div className="glass-card p-8 text-center rounded-3xl border border-rose-500/40 bg-black/50 space-y-3 max-w-md mx-auto my-6">
+              <CloudOff className="w-10 h-10 text-rose-400 mx-auto" />
+              <h3 className="font-dharmik text-base font-bold text-rose-300">खोज विफल रही</h3>
+              <p className="text-xs text-[#D4A373]">{elibraryError}</p>
+              <button
+                type="button"
+                onClick={() => searchELibrary(elibraryQuery)}
+                className="btn-gold text-xs px-4 py-2 mx-auto flex items-center gap-2 cursor-pointer"
+              >
+                <RefreshCcw className="w-3.5 h-3.5" />
+                <span>पुनः प्रयास करें</span>
+              </button>
+            </div>
+          ) : elibraryBooks.length === 0 ? (
+            <div className="glass-card p-8 text-center rounded-3xl border border-[#C58B4E]/30 bg-black/40 space-y-3 max-w-md mx-auto my-6">
+              <BookOpen className="w-10 h-10 text-[#E0A96D] mx-auto opacity-70" />
+              <h3 className="font-dharmik text-base font-bold text-[#F3CA9D]">कोई परिणाम नहीं मिला</h3>
+              <p className="text-xs text-[#D4A373]">
+                दिए गए शब्द के लिए कोई ई-पुस्तक नहीं मिली। कृपया अन्य नाम खोजें।
+              </p>
+              <button
+                type="button"
+                onClick={() => { setElibraryQuery(''); searchELibrary(''); }}
+                className="btn-gold text-xs px-4 py-2 mx-auto flex items-center gap-2 cursor-pointer"
+              >
+                <RefreshCcw className="w-3.5 h-3.5" />
+                <span>समस्त वेद व उपनिषद् देखें</span>
+              </button>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">

@@ -13,6 +13,8 @@ import { pdfReportService } from '../../services/pdfReportService';
 export default function KundaliView({ onBack }) {
   const toast = useToast();
   const printContainerRef = useRef(null);
+  const [now] = useState(() => new Date());
+  const [todayDateStr] = useState(() => new Date().toLocaleDateString());
   const [formData, setFormData] = useState({
     name: 'राहुल शर्मा',
     dob: '1998-08-15',
@@ -25,6 +27,7 @@ export default function KundaliView({ onBack }) {
   const [chartType, setChartType] = useState('north'); // 'north' or 'south'
   const [aiReading, setAiReading] = useState('');
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
+  const [aiReadingError, setAiReadingError] = useState(null);
   const [isExporting, setIsExporting] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   
@@ -102,6 +105,7 @@ export default function KundaliView({ onBack }) {
 
   const handleGenerateAiReading = async () => {
     if (!calculatedData) return;
+    setAiReadingError(null);
     audioService.playTempleBell(432, 1.2);
     setIsGeneratingAi(true);
     try {
@@ -113,6 +117,8 @@ export default function KundaliView({ onBack }) {
       }
     } catch (err) {
       console.error(err);
+      setAiReadingError('AI फलादेश प्राप्त करने में बाधा आई। कृपया पुनः प्रयास करें।');
+      toast.error('AI फलादेश प्राप्त करने में बाधा आई। कृपया पुनः प्रयास करें।');
     } finally {
       setIsGeneratingAi(false);
     }
@@ -530,7 +536,7 @@ export default function KundaliView({ onBack }) {
                     {calculatedData.dashaTimeline.map((dasha, idx) => {
                       const startDate = new Date(dasha.startDate);
                       const endDate = new Date(dasha.endDate);
-                      const isCurrent = new Date() >= startDate && new Date() <= endDate;
+                      const isCurrent = now >= startDate && now <= endDate;
                       return (
                         <div key={idx} className={`p-3 border rounded-lg text-center ${isCurrent ? 'bg-amber-100 border-amber-400 dark:bg-amber-900/20' : 'border-gray-200 dark:border-gray-700'}`}>
                           <strong className={`block ${isCurrent ? 'text-amber-700 dark:text-amber-400' : ''}`}>{dasha.lord} ({dasha.years} वर्ष)</strong>
@@ -543,7 +549,7 @@ export default function KundaliView({ onBack }) {
               )}
 
               <div className="mt-8 text-xs text-gray-400 dark:text-gray-500 text-center border-t border-gray-200 dark:border-gray-800 pt-4">
-                गणितीय प्रमाण: Karmphal Ephemeris Engine v1.0.0-verified | अयानांश: Lahiri | गृह पद्धति: Whole Sign | दिनांक: {new Date().toLocaleDateString()}
+                गणितीय प्रमाण: Karmphal Ephemeris Engine v1.0.0-verified | अयानांश: Lahiri | गृह पद्धति: Whole Sign | दिनांक: {todayDateStr}
               </div>
             </div>
 
@@ -559,9 +565,26 @@ export default function KundaliView({ onBack }) {
               </div>
 
               {isGeneratingAi ? (
-                <div className="flex flex-col items-center justify-center py-20 text-center">
-                  <span className="font-sanskrit text-5xl text-amber-500 animate-spin mb-4 block">ॐ</span>
-                  <p className="text-gray-500">बृहत्पाराशर होरा शास्त्र के अनुसार आपका 3-5 पृष्ठ का विस्तृत फलादेश तैयार हो रहा है...</p>
+                <div className="flex flex-col items-center justify-center py-16 text-center space-y-4 animate-pulse">
+                  <span className="font-sanskrit text-5xl text-amber-500 animate-spin mb-2 block">ॐ</span>
+                  <div className="w-full max-w-md space-y-2.5 mx-auto">
+                    <div className="h-4 bg-[#C58B4E]/30 rounded w-full" />
+                    <div className="h-4 bg-[#C58B4E]/20 rounded w-4/5 mx-auto" />
+                    <div className="h-4 bg-[#C58B4E]/10 rounded w-2/3 mx-auto" />
+                  </div>
+                  <p className="text-gray-400 text-xs">बृहत्पाराशर होरा शास्त्र के अनुसार आपका 3-5 पृष्ठ का विस्तृत फलादेश तैयार हो रहा है...</p>
+                </div>
+              ) : aiReadingError ? (
+                <div className="text-center py-10 px-4 border border-rose-500/40 rounded-2xl bg-rose-950/20 space-y-3">
+                  <p className="text-rose-300 text-xs sm:text-sm font-medium">{aiReadingError}</p>
+                  <button
+                    type="button"
+                    onClick={handleGenerateAiReading}
+                    className="btn-gold text-xs py-2 px-4 mx-auto flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <RefreshCcw className="w-3.5 h-3.5" />
+                    <span>पुनः प्रयास करें (Retry)</span>
+                  </button>
                 </div>
               ) : (
                 <div className="prose prose-sm dark:prose-invert max-w-none prose-amber">

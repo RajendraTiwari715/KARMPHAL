@@ -218,6 +218,77 @@ class StorageService {
     this.addPunya(minutes * 2, 'स्वाध्याय ग्रन्थ अध्ययन');
     return this.state;
   }
+
+  exportAllData() {
+    const backup = {
+      app: 'karmphal',
+      version: 2,
+      exportedAt: new Date().toISOString(),
+      sadhanaState: this.state,
+      localStorage: {}
+    };
+
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const keysToBackup = [
+        'karmphal_location',
+        'karmphal_kundali_form_data',
+        'karmphal_lang',
+        'karmphal_audio_muted'
+      ];
+      for (const k of keysToBackup) {
+        const val = window.localStorage.getItem(k);
+        if (val !== null) backup.localStorage[k] = val;
+      }
+    }
+
+    const jsonStr = JSON.stringify(backup, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const dateStr = new Date().toISOString().split('T')[0];
+    link.href = url;
+    link.download = `karmphal_backup_${dateStr}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    return true;
+  }
+
+  importAllData(jsonString) {
+    try {
+      const data = typeof jsonString === 'string' ? JSON.parse(jsonString) : jsonString;
+      if (!data || (!data.sadhanaState && !data.punyaLedger)) {
+        throw new Error('अमान्य डेटा संरचना: कर्मफल बैकअप डेटा नहीं मिला।');
+      }
+
+      if (data.sadhanaState) {
+        this.state = {
+          ...DEFAULT_STATE,
+          ...data.sadhanaState
+        };
+      } else if (data.punyaLedger !== undefined) {
+        this.state = {
+          ...DEFAULT_STATE,
+          ...data
+        };
+      }
+
+      this.saveStateToLocalOnly();
+
+      if (data.localStorage && typeof window !== 'undefined' && window.localStorage) {
+        for (const [k, v] of Object.entries(data.localStorage)) {
+          window.localStorage.setItem(k, v);
+        }
+      }
+
+      this.notify();
+      return { success: true, message: 'समस्त डेटा सफलतापूर्वक पुनर्स्थापित किया गया।' };
+    } catch (err) {
+      console.error('Data import failed', err);
+      return { success: false, error: err.message || 'फ़ाइल पार्स करने में त्रुटि' };
+    }
+  }
 }
 
 export const storageService = new StorageService();

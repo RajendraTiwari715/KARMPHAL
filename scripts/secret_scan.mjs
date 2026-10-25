@@ -51,7 +51,7 @@ function scanFiles(fileList, label) {
           p.regex.lastIndex = 0;
         }
       });
-    } catch (e) {}
+    } catch {}
   }
 
   console.log(`Hits found in ${label}: ${hits.length}`);
@@ -78,7 +78,7 @@ function walk(dir) {
       if (fs.statSync(p).isDirectory()) res = res.concat(walk(p));
       else res.push(p);
     });
-  } catch(e) {}
+  } catch {}
   return res;
 }
 

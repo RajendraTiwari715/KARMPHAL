@@ -98,21 +98,22 @@ karmphal/
   - `react-markdown` + `remark-gfm` + `rehype-sanitize` द्वारा शुद्ध देवनागरी/संस्कृत रेंडरिंग।
   - सेशन एवं सर्वर-साइड डेटाबेस हिस्ट्री परसिस्टेंस।
 
-### 2. `karmphal-backend` (सुरक्षित API सर्वर)
+### 2. `karmphal-backend` (सुरक्षित एवं सुदृढ़ API सर्वर)
 - **प्रमाणीकरण (Authentication)**:
-  - बिना किसी बाहरी पासवर्ड निर्भरता के तात्कालिक गेस्ट सेशन एवं JWT टोकन जेनरेशन।
-  - संपूर्ण रूट्स पर स्ट्रिक्ट बियरर टोकन सत्यापन।
-- **डेटाबेस (SQLite WAL)**:
-  - SQLite Write-Ahead Logging (WAL) मोड में उच्च-समवर्ती (high concurrency) रीड/राइट्स।
-  - साधक प्रोफ़ाइल, नित्य पुण्य लेज़र, जप सांख्यिकी, और वार्तालाप इतिहास का संचयन।
-- **AI प्रॉक्सी**:
+  - बिना किसी बाहरी पासवर्ड निर्भरता के तात्कालिक गेस्ट सेशन एवं JWT टोकन जेनरेशन (HS256, 30-day expiry)।
+  - रिफ्रेश टोकन रोटेशन (SHA-256 हैशेड स्टोरेज) और ऑटो-रिफ्रेश सिंगल-फ्लाइट मैकेनिज्म।
+  - संपूर्ण सुरक्षित रूट्स पर स्ट्रिक्ट बियरर टोकन सत्यापन।
+- **डेटाबेस (SQLite WAL & Composite Indexing)**:
+  - SQLite Write-Ahead Logging (WAL) मोड, busy_timeout (5000ms), और विदेशी कुंजी (foreign keys) प्रवर्तन।
+  - माइग्रेशन प्रणाली (001-005) के तहत साधक प्रोफ़ाइल, नित्य पुण्य लेज़र, जप सांख्यिकी, और वार्तालाप इतिहास पर संयुक्त अनुक्रमणिका (Composite Indexes) जिससे सभी मुख्य क्वेरी शून्य फुल-टेबल-स्कैन के साथ O(1)/O(log N) गति से निष्पादित होती हैं।
+- **AI प्रॉक्सी एवं सुरक्षा**:
   - `GEMINI_API_KEY` को सर्वर-साइड गुप्त रखा जाता है (क्लाइंट APK/Web में कभी एक्सपोज़ नहीं होता)।
-
-### 3. निष्कासित सेवाएँ (Retired Components)
-- **`aiEngine/aiEngine.py`**:
-  - एक अप्रयुक्त स्टैंडअलोन FastAPI + PyTorch प्रोटोटाइप जिसे परियोजना से हटा दिया गया है।
-  - यह अनुपलब्ध फ़ोल्डर (`scripture_knowledgebase/`) पर निर्भर था और किसी भी क्लाइंट या बैकएंड से सम्बद्ध नहीं था।
-  - सनातन धर्म प्रश्नोत्तर अब Node.js बैकएंड और जेमिनी AI Acharya RAG पाइपलाइन द्वारा आधिकारिक रूप से संचालित होता है।
+  - प्रति-यूज़र एवं प्रति-आईपी दर सीमा (Rate Limiting) और दैनिक कोटा (Daily Quota) सुरक्षा।
+  - प्रॉम्प्ट इंजेक्शन सुरक्षा (Prompt Injection Guardrails) तथा 10MB OCR पार्सर सीमा।
+- **उत्पादन लचीलापन (Production Resilience)**:
+  - `/health` और `/ready` जांच (Liveness & Readiness Probes)।
+  - अनुग्रहयुक्त शटडाउन (Graceful Shutdown) SIGTERM/SIGINT पर WAL चेकपॉइंटिंग के साथ।
+  - स्वचालित ऑनलाइन बैकअप स्क्रिप्ट (`npm run backup`) 7-बैकअप अवधारण नीति (retention policy) के साथ।
 
 ---
 
@@ -179,5 +180,39 @@ npx cap sync android
 # एंड्रॉइड स्टूडियो में खोलें
 npx cap open android
 ```
+
+---
+
+## 💾 डेटाबेस बैकअप एवं पुनर्स्थापना (Backup & Restore Procedure)
+
+### ऑनलाइन बैकअप (Zero-downtime Online Backup)
+बैकएंड में `sqlite3.backup()` API का उपयोग करके बिना रीड/राइट ब्लॉक किए लाइव बैकअप लिया जाता है:
+```bash
+cd karmphal-backend
+npm run backup
+```
+- बैकअप फ़ाइलें `karmphal-backend/backups/karmphal-backup-YYYY-MM-DDTHH-mm-ss.db` में संग्रहीत होती हैं।
+- अवधारण नीति (Retention Policy): नवीनतम 7 बैकअप सुरक्षित रखे जाते हैं, पुराने बैकअप स्वतः हटा दिए जाते हैं।
+- इसे `cron` या सिस्टम टाइमर द्वारा स्वचालित किया जा सकता है (उदा. दैनिक रात्रि २ बजे):
+  `0 2 * * * cd /path/to/karmphal-backend && npm run backup >> /var/log/karmphal-backup.log 2>&1`
+
+### पुनर्स्थापना प्रक्रिया (Disaster Recovery & Restore)
+1. बैकएंड सेवा को सुरक्षित रोकें: `systemctl stop karmphal` या `pm2 stop karmphal`
+2. बैकअप फ़ाइल की सत्यनिष्ठा (Integrity) जांचें:
+   ```bash
+   sqlite3 backups/karmphal-backup-YYYY-MM-DDTHH-mm-ss.db "PRAGMA integrity_check;"
+   # आउटपुट: 'ok'
+   ```
+3. मुख्य डेटाबेस फ़ाइल को प्रतिस्थापित करें:
+   ```bash
+   cp backups/karmphal-backup-YYYY-MM-DDTHH-mm-ss.db data/karmphal.db
+   rm -f data/karmphal.db-wal data/karmphal.db-shm
+   ```
+4. बैकएंड सेवा पुनः प्रारम्भ करें एवं रेडीनेस जांचें:
+   ```bash
+   curl http://localhost:5000/ready
+   # आउटपुट: {"status":"ready","database":"connected"}
+   ```
+
 
 विस्तृत उत्पादन परिनियोजन (Production Deployment) निर्देशों के लिए [`DEPLOYMENT.md`](file:///c:/Users/rajen/AndroidStudioProjects/karmphal/DEPLOYMENT.md) देखें।

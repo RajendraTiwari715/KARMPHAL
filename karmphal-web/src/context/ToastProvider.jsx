@@ -110,6 +110,17 @@ export const ToastProvider = ({ children }) => {
     confirm
   };
 
+  useEffect(() => {
+    if (!confirmDialog) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        confirmDialog.onCancel();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [confirmDialog]);
+
   return (
     <ToastContext.Provider value={toastMethods}>
       {children}

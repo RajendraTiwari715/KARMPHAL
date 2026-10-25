@@ -36,8 +36,18 @@ export default function SanatanAIAcharya({ panchangData }) {
     const query = textToSend || inputQuery;
     if (!query.trim() || isSending) return;
 
-    setInputQuery('');
-    await sendMessage(query, panchangData);
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      toast.error('आप ऑफ़लाइन हैं। आचार्य संवाद हेतु इंटरनेट कनेक्शन आवश्यक है। आपका सन्देश सुरक्षित है।');
+      return; // Keep typed text in inputQuery!
+    }
+
+    try {
+      setInputQuery('');
+      await sendMessage(query, panchangData);
+    } catch {
+      setInputQuery(query); // Restore typed text
+      toast.error('सन्देश भेजने में समस्या हुई। कृपया पुनः प्रयास करें।');
+    }
   };
 
   const handleCopy = (id, text) => {
