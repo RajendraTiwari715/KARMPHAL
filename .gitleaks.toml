@@ -1,0 +1,31 @@
+title = "Karmphal Gitleaks Security Policy"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "google-api-key"
+description = "Google Cloud / AI Studio API Key"
+regex = '''AIza[0-9A-Za-z_-]{35}'''
+keywords = ["AIza"]
+
+[[rules]]
+id = "google-aq-token"
+description = "Google Gemini / Vertex AQ Token"
+regex = '''AQ\.[0-9A-Za-z_-]{20,}'''
+keywords = ["AQ."]
+
+[[rules]]
+id = "jwt-secret-leak"
+description = "Hardcoded JWT Secret Assignment"
+regex = '''JWT_SECRET\s*=\s*(?!your_jwt_secret|placeholder|min_32|test-mock)[^\s\r\n]{16,}'''
+keywords = ["JWT_SECRET"]
+
+[allowlist]
+description = "Allowlist for placeholders, example templates, and build cache"
+paths = [
+  '''\.env\.example$''',
+  '''node_modules''',
+  '''dist/''',
+  '''package-lock\.json'''
+]

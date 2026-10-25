@@ -25,6 +25,10 @@ secrets/
 .env
 .env.*
 !**/.env.example
+google-services.json
+**/google-services.json
+AUDIT_REPORT.md
+**/AUDIT_REPORT.md
 
 # SQLite Databases & Storage
 *.db

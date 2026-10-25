@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 let server;
 const TEST_PORT = process.env.TEST_PORT || '5055';
 const BASE_URL = `http://127.0.0.1:${TEST_PORT}`;
-const JWT_SECRET = process.env.JWT_SECRET || 'abb1b2019a00844a9fba5c837b8707fa3b9f5c4aea9e8ea083eb9ed875c7e5c4';
+const JWT_SECRET = process.env.JWT_SECRET || 'test-mock-jwt-secret-min-32-chars-long-for-smoke-tests';
 
 async function runTests() {
   console.log(`🚀 Starting backend server on port ${TEST_PORT} for security & test suite...`);
@@ -15,7 +15,7 @@ async function runTests() {
   });
 
   // Wait for server to start
-  await new Promise(resolve => setTimeout(resolve, 2500));
+  await new Promise(resolve => setTimeout(resolve, 4000));
 
   try {
     // ----------------------------------------------------

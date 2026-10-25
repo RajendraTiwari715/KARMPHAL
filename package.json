@@ -10,9 +10,13 @@
     "build": "npm --prefix karmphal-web run build",
     "test": "npm --prefix karmphal-backend run test",
     "lint": "npm --prefix karmphal-web run lint",
+    "check:secrets": "secretlint \"**/*\"",
     "prepare": "husky"
   },
   "lint-staged": {
+    "*": [
+      "secretlint"
+    ],
     "karmphal-web/**/*.{js,jsx}": [
       "npx --prefix karmphal-web oxlint"
     ],
@@ -21,7 +25,10 @@
     ]
   },
   "devDependencies": {
+    "@secretlint/secretlint-rule-pattern": "^13.0.7",
+    "@secretlint/secretlint-rule-preset-recommend": "^13.0.7",
     "husky": "^9.1.7",
-    "lint-staged": "^17.6.0"
+    "lint-staged": "^17.6.0",
+    "secretlint": "^13.0.7"
   }
 }

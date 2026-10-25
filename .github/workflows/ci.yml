@@ -21,6 +21,12 @@ jobs:
           cache: 'npm'
           cache-dependency-path: karmphal-web/package-lock.json
 
+      - name: Install Root Tooling & Dependencies
+        run: npm ci
+
+      - name: Scan Secrets & API Keys (Zero Secret Tolerance)
+        run: npx secretlint "**/*"
+
       - name: Install Frontend Dependencies
         working-directory: karmphal-web
         run: npm ci
