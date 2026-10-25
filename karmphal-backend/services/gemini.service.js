@@ -1,5 +1,5 @@
 const MODELS = ['gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-flash-latest'];
-const TIMEOUT_MS = 45000; // 45 seconds
+const TIMEOUT_MS = 25000; // 25 seconds request timeout
 
 async function fetchWithTimeout(resource, options = {}) {
   const { timeout = TIMEOUT_MS } = options;

@@ -4,11 +4,20 @@ const fs = require('fs');
 
 const dbPath = process.env.DB_PATH || path.resolve(__dirname, 'karmphal.db');
 fs.mkdirSync(path.dirname(dbPath), { recursive: true });
-const db = new Database(dbPath, { verbose: console.log });
 
-// Enforce foreign keys and WAL mode for better concurrency and reliability
+const db = new Database(dbPath, {
+  verbose: process.env.DEBUG_SQL === 'true' ? console.log : null
+});
+
+// Production SQLite Pragmas:
+// - foreign_keys: Enforces integrity and cascading deletes
+// - journal_mode = WAL: Concurrent readers and writers without blocking
+// - busy_timeout = 5000: Waits up to 5s on lock contention instead of failing with SQLITE_BUSY
+// - synchronous = NORMAL: Recommended with WAL for high performance and power-loss safety
 db.pragma('foreign_keys = ON');
 db.pragma('journal_mode = WAL');
+db.pragma('busy_timeout = 5000');
+db.pragma('synchronous = NORMAL');
 
 // Initialize Migrations Table
 db.exec(`
@@ -168,36 +177,62 @@ const migrations = [
 
       CREATE INDEX IF NOT EXISTS idx_refresh_tokens_hash ON RefreshTokens(tokenHash);
       CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user ON RefreshTokens(userId);
+
+      -- Core Production Indexes
+      CREATE INDEX IF NOT EXISTS idx_chathistory_user_id_desc ON ChatHistory(userId, id DESC);
+      CREATE INDEX IF NOT EXISTS idx_sadhanalogs_user_id_desc ON SadhanaLogs(userId, id DESC);
+      CREATE INDEX IF NOT EXISTS idx_sadhanalogs_user_type ON SadhanaLogs(userId, type);
+      CREATE INDEX IF NOT EXISTS idx_savedreports_user ON SavedReports(userId);
+      CREATE INDEX IF NOT EXISTS idx_consentrecords_user ON ConsentRecords(userId);
+      CREATE INDEX IF NOT EXISTS idx_securityaudit_user ON SecurityAudit(userId);
+    `
+  },
+  {
+    name: '005_production_performance_indexes_and_usage',
+    up: `
+      -- Idempotent performance indexes for existing databases
+      CREATE INDEX IF NOT EXISTS idx_chathistory_user_id_desc ON ChatHistory(userId, id DESC);
+      CREATE INDEX IF NOT EXISTS idx_sadhanalogs_user_id_desc ON SadhanaLogs(userId, id DESC);
+      CREATE INDEX IF NOT EXISTS idx_sadhanalogs_user_type ON SadhanaLogs(userId, type);
+      CREATE INDEX IF NOT EXISTS idx_savedreports_user ON SavedReports(userId);
+      CREATE INDEX IF NOT EXISTS idx_consentrecords_user ON ConsentRecords(userId);
+      CREATE INDEX IF NOT EXISTS idx_securityaudit_user ON SecurityAudit(userId);
+      CREATE INDEX IF NOT EXISTS idx_sessions_user ON Sessions(userId);
+
+      -- AI Daily Quota Tracking Table
+      CREATE TABLE IF NOT EXISTS AiUsageDaily (
+        userId TEXT NOT NULL,
+        date TEXT NOT NULL,
+        count INTEGER DEFAULT 0,
+        PRIMARY KEY (userId, date),
+        FOREIGN KEY(userId) REFERENCES Users(id) ON DELETE CASCADE
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_aiusagedaily_user_date ON AiUsageDaily(userId, date);
     `
   }
 ];
 
 // Run migrations inside a transaction
-const runMigrations = () => {
-  // Can't wrap PRAGMA foreign_keys = OFF inside standard BEGIN/COMMIT block reliably in some sqlite versions,
-  // so we execute them sequentially. better-sqlite3 handles PRAGMA outside of explicit transactions.
-  
-  const getApplied = db.prepare('SELECT name FROM Migrations').all().map(r => r.name);
+const runMigrations = (targetDb = db) => {
+  const getApplied = targetDb.prepare('SELECT name FROM Migrations').all().map(r => r.name);
   
   for (const migration of migrations) {
     if (!getApplied.includes(migration.name)) {
-      console.log(`[Migrations] Applying migration: ${migration.name}`);
-      
       // Run the migration
-      db.exec(migration.up);
-      
+      targetDb.exec(migration.up);
       // Mark as applied
-      db.prepare('INSERT INTO Migrations (name) VALUES (?)').run(migration.name);
-      console.log(`[Migrations] Successfully applied: ${migration.name}`);
+      targetDb.prepare('INSERT INTO Migrations (name) VALUES (?)').run(migration.name);
     }
   }
 };
 
 try {
-  runMigrations();
+  runMigrations(db);
 } catch (err) {
   console.error('[Migrations] Fatal Error during migrations:', err);
   process.exit(1);
 }
 
 module.exports = db;
+module.exports.runMigrations = runMigrations;

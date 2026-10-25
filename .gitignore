@@ -38,6 +38,8 @@ AUDIT_REPORT.md
 data/*.db
 data/*.db-wal
 data/*.db-shm
+backups/
+**/backups/
 
 # Logs
 logs/

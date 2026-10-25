@@ -1,18 +1,13 @@
-require('dotenv').config();
-
-// Fail fast on startup if JWT_SECRET is missing or insecure
-if (!process.env.JWT_SECRET || process.env.JWT_SECRET.trim().length < 16) {
-  console.error('FATAL ERROR: JWT_SECRET environment variable is missing or insecure (minimum 16 characters required). Exiting.');
-  process.exit(1);
-}
+// 1. Fail fast on startup with strict Zod environment validation
+const env = require('./config/env');
 
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
-const bodyParser = require('body-parser');
 
-require('./database');
+const db = require('./database');
+const logger = require('./utils/logger');
 const { errorHandler } = require('./middlewares/errorHandler');
 
 const aiRoutes = require('./routes/ai');
@@ -20,7 +15,10 @@ const userRoutes = require('./routes/user');
 const authRoutes = require('./routes/auth');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = env.PORT || 5000;
+
+// State management for graceful shutdown
+let isShuttingDown = false;
 
 // Trust Proxy Configuration: safely resolve real client IP via patched proxy-addr for rate limiting
 if (process.env.TRUST_PROXY) {
@@ -29,86 +27,233 @@ if (process.env.TRUST_PROXY) {
   app.set('trust proxy', 1);
 }
 
-// Security Middlewares
+// Security Headers
 app.use(helmet());
 
-// Strict CORS Allowlist
-const allowedOrigins = [
-  'http://localhost:5173',
-  'http://127.0.0.1:5173',
-  'capacitor://localhost',
-  'http://localhost',
-  'https://localhost',
-  'http://10.0.2.2:5000'
-];
-if (process.env.FRONTEND_URL) {
-  allowedOrigins.push(process.env.FRONTEND_URL);
-}
-if (process.env.BACKEND_URL) {
-  allowedOrigins.push(process.env.BACKEND_URL);
-}
+// CORS Policy Configuration
+// Rules:
+// - Capacitor origins ('capacitor://localhost', 'https://localhost') stay allowed.
+// - Localhost, 127.0.0.1, 10.0.2.2, and insecure http:// origins allowed ONLY when NODE_ENV != production.
+// - Env-driven allowlist via CORS_ORIGINS.
+const parsedEnvOrigins = (env.CORS_ORIGINS || '')
+  .split(',')
+  .map(o => o.trim())
+  .filter(Boolean);
+
+const isOriginAllowed = (origin, envOrigins = parsedEnvOrigins, nodeEnv = process.env.NODE_ENV) => {
+  // Allow non-browser requests (native mobile apps, curl, server-to-server)
+  if (!origin) return true;
+
+  // Capacitor native app origins are always allowed in all environments
+  if (origin === 'capacitor://localhost' || origin === 'https://localhost') {
+    return true;
+  }
+
+  const isDevOrTest = nodeEnv !== 'production';
+  const isLocalOrInsecure =
+    origin.startsWith('http://') ||
+    origin.includes('localhost') ||
+    origin.includes('127.0.0.1') ||
+    origin.includes('10.0.2.2');
+
+  // In production, strictly reject any localhost or plain http:// origins
+  if (!isDevOrTest && isLocalOrInsecure) {
+    return false;
+  }
+
+  // Check against env configured CORS_ORIGINS
+  if (envOrigins.includes(origin)) {
+    return true;
+  }
+
+  // In dev / test, also permit default development local origins
+  if (isDevOrTest) {
+    const devDefaults = [
+      'http://localhost:5173',
+      'http://127.0.0.1:5173',
+      'http://localhost:3000',
+      'http://localhost',
+      'http://10.0.2.2:5000'
+    ];
+    if (devDefaults.includes(origin)) {
+      return true;
+    }
+  }
+
+  return false;
+};
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow non-browser requests (mobile apps, curl, native Capacitor, unit tests)
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (isOriginAllowed(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Blocked by CORS'));
     }
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-Id']
 }));
 
-// Payload size limits
-app.use(bodyParser.json({ limit: '1mb' }));
-app.use(bodyParser.urlencoded({ extended: true, limit: '1mb' }));
+// Request ID & Structured Logging Middleware (safe - tokens & chat bodies redacted)
+app.use(logger.requestMiddleware);
 
-// Global Rate Limiting
-const globalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: process.env.NODE_ENV === 'test' ? 10000 : 200, // High ceiling for test suites
-  message: { error: 'RATE_LIMIT', message: 'Too many requests from this IP, please try again after 15 minutes' },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-app.use('/api/', globalLimiter);
-
-// Auth Rate Limiting on /api/auth/*
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: process.env.NODE_ENV === 'test' ? 1000 : 30, // Max 30 attempts per 15 minutes
-  message: { error: 'AUTH_RATE_LIMIT', message: 'Too many authentication attempts. Please try again after 15 minutes.' },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-app.use('/api/auth/', authLimiter);
-
-// Request Logging (Safe - no tokens or PII)
+// Graceful rejection when server is draining/shutting down
 app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  if (isShuttingDown) {
+    res.setHeader('Connection', 'close');
+    return res.status(503).json({
+      error: 'SERVICE_SHUTTING_DOWN',
+      message: 'सर्वर बंद हो रहा है, कृपया कुछ समय बाद पुनः प्रयास करें।'
+    });
+  }
   next();
 });
 
-// Routes
+// Selective Body Parsing:
+// Skip global 1MB body parser for /api/ai/extract-kundali so its dedicated 10MB parser handles large images.
+app.use((req, res, next) => {
+  if (req.path === '/api/ai/extract-kundali') {
+    return next();
+  }
+  express.json({ limit: '1mb' })(req, res, next);
+});
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+
+// Global Rate Limiter
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: process.env.NODE_ENV === 'test' ? 10000 : 200,
+  message: { error: 'RATE_LIMIT', message: 'Too many requests from this IP, please try again after 15 minutes' },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+app.use('/api/', globalLimiter);
+
+// Auth Rate Limiter
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: process.env.NODE_ENV === 'test' ? 1000 : 30,
+  message: { error: 'AUTH_RATE_LIMIT', message: 'Too many authentication attempts. Please try again after 15 minutes.' },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+app.use('/api/auth/', authLimiter);
+
+// Health Check Endpoints (No Auth, No Sensitive Data)
+const livenessHandler = (_req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+};
+const readinessHandler = (_req, res) => {
+  try {
+    db.prepare('SELECT 1').get();
+    res.status(200).json({ status: 'ready', database: 'connected' });
+  } catch (err) {
+    logger.error('Readiness probe failed', { error: err.message });
+    res.status(503).json({ status: 'unavailable', error: 'Database check failed' });
+  }
+};
+
+app.get('/health', livenessHandler);
+app.get('/api/health', livenessHandler);
+app.get('/ready', readinessHandler);
+app.get('/api/ready', readinessHandler);
+
+// Application Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/user', userRoutes);
 
-// Safe Health Endpoint
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', version: '1.0.0', timestamp: new Date().toISOString() });
-});
-
 // Global Error Handler
 app.use(errorHandler);
 
-// Only listen if run directly (allows importing app in tests)
+let server = null;
+
+// Graceful Shutdown Implementation
+function gracefulShutdown(signal) {
+  if (isShuttingDown) return;
+  isShuttingDown = true;
+  logger.info(`Received ${signal}. Starting graceful shutdown...`);
+
+  const forceTimeout = setTimeout(() => {
+    logger.warn('Graceful shutdown timed out (10s limit). Forcing exit...');
+    try {
+      db.pragma('wal_checkpoint(TRUNCATE)');
+      db.close();
+    } catch {}
+    setImmediate(() => process.exit(0));
+  }, 10000);
+  forceTimeout.unref();
+
+  if (server) {
+    server.close((err) => {
+      if (err) {
+        logger.error('Error closing HTTP server', { error: err.message });
+      } else {
+        logger.info('HTTP server closed cleanly. In-flight requests drained.');
+      }
+
+      // SQLite WAL Checkpoint and Close
+      try {
+        logger.info('Performing SQLite WAL checkpoint (TRUNCATE)...');
+        const checkpoint = db.pragma('wal_checkpoint(TRUNCATE)');
+        logger.info('SQLite WAL checkpoint completed cleanly', { checkpoint });
+      } catch (walErr) {
+        logger.error('Error during WAL checkpoint', { error: walErr.message });
+      }
+
+      try {
+        db.close();
+        logger.info('Database connection closed cleanly.');
+      } catch (dbErr) {
+        logger.error('Error closing database', { error: dbErr.message });
+      }
+
+      logger.info('Graceful shutdown complete. Exiting process with code 0.');
+      clearTimeout(forceTimeout);
+      setImmediate(() => process.exit(0));
+    });
+  } else {
+    try {
+      db.pragma('wal_checkpoint(TRUNCATE)');
+      db.close();
+    } catch {}
+    clearTimeout(forceTimeout);
+    setImmediate(() => process.exit(0));
+  }
+}
+
+// Process-level Signal and Error Listeners
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+// Cross-platform IPC signal listener (enables graceful signal testing on Windows)
+if (process.send) {
+  process.on('message', (msg) => {
+    if (msg === 'SIGTERM' || msg === 'SIGINT') {
+      gracefulShutdown(msg);
+    }
+  });
+}
+
+process.on('uncaughtException', (err) => {
+  logger.fatal('Uncaught Exception', { error: err.message, stack: err.stack });
+  gracefulShutdown('uncaughtException');
+});
+
+process.on('unhandledRejection', (reason) => {
+  logger.error('Unhandled Rejection', { reason: reason?.message || String(reason) });
+});
+
 if (require.main === module) {
-  app.listen(PORT, () => {
-    console.log(`Backend server running on http://localhost:${PORT}`);
+  server = app.listen(PORT, () => {
+    logger.info(`Backend server running on http://localhost:${PORT}`, {
+      port: PORT,
+      nodeEnv: process.env.NODE_ENV || 'development'
+    });
   });
 }
 
 module.exports = app;
+module.exports.gracefulShutdown = gracefulShutdown;
+module.exports.isOriginAllowed = isOriginAllowed;

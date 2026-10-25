@@ -44,6 +44,14 @@ const errorHandler = (err, req, res, _next) => {
     });
   }
 
+  // Payload size limit errors (413)
+  if (err.type === 'entity.too.large' || err.status === 413) {
+    return res.status(413).json({
+      error: 'PAYLOAD_TOO_LARGE',
+      message: 'अनुरोध या छवि का आकार बहुत बड़ा है (अधिकतम सीमा पार हो गई है)।'
+    });
+  }
+
   // Safe General server error - Never leak raw upstream stack traces or messages
   res.status(500).json({
     error: 'INTERNAL_SERVER_ERROR',

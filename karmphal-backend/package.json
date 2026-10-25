@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "test": "node smoke.test.js"
+    "test": "node smoke.test.js && node production_hardening.test.js",
+    "backup": "node scripts/backup.js"
   },
   "keywords": [],
   "author": "",

@@ -212,10 +212,11 @@ router.get('/export', (req, res, next) => {
 });
 
 /**
- * DELETE /api/user/delete
- * Deletes user account and associated data scoped strictly to req.user.id
+ * DELETE /api/user/delete & DELETE /api/user/account
+ * Permanently and atomically deletes all user rows across all tables:
+ * Users, ChatHistory, SadhanaLogs, RefreshTokens, UserPreferences, ConsentRecords, SavedReports, Sessions, AiUsageDaily, SecurityAudit.
  */
-router.delete('/delete', (req, res, next) => {
+const handleDeleteUser = (req, res, next) => {
   try {
     const userId = req.user.id;
     const user = db.prepare('SELECT id FROM Users WHERE id = ?').get(userId);
@@ -224,18 +225,28 @@ router.delete('/delete', (req, res, next) => {
       return res.status(404).json({ error: 'NOT_FOUND', message: 'User not found' });
     }
 
-    // Atomic transaction for data deletion
-    const deleteTransaction = db.transaction((id) => {
+    // Comprehensive atomic transaction for complete data deletion
+    const deleteAllUserData = db.transaction((id) => {
       db.prepare('DELETE FROM ChatHistory WHERE userId = ?').run(id);
       db.prepare('DELETE FROM SadhanaLogs WHERE userId = ?').run(id);
-      db.prepare('DELETE FROM Users WHERE id = ?').run(id);
+      db.prepare('DELETE FROM RefreshTokens WHERE userId = ?').run(id);
+      db.prepare('DELETE FROM UserPreferences WHERE userId = ?').run(id);
+      db.prepare('DELETE FROM ConsentRecords WHERE userId = ?').run(id);
+      db.prepare('DELETE FROM SavedReports WHERE userId = ?').run(id);
+      db.prepare('DELETE FROM Sessions WHERE userId = ?').run(id);
+      db.prepare('DELETE FROM AiUsageDaily WHERE userId = ?').run(id);
+      db.prepare('DELETE FROM SecurityAudit WHERE userId = ?').run(id);
+      return db.prepare('DELETE FROM Users WHERE id = ?').run(id);
     });
     
-    deleteTransaction(userId);
-    res.json({ success: true, message: 'User account and data permanently deleted.' });
+    deleteAllUserData(userId);
+    res.json({ success: true, message: 'User account and all associated data permanently deleted.' });
   } catch (err) {
     next(err);
   }
-});
+};
+
+router.delete('/delete', handleDeleteUser);
+router.delete('/account', handleDeleteUser);
 
 module.exports = router;
