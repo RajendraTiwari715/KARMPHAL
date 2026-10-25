@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { CheckCircle2, AlertCircle, Info, AlertTriangle, X, HelpCircle } from 'lucide-react';
 import { ToastContext } from './toastContextDef';
 
@@ -35,6 +35,18 @@ export const ToastProvider = ({ children }) => {
     },
     [dismiss]
   );
+
+  // Listen for global toast events dispatched by non-React services (e.g. apiClient session reset)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handleGlobalToast = (event) => {
+      if (event?.detail) {
+        addToast(event.detail);
+      }
+    };
+    window.addEventListener('karmphal:toast', handleGlobalToast);
+    return () => window.removeEventListener('karmphal:toast', handleGlobalToast);
+  }, [addToast]);
 
   // Helper methods
   const success = useCallback(

@@ -4,6 +4,16 @@ const TOKEN_KEY = 'karmphal_jwt_token';
 const REFRESH_TOKEN_KEY = 'karmphal_refresh_token';
 
 /**
+ * Validates that a token conforms to the 3 dot-separated Base64 segments of a JWT.
+ */
+export function isValidJwtFormat(token) {
+  if (!token || typeof token !== 'string') return false;
+  const parts = token.trim().split('.');
+  if (parts.length !== 3) return false;
+  return parts.every(part => part.length > 0);
+}
+
+/**
  * Token Storage Service
  * Uses Capacitor Preferences on native Android/iOS and falls back to localStorage on Web.
  */

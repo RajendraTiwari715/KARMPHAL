@@ -152,6 +152,23 @@ const migrations = [
         FOREIGN KEY(userId) REFERENCES Users(id) ON DELETE CASCADE
       );
     `
+  },
+  {
+    name: '004_refresh_tokens_and_rotation',
+    up: `
+      CREATE TABLE IF NOT EXISTS RefreshTokens (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        userId TEXT NOT NULL,
+        tokenHash TEXT NOT NULL UNIQUE,
+        expiresAt DATETIME NOT NULL,
+        revokedAt DATETIME DEFAULT NULL,
+        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY(userId) REFERENCES Users(id) ON DELETE CASCADE
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_refresh_tokens_hash ON RefreshTokens(tokenHash);
+      CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user ON RefreshTokens(userId);
+    `
   }
 ];
 

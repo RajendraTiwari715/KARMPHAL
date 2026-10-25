@@ -363,7 +363,132 @@ async function runTests() {
     assert.ok(aiData.text && aiData.text.length > 10, 'Expected valid Acharya answer');
     console.log('✅ Acharya AI response received successfully:', aiData.text.slice(0, 90), '...');
 
-    console.log('\n🎉 ALL 11 BACKEND SECURITY & CHAT TESTS PASSED WITH 100% SUCCESS!');
+    // ----------------------------------------------------
+    // TEST 12: Refresh Token Rotation (RTR) & DB Hash Storage
+    // ----------------------------------------------------
+    console.log('\n[12/15] Testing Refresh Token Rotation (RTR) and SHA-256 DB Hash Storage...');
+    const crypto = require('crypto');
+    const guestRtrRes = await fetch(`${BASE_URL}/api/auth/guest`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ expiresIn: '1s', refreshExpiresIn: '10s' })
+    });
+    const guestRtrData = await guestRtrRes.json();
+    const rtrUserId = guestRtrData.user.id;
+    const initialRefresh = guestRtrData.refreshToken;
+    const initialHash = crypto.createHash('sha256').update(initialRefresh).digest('hex');
+
+    // Verify hash is in SQLite database
+    const db = require('./database');
+    const initialRow = db.prepare('SELECT * FROM RefreshTokens WHERE tokenHash = ?').get(initialHash);
+    assert.ok(initialRow, 'SHA-256 hash of refresh token must be stored in RefreshTokens table');
+    assert.strictEqual(initialRow.userId, rtrUserId);
+    assert.strictEqual(initialRow.revokedAt, null, 'New token must not be revoked');
+
+    // Wait 1.1s for short access token to expire
+    console.log('    ⏳ Waiting 1.1s for access token to expire (short test expiry)...');
+    await new Promise(r => setTimeout(r, 1100));
+
+    // Verify access token is now expired
+    const expiredCheckRes = await fetch(`${BASE_URL}/api/user/profile`, {
+      headers: { 'Authorization': `Bearer ${guestRtrData.token}` }
+    });
+    assert.strictEqual(expiredCheckRes.status, 401, 'Expired access token must return 401');
+
+    // Call POST /api/auth/refresh
+    const refreshRes = await fetch(`${BASE_URL}/api/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken: initialRefresh })
+    });
+    assert.strictEqual(refreshRes.status, 200, 'Refresh must succeed with valid refresh token');
+    const refreshData = await refreshRes.json();
+    assert.strictEqual(refreshData.user.id, rtrUserId, 'User ID MUST remain identical after refresh');
+    assert.notStrictEqual(refreshData.refreshToken, initialRefresh, 'Refresh token MUST be rotated to a new token');
+
+    console.log(`    [LOG PROOF] User ID before expiry: ${rtrUserId} | User ID after refresh: ${refreshData.user.id} (MATCH ✅)`);
+
+    // Verify old refresh token is now marked revoked in DB
+    const oldRowAfter = db.prepare('SELECT revokedAt FROM RefreshTokens WHERE tokenHash = ?').get(initialHash);
+    assert.ok(oldRowAfter && oldRowAfter.revokedAt, 'Old refresh token must be invalidated (revokedAt set)');
+
+    // Verify attempt to reuse old refresh token fails with 401 TOKEN_REVOKED
+    const reuseRes = await fetch(`${BASE_URL}/api/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken: initialRefresh })
+    });
+    assert.strictEqual(reuseRes.status, 401, 'Reused refresh token must be rejected');
+    const reuseData = await reuseRes.json();
+    assert.strictEqual(reuseData.error, 'TOKEN_REVOKED', 'Expected TOKEN_REVOKED error on reuse');
+    console.log('✅ Refresh Token Rotation, DB SHA-256 hash storage, and single-use enforcement verified');
+
+    // ----------------------------------------------------
+    // TEST 13: Tampered Refresh Token Rejection
+    // ----------------------------------------------------
+    console.log('\n[13/15] Testing Tampered Refresh Token rejection...');
+    const tamperedToken = refreshData.refreshToken.slice(0, -6) + 'abcdef';
+    const tamperedRes = await fetch(`${BASE_URL}/api/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken: tamperedToken })
+    });
+    assert.strictEqual(tamperedRes.status, 401, 'Tampered refresh token must return 401');
+    const tamperedData = await tamperedRes.json();
+    assert.strictEqual(tamperedData.error, 'INVALID_TOKEN');
+    console.log('✅ Tampered refresh token correctly rejected with 401 INVALID_TOKEN');
+
+    // ----------------------------------------------------
+    // TEST 14: Refresh Token Revocation / Logout
+    // ----------------------------------------------------
+    console.log('\n[14/15] Testing Refresh Token Revocation / Logout (/api/auth/revoke)...');
+    const revokeRes = await fetch(`${BASE_URL}/api/auth/revoke`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken: refreshData.refreshToken })
+    });
+    assert.strictEqual(revokeRes.status, 200);
+    const revokeData = await revokeRes.json();
+    assert.strictEqual(revokeData.success, true);
+    assert.strictEqual(revokeData.revoked, true);
+
+    // Refresh after explicit revocation must fail
+    const refreshRevokedRes = await fetch(`${BASE_URL}/api/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken: refreshData.refreshToken })
+    });
+    assert.strictEqual(refreshRevokedRes.status, 401);
+    const refreshRevokedData = await refreshRevokedRes.json();
+    assert.strictEqual(refreshRevokedData.error, 'TOKEN_REVOKED');
+    console.log('✅ Refresh token revocation and logout confirmed');
+
+    // ----------------------------------------------------
+    // TEST 15: Legacy Non-JWT Token Migration
+    // ----------------------------------------------------
+    console.log('\n[15/15] Testing Legacy Non-JWT Token Migration (/api/auth/migrate-legacy)...');
+    // Test migrating the user created in Test 12 using their raw UUID
+    const migrateRes = await fetch(`${BASE_URL}/api/auth/migrate-legacy`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ legacyToken: rtrUserId })
+    });
+    assert.strictEqual(migrateRes.status, 200, 'Legacy UUID must migrate to valid signed JWT');
+    const migrateData = await migrateRes.json();
+    assert.strictEqual(migrateData.user.id, rtrUserId, 'Migrated user ID must match original user');
+    assert.ok(migrateData.token && migrateData.token.split('.').length === 3, 'Migrated token must be valid JWT');
+
+    // Invalid non-UUID format rejection
+    const invalidMigrateRes = await fetch(`${BASE_URL}/api/auth/migrate-legacy`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ legacyToken: 'not-a-valid-uuid' })
+    });
+    assert.strictEqual(invalidMigrateRes.status, 400);
+
+    console.log('✅ Legacy UUID migration and invalid non-JWT token handling verified');
+
+    console.log('\n🎉 ALL 15 BACKEND SECURITY, RTR & CHAT TESTS PASSED WITH 100% SUCCESS!');
   } catch (err) {
     console.error('\n❌ Security tests failed:', err);
     process.exitCode = 1;
