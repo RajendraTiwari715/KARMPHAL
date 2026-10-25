@@ -1,5 +1,4 @@
 import fs from 'fs';
-import path from 'path';
 
 const PREVIEW_BASE = 'http://localhost:4173';
 
