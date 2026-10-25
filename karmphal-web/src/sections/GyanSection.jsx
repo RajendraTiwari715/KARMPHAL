@@ -4,6 +4,7 @@ import { BookOpen, Sparkles, ArrowLeft, Search, Copy, Check, ChevronRight, Downl
 import { libraryService } from '../services/libraryService';
 import PDFReader from '../components/PDFReader';
 import { useToast } from '../context/useToast';
+import { BOOK_COVER_FALLBACK_SVG, handleImageError } from '../assets';
 
 export default function GyanSection() {
   const toast = useToast();
@@ -347,10 +348,13 @@ export default function GyanSection() {
                       <div className="w-24 h-32 shrink-0 book-wrapper ml-1 mr-3 mb-2">
                         <div className="w-full h-full book-volume border border-[#C58B4E]/40">
                           <img 
-                            src={book.coverUrl} 
-                            alt="Cover" 
+                            src={book.coverUrl || BOOK_COVER_FALLBACK_SVG} 
+                            alt={`${book.title} आवरण`} 
+                            width="96"
+                            height="128"
+                            loading="lazy"
                             className="w-full h-full object-cover rounded-[2px_5px_5px_2px] opacity-95 group-hover:opacity-100 transition-opacity relative z-0"
-                            onError={(e) => { e.target.style.display = 'none'; }}
+                            onError={handleImageError(BOOK_COVER_FALLBACK_SVG)}
                           />
                         </div>
                       </div>

@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "check:assets": "node scripts/check-assets.mjs",
+    "build": "npm run check:assets && vite build",
     "lint": "oxlint",
     "optimize:images": "node scripts/optimize-images.mjs",
     "verify:library": "node scripts/verify_library_books.mjs",

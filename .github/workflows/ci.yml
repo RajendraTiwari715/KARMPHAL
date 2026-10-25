@@ -29,6 +29,10 @@ jobs:
         working-directory: karmphal-web
         run: npx oxlint --deny-warnings
 
+      - name: Verify Asset Integrity
+        working-directory: karmphal-web
+        run: npm run check:assets
+
       - name: Run Frontend Production Build
         working-directory: karmphal-web
         run: npm run build

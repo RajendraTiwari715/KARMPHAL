@@ -3,7 +3,7 @@ import { Volume2, VolumeX, User, Settings } from 'lucide-react';
 import { languageService } from '../services/languageService';
 import { audioService } from '../services/audioService';
 import ProfileModal from './ProfileModal';
-import appLogo from '../assets/app_logo.webp';
+import appLogo, { handleImageError, OM_FALLBACK_SVG } from '../assets';
 import { GuruIcon, GyanIcon, SadhanaIcon, JyotishIcon, KarmaIcon } from './SectionIcons';
 
 function Navbar({ activeSection, setActiveSection, panchangData: _panchangData }) {
@@ -74,10 +74,11 @@ function Navbar({ activeSection, setActiveSection, panchangData: _panchangData }
             >
               <img 
                 src={appLogo} 
-                alt="Karmphal Divine OM Logo" 
+                alt="कर्मफल ॐ प्रतीक (Karmphal Divine OM Logo)" 
                 width="56"
                 height="56"
                 loading="eager"
+                onError={handleImageError(OM_FALLBACK_SVG)}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />
             </button>

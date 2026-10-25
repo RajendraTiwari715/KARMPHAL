@@ -6,7 +6,7 @@ import SadhanaSection from './sections/SadhanaSection';
 import JyotishSection from './sections/JyotishSection';
 import KarmaSection from './sections/KarmaSection';
 import { computePanchang } from './services/ephemerisEngine';
-import bgImage from './assets/vedic_ashram_bg.webp';
+import { vedicAshramBg as bgImage } from './assets';
 
 export default function App() {
   const [activeSection, setActiveSection] = useState('guru'); // 'guru', 'gyan', 'sadhana', 'jyotish', 'karma'

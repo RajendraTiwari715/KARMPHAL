@@ -1,6 +1,6 @@
 import React from 'react';
 import SanatanAIAcharya from '../components/TheologicalChatbot/SanatanAIAcharya';
-import templeHero from '../assets/temple_hero.webp';
+import templeHero, { handleImageError, OM_FALLBACK_SVG } from '../assets';
 
 export default function GuruSection({ panchangData }) {
   return (
@@ -22,10 +22,11 @@ export default function GuruSection({ panchangData }) {
         <div className="relative w-full sm:w-48 h-28 sm:h-32 rounded-2xl overflow-hidden border border-[#C58B4E]/40 shrink-0 shadow-lg">
           <img
             src={templeHero}
-            alt="वैदिक मन्दिर एवं आध्यात्मिक पीठ"
+            alt="वैदिक मन्दिर एवं आध्यात्मिक पीठ (Vedic Temple Banner)"
             width="1080"
             height="720"
             fetchpriority="high"
+            onError={handleImageError(OM_FALLBACK_SVG)}
             className="w-full h-full object-cover brightness-90 hover:scale-105 transition-transform duration-700"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none"></div>

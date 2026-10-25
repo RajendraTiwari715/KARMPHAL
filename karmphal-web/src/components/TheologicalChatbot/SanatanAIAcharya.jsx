@@ -3,7 +3,7 @@ import { Send, Copy, Check, Trash2, Loader2 } from 'lucide-react';
 import { useChat } from '../../context/useChat';
 import { useToast, useConfirm } from '../../context/useToast';
 import AcharyaMarkdown from './AcharyaMarkdown';
-import guruAvatar from '../../assets/guru_avatar.webp';
+import guruAvatar, { handleImageError, OM_FALLBACK_SVG } from '../../assets';
 
 export default function SanatanAIAcharya({ panchangData }) {
   const {
@@ -82,10 +82,11 @@ export default function SanatanAIAcharya({ panchangData }) {
           <div className="flex items-center gap-2.5">
             <img 
               src={guruAvatar} 
-              alt="आचार्य जी अवतार" 
+              alt="सनातन आचार्य अवतार (Acharya Avatar)" 
               width="44" 
               height="44" 
               loading="lazy" 
+              onError={handleImageError(OM_FALLBACK_SVG)}
               className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl object-cover border border-[#C58B4E]/50 shadow-md shrink-0" 
             />
             <div>
@@ -192,6 +193,7 @@ export default function SanatanAIAcharya({ panchangData }) {
                             width="20" 
                             height="20" 
                             loading="lazy" 
+                            onError={handleImageError(OM_FALLBACK_SVG)}
                             className="w-5 h-5 rounded-full object-cover border border-[#C58B4E]/50 shadow shrink-0" 
                           />
                           <span>आचार्य जी</span>
