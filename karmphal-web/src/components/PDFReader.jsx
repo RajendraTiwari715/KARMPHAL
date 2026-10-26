@@ -13,6 +13,7 @@ import {
 import * as pdfjsLib from 'pdfjs-dist';
 import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import { libraryService } from '../services/libraryService';
+import { backButtonService, BACK_PRIORITY } from '../services/backButtonService';
 
 // Configure local bundled worker (strictly local asset, NOT from external CDN)
 if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
@@ -20,6 +21,14 @@ if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
 }
 
 export default function PDFReader({ book, onClose }) {
+  // Register back button handler to close PDF reader before navigating tabs
+  useEffect(() => {
+    const unregister = backButtonService.register(() => {
+      onClose();
+      return true;
+    }, BACK_PRIORITY.PDF_READER);
+    return unregister;
+  }, [onClose]);
   const [loading, setLoading] = useState(true);
   const [renderingPage, setRenderingPage] = useState(false);
   const [error, setError] = useState(null);

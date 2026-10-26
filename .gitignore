@@ -20,6 +20,9 @@ local.properties
 captures/
 keystore/
 secrets/
+*.keystore
+*.jks
+keystore.properties
 
 # Environment Variables & Secrets
 .env

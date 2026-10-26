@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PanchangView from '../components/AstrologicalCore/PanchangView';
 import KundaliView from '../components/AstrologicalCore/KundaliView';
 import VivahMilanView from '../components/VivahMilan/VivahMilanView';
@@ -6,6 +6,7 @@ import RashiView from '../components/AstrologicalCore/RashiView';
 import VastuView from '../components/VastuShastra/VastuView';
 import { Calendar, Compass, HeartHandshake, Star, Home, ChevronRight } from 'lucide-react';
 import { audioService } from '../services/audioService';
+import { backButtonService, BACK_PRIORITY } from '../services/backButtonService';
 
 const JYOTISH_MODULES = [
   {
@@ -68,6 +69,15 @@ export default function JyotishSection({ panchangData }) {
     audioService.playBeadClick();
     setActiveModule(null);
   };
+
+  useEffect(() => {
+    if (!activeModule) return;
+    const unregister = backButtonService.register(() => {
+      handleBackToHub();
+      return true;
+    }, BACK_PRIORITY.SUB_VIEW);
+    return unregister;
+  }, [activeModule]);
 
   // Render Sub-Module Pages
   if (activeModule === 'panchang') {

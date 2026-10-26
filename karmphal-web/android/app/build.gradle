@@ -1,5 +1,12 @@
 apply plugin: 'com.android.application'
 
+// Optional keystore.properties loader if present
+def keystorePropertiesFile = rootProject.file("keystore.properties")
+def keystoreProperties = new Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
 android {
     namespace = "com.karmphal.app"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -7,8 +14,8 @@ android {
         applicationId "com.karmphal.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode (System.getenv("VERSION_CODE")?.toInteger() ?: (project.findProperty("VERSION_CODE") ?: "1").toInteger())
+        versionName (System.getenv("VERSION_NAME") ?: (project.findProperty("VERSION_NAME") ?: "1.0.0"))
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,10 +23,33 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+
+    signingConfigs {
+        release {
+            def storeFilePath = System.getenv("RELEASE_STORE_FILE") ?: keystoreProperties['RELEASE_STORE_FILE'] ?: project.findProperty("RELEASE_STORE_FILE") ?: "release.keystore"
+            def storePasswordVal = System.getenv("RELEASE_STORE_PASSWORD") ?: keystoreProperties['RELEASE_STORE_PASSWORD'] ?: project.findProperty("RELEASE_STORE_PASSWORD")
+            def keyAliasVal = System.getenv("RELEASE_KEY_ALIAS") ?: keystoreProperties['RELEASE_KEY_ALIAS'] ?: project.findProperty("RELEASE_KEY_ALIAS")
+            def keyPasswordVal = System.getenv("RELEASE_KEY_PASSWORD") ?: keystoreProperties['RELEASE_KEY_PASSWORD'] ?: project.findProperty("RELEASE_KEY_PASSWORD")
+
+            def kFile = storeFilePath ? file(storeFilePath) : null
+            if (kFile != null && !kFile.exists()) {
+                kFile = rootProject.file(storeFilePath)
+            }
+            if (kFile != null && kFile.exists() && storePasswordVal && keyAliasVal && keyPasswordVal) {
+                storeFile kFile
+                storePassword storePasswordVal
+                keyAlias keyAliasVal
+                keyPassword keyPasswordVal
+            }
+        }
+    }
+
     buildTypes {
         release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
     }
     compileOptions {

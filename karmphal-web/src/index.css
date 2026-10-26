@@ -25,12 +25,26 @@
   padding-top: env(safe-area-inset-top, 0px);
 }
 @utility pb-safe {
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-bottom: calc(0.375rem + env(safe-area-inset-bottom, 0px));
 }
 @utility pl-safe {
   padding-left: env(safe-area-inset-left, 0px);
 }
 @utility pr-safe {
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
+/* Explicit class definitions for full browser & webview engine compatibility */
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.pb-safe {
+  padding-bottom: calc(0.375rem + env(safe-area-inset-bottom, 0px));
+}
+.pl-safe {
+  padding-left: env(safe-area-inset-left, 0px);
+}
+.pr-safe {
   padding-right: env(safe-area-inset-right, 0px);
 }
 /* Sacred Typography Utilities */

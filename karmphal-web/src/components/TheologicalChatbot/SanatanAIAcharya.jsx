@@ -32,6 +32,20 @@ export default function SanatanAIAcharya({ panchangData }) {
     }
   }, [messages, isSending, isLoading, isLoadingOlder]);
 
+  // Handle visualViewport resize on mobile when soft keyboard opens/closes
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.visualViewport) return;
+    const handleViewportChange = () => {
+      if (window.visualViewport.height < window.innerHeight * 0.85) {
+        chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }
+    };
+    window.visualViewport.addEventListener('resize', handleViewportChange);
+    return () => {
+      window.visualViewport?.removeEventListener('resize', handleViewportChange);
+    };
+  }, []);
+
   const handleSend = async (textToSend = null) => {
     const query = textToSend || inputQuery;
     if (!query.trim() || isSending) return;
@@ -272,6 +286,11 @@ export default function SanatanAIAcharya({ panchangData }) {
             placeholder="आचार्य जी से कोई भी प्रश्न पूछें..."
             value={inputQuery}
             onChange={(e) => setInputQuery(e.target.value)}
+            onFocus={() => {
+              setTimeout(() => {
+                chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+              }, 300);
+            }}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
             disabled={isSending || isLoading}
             className="flex-1 bg-black/50 backdrop-blur-sm border border-[#C58B4E]/30 text-[#F7E7D6] text-xs sm:text-sm px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-xl outline-none focus:border-[#E0A96D] font-sans disabled:opacity-50"

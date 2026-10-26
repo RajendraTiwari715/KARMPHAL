@@ -3,6 +3,7 @@ import { MapPin, Search, Navigation, Check, X, Compass, AlertCircle } from 'luci
 import { locationService, MAJOR_CITIES, DEFAULT_LOCATION } from '../services/locationService';
 import { CITY_COORDINATES } from '../services/ephemerisEngine';
 import { useProfile } from '../context/useProfile';
+import { backButtonService, BACK_PRIORITY } from '../services/backButtonService';
 
 export default function LocationPickerModal({ isOpen, onClose }) {
   const { location, updateLocation } = useProfile();
@@ -14,13 +15,21 @@ export default function LocationPickerModal({ isOpen, onClose }) {
 
   useEffect(() => {
     if (!isOpen) return;
+    const unregister = backButtonService.register(() => {
+      onClose();
+      return true;
+    }, BACK_PRIORITY.MODAL + 1);
+
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
         onClose();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      unregister();
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
@@ -63,9 +72,9 @@ export default function LocationPickerModal({ isOpen, onClose }) {
         updateLocation(res.location);
         onClose();
       } else {
-        setGpsError(res.error === 'User denied Geolocation' || res.error?.includes('denied')
-          ? 'स्थान अनुमति अस्वीकृत कर दी गई। कृपया नीचे दिए गए नगरों में से चुनें।'
-          : 'स्थान का पता लगाने में असमर्थ। कृपया सूची से नगर चुनें।');
+        setGpsError(res.denied || res.error === 'PERMISSION_DENIED' || res.error === 'User denied Geolocation' || res.error?.toLowerCase?.().includes('denied')
+          ? 'स्थान (GPS) अनुमति अस्वीकृत कर दी गई। कृपया उपकरण सेटिंग्स में अनुमति दें अथवा नीचे दी गई सूची में से अपना नगर चुनें।'
+          : (res.message || 'स्थान का पता लगाने में असमर्थ। कृपया सूची से नगर चुनें।'));
       }
     } catch {
       setGpsError('स्थान का पता लगाने में त्रुटि हुई।');

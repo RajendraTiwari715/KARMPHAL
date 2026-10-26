@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Navbar from './components/Navbar';
 import GuruSection from './sections/GuruSection';
 import GyanSection from './sections/GyanSection';
@@ -7,7 +7,7 @@ import JyotishSection from './sections/JyotishSection';
 import KarmaSection from './sections/KarmaSection';
 import { computePanchang } from './services/ephemerisEngine';
 import { vedicAshramBg as bgImage } from './assets';
-
+import { backButtonService } from './services/backButtonService';
 import ErrorBoundary from './components/ErrorBoundary';
 
 // Resilience & Crash Demo: allows intentional crash simulation per section
@@ -29,7 +29,37 @@ function ForcedErrorTester({ section }) {
 
 export default function App() {
   const [activeSection, setActiveSection] = useState('guru'); // 'guru', 'gyan', 'sadhana', 'jyotish', 'karma'
+  const [sectionHistory, setSectionHistory] = useState(['guru']);
   const [panchangData, setPanchangData] = useState(() => computePanchang(new Date(), 28.6139, 77.2090));
+
+  const handleNavigateSection = useCallback((newSection) => {
+    setActiveSection(newSection);
+    setSectionHistory(prev => {
+      if (prev[prev.length - 1] === newSection) return prev;
+      return [...prev, newSection];
+    });
+  }, []);
+
+  useEffect(() => {
+    backButtonService.initNativeListener();
+    backButtonService.configureNavigation({
+      isHome: () => activeSection === 'guru' && sectionHistory.length <= 1,
+      popNavigation: () => {
+        if (sectionHistory.length > 1) {
+          const nextHistory = sectionHistory.slice(0, -1);
+          const prevSection = nextHistory[nextHistory.length - 1];
+          setSectionHistory(nextHistory);
+          setActiveSection(prevSection);
+          return true;
+        } else if (activeSection !== 'guru') {
+          setActiveSection('guru');
+          setSectionHistory(['guru']);
+          return true;
+        }
+        return false;
+      }
+    });
+  }, [activeSection, sectionHistory]);
 
   return (
     <div 
@@ -43,7 +73,7 @@ export default function App() {
         {/* Top Clean Navbar */}
         <Navbar
           activeSection={activeSection}
-          setActiveSection={setActiveSection}
+          setActiveSection={handleNavigateSection}
           panchangData={panchangData}
         />
 

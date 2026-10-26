@@ -1,5 +1,7 @@
 // Location & Geolocation Service for Karmphal Panchang & Vedic Ephemeris
 import { getCoordinatesForCity, CITY_COORDINATES } from './ephemerisEngine';
+import { Capacitor } from '@capacitor/core';
+import { Geolocation } from '@capacitor/geolocation';
 
 const LOCATION_STORAGE_KEY = 'karmphal_user_location';
 const PROMPT_STORAGE_KEY = 'karmphal_location_prompted_once';
@@ -161,55 +163,107 @@ class LocationService {
   }
 
   async requestGeolocation() {
-    if (typeof navigator === 'undefined' || !navigator.geolocation) {
-      return { success: false, error: 'GEOLOCATION_UNSUPPORTED' };
+    this.markPrompted();
+
+    let lat = null;
+    let lon = null;
+
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const checkStatus = await Geolocation.checkPermissions();
+        if (checkStatus.location !== 'granted') {
+          const reqStatus = await Geolocation.requestPermissions();
+          if (reqStatus.location !== 'granted') {
+            return {
+              success: false,
+              error: 'PERMISSION_DENIED',
+              denied: true,
+              message: 'स्थान (GPS) अनुमति अस्वीकृत है।'
+            };
+          }
+        }
+
+        const position = await Geolocation.getCurrentPosition({
+          enableHighAccuracy: false,
+          timeout: 10000
+        });
+
+        if (position && position.coords) {
+          lat = position.coords.latitude;
+          lon = position.coords.longitude;
+        }
+      } catch (nativeErr) {
+        console.warn('Native geolocation error:', nativeErr);
+        const errMsg = nativeErr?.message || '';
+        const isDenied = errMsg.toLowerCase().includes('denied') || nativeErr?.code === 1;
+        return {
+          success: false,
+          error: isDenied ? 'PERMISSION_DENIED' : (errMsg || 'LOCATION_ERROR'),
+          denied: isDenied,
+          message: isDenied ? 'स्थान (GPS) अनुमति अस्वीकृत है।' : 'स्थान प्राप्त नहीं हो सका।'
+        };
+      }
+    } else {
+      // Web Fallback
+      if (typeof navigator === 'undefined' || !navigator.geolocation) {
+        return { success: false, error: 'GEOLOCATION_UNSUPPORTED', denied: false };
+      }
+
+      try {
+        const position = await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            timeout: 10000,
+            enableHighAccuracy: false
+          });
+        });
+        lat = position.coords.latitude;
+        lon = position.coords.longitude;
+      } catch (webErr) {
+        console.warn('Web geolocation error:', webErr?.message);
+        const isDenied = webErr?.code === 1 || webErr?.message?.toLowerCase().includes('denied');
+        return {
+          success: false,
+          error: isDenied ? 'PERMISSION_DENIED' : (webErr?.message || 'LOCATION_ERROR'),
+          denied: isDenied,
+          message: isDenied ? 'स्थान अनुमति अस्वीकृत कर दी गई।' : 'स्थान का पता लगाने में असमर्थ।'
+        };
+      }
     }
 
-    return new Promise((resolve) => {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const lat = position.coords.latitude;
-          const lon = position.coords.longitude;
-          const timezone = typeof Intl !== 'undefined' ? Intl.DateTimeFormat().resolvedOptions().timeZone : 'Asia/Kolkata';
+    if (lat === null || lon === null) {
+      return { success: false, error: 'LOCATION_UNAVAILABLE', denied: false };
+    }
 
-          // Find closest known city
-          let closest = null;
-          let minDistance = Infinity;
+    const timezone = typeof Intl !== 'undefined' ? Intl.DateTimeFormat().resolvedOptions().timeZone : 'Asia/Kolkata';
 
-          for (const city of CITY_COORDINATES) {
-            const dLat = city.lat - lat;
-            const dLon = city.lon - lon;
-            const dist = dLat * dLat + dLon * dLon;
-            if (dist < minDistance) {
-              minDistance = dist;
-              closest = city;
-            }
-          }
+    // Find closest known city
+    let closest = null;
+    let minDistance = Infinity;
 
-          const majorMatch = closest ? MAJOR_CITIES.find(c => c.cityNameEn.toLowerCase() === closest.name.toLowerCase()) : null;
-          const displayName = majorMatch ? majorMatch.cityName : (closest ? closest.name : 'वर्तमान जीपीएस स्थान');
+    for (const city of CITY_COORDINATES) {
+      const dLat = city.lat - lat;
+      const dLon = city.lon - lon;
+      const dist = dLat * dLat + dLon * dLon;
+      if (dist < minDistance) {
+        minDistance = dist;
+        closest = city;
+      }
+    }
 
-          const newLoc = this.setLocation({
-            cityName: displayName,
-            cityNameEn: closest ? closest.name : 'Current GPS',
-            lat,
-            lon,
-            timezone,
-            isDefaultLocation: false,
-            source: 'geolocation'
-          });
+    const majorMatch = closest ? MAJOR_CITIES.find(c => c.cityNameEn.toLowerCase() === closest.name.toLowerCase()) : null;
+    const displayName = majorMatch ? majorMatch.cityName : (closest ? closest.name : 'वर्तमान जीपीएस स्थान');
 
-          this.markPrompted();
-          resolve({ success: true, location: newLoc });
-        },
-        (error) => {
-          console.warn('Geolocation error:', error.message);
-          this.markPrompted();
-          resolve({ success: false, error: error.message });
-        },
-        { timeout: 10000, enableHighAccuracy: false }
-      );
+    const newLoc = this.setLocation({
+      cityName: displayName,
+      cityNameEn: closest ? closest.name : 'Current GPS',
+      lat,
+      lon,
+      timezone,
+      isDefaultLocation: false,
+      source: 'geolocation'
     });
+
+    return { success: true, location: newLoc };
   }
 }
 

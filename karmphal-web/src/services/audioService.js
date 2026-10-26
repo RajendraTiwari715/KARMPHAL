@@ -14,8 +14,13 @@ class AudioAndHapticService {
     // Unlocking AudioContext on first user interaction for autoplay policy (Capacitor & Web)
     if (typeof window !== 'undefined') {
       const unlock = () => {
-        if (this.audioCtx && this.audioCtx.state === 'suspended') {
-          this.audioCtx.resume().catch(() => {});
+        try {
+          const ctx = this.getAudioContext();
+          if (ctx && ctx.state === 'suspended') {
+            ctx.resume().catch(() => {});
+          }
+        } catch (e) {
+          console.warn('[AudioService] First tap unlock error:', e);
         }
         window.removeEventListener('click', unlock);
         window.removeEventListener('touchstart', unlock);

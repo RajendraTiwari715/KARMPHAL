@@ -26,6 +26,7 @@ import { storageService } from '../services/storageService';
 import { useProfile } from '../context/useProfile';
 import { apiClient } from '../services/apiClient';
 import LocationPickerModal from './LocationPickerModal';
+import { backButtonService, BACK_PRIORITY } from '../services/backButtonService';
 
 function ProfileModal({ isOpen, onClose, initialTab = 'profile' }) {
   const { punyaLedger, currentStreak, location, updateCity } = useProfile();
@@ -34,6 +35,15 @@ function ProfileModal({ isOpen, onClose, initialTab = 'profile' }) {
   useEffect(() => {
     return languageService.subscribe((l) => setCurrentLang(l));
   }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const unregister = backButtonService.register(() => {
+      onClose();
+      return true;
+    }, BACK_PRIORITY.MODAL);
+    return unregister;
+  }, [isOpen, onClose]);
 
   const [activeTab, setActiveTab] = useState(initialTab);
   const [prevInitialTab, setPrevInitialTab] = useState(initialTab);
