@@ -18,12 +18,20 @@ keywords = ["AQ."]
 [[rules]]
 id = "jwt-secret-leak"
 description = "Hardcoded JWT Secret Assignment"
-regex = '''JWT_SECRET\s*=\s*(?!your_jwt_secret|placeholder|min_32|test-mock)[^\s\r\n]{16,}'''
+regex = '''JWT_SECRET\s*=\s*['"]?[A-Za-z0-9_-]{16,}['"]?'''
 keywords = ["JWT_SECRET"]
+[rules.allowlist]
+description = "Ignore safe test fixtures, environment variables and templates"
+regexes = [
+  '''JWT_SECRET\s*=\s*['"]?(your_jwt_secret|placeholder|min_32|test-mock|process\.env)''',
+  '''process\.env\.JWT_SECRET'''
+]
 
 [allowlist]
-description = "Allowlist for placeholders, example templates, and build cache"
+description = "Allowlist for gitignored local files, templates, and build cache"
 paths = [
+  '''^\.env$''',
+  '''/\.env$''',
   '''\.env\.example$''',
   '''node_modules''',
   '''dist/''',

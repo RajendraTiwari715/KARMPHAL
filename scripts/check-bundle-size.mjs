@@ -8,18 +8,18 @@ const __dirname = path.dirname(__filename);
 const distDir = path.resolve(__dirname, '../karmphal-web/dist');
 const assetsDir = path.join(distDir, 'assets');
 
-// Budgets in Kilobytes (KB)
+// Budgets in Kilobytes (KB) - tightened to ~15% above actual post-lazy-load bundle sizes
 const BUDGETS = {
-  maxSingleJsChunkKb: 1000,
-  maxSingleJsChunkGzipKb: 350,
-  maxWorkerChunkKb: 1500,
-  maxWorkerChunkGzipKb: 450,
-  maxCssTotalKb: 150,
-  maxCssTotalGzipKb: 30,
-  maxMainJsTotalKb: 2600,
-  maxMainJsTotalGzipKb: 750,
-  maxTotalAllJsKb: 4000,
-  maxTotalAllJsGzipKb: 1200
+  maxSingleJsChunkKb: 600,       // Real largest: 513.70 KB (+15% -> ~590 KB)
+  maxSingleJsChunkGzipKb: 175,   // Real largest gzip: 148.21 KB (+15% -> ~170 KB)
+  maxWorkerChunkKb: 1420,        // Real worker: 1234.71 KB (+15% -> ~1420 KB)
+  maxWorkerChunkGzipKb: 425,     // Real worker gzip: 367.66 KB (+15% -> ~423 KB)
+  maxCssTotalKb: 125,            // Real CSS: 106.98 KB (+15% -> ~123 KB)
+  maxCssTotalGzipKb: 20,         // Real CSS gzip: 15.94 KB (+15% -> ~18.3 KB)
+  maxMainJsTotalKb: 2460,        // Real Main JS total: 2131.41 KB (+15% -> ~2451 KB)
+  maxMainJsTotalGzipKb: 710,     // Real Main JS gzip: 613.71 KB (+15% -> ~706 KB)
+  maxTotalAllJsKb: 3880,         // Real All JS: 3366.12 KB (+15% -> ~3871 KB)
+  maxTotalAllJsGzipKb: 1130      // Real All JS gzip: 981.37 KB (+15% -> ~1129 KB)
 };
 
 console.log('=== Karmphal Bundle Size Budget Check ===\n');
@@ -111,6 +111,7 @@ console.log('Asset Bundles Analyzed:');
 console.table(report);
 console.log(`\nTotals:`);
 console.log(`  Main JS:   ${mainJsKb} KB (Gzip: ${mainJsGzipKb} KB) | Budget: ${BUDGETS.maxMainJsTotalKb} KB (${BUDGETS.maxMainJsTotalGzipKb} KB gz)`);
+console.log(`  Worker JS: ${workerKb} KB (Gzip: ${workerGzipKb} KB) | Budget: ${BUDGETS.maxWorkerChunkKb} KB (${BUDGETS.maxWorkerChunkGzipKb} KB gz)`);
 console.log(`  Total JS:  ${totalJsKb} KB (Gzip: ${totalJsGzipKb} KB) | Budget: ${BUDGETS.maxTotalAllJsKb} KB (${BUDGETS.maxTotalAllJsGzipKb} KB gz)`);
 console.log(`  Total CSS: ${totalCssKb} KB (Gzip: ${totalCssGzipKb} KB) | Budget: ${BUDGETS.maxCssTotalKb} KB (${BUDGETS.maxCssTotalGzipKb} KB gz)\n`);
 

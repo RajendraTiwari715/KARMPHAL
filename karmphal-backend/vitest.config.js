@@ -17,7 +17,19 @@ module.exports = defineConfig({
         lines: 80,
         functions: 80,
         branches: 70,
-        statements: 80
+        statements: 80,
+        'routes/**/*.js': {
+          lines: 80,
+          functions: 80,
+          branches: 75,
+          statements: 80
+        },
+        'services/**/*.js': {
+          lines: 80,
+          functions: 80,
+          branches: 75,
+          statements: 80
+        }
       }
     },
     testTimeout: 15000

@@ -1,14 +1,23 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Navbar from './components/Navbar';
 import GuruSection from './sections/GuruSection';
-import GyanSection from './sections/GyanSection';
-import SadhanaSection from './sections/SadhanaSection';
-import JyotishSection from './sections/JyotishSection';
-import KarmaSection from './sections/KarmaSection';
+const GyanSection = React.lazy(() => import('./sections/GyanSection'));
+const SadhanaSection = React.lazy(() => import('./sections/SadhanaSection'));
+const JyotishSection = React.lazy(() => import('./sections/JyotishSection'));
+const KarmaSection = React.lazy(() => import('./sections/KarmaSection'));
 import { computePanchang } from './services/ephemerisEngine';
 import { vedicAshramBg as bgImage } from './assets';
 import { backButtonService } from './services/backButtonService';
 import ErrorBoundary from './components/ErrorBoundary';
+
+function SectionSkeleton() {
+  return (
+    <div className="flex flex-col items-center justify-center py-24 px-4 text-center">
+      <div className="w-10 h-10 border-3 border-[#C58B4E] border-t-transparent rounded-full animate-spin mb-3"></div>
+      <p className="font-dharmik text-[#F3CA9D] text-sm">लोड हो रहा है...</p>
+    </div>
+  );
+}
 
 // Resilience & Crash Demo: allows intentional crash simulation per section
 function ForcedErrorTester({ section }) {
@@ -90,31 +99,39 @@ export default function App() {
           {activeSection === 'gyan' && (
             <ErrorBoundary section="gyan" onGoHome={() => setActiveSection('guru')}>
               <ForcedErrorTester section="gyan" />
-              <GyanSection />
+              <React.Suspense fallback={<SectionSkeleton />}>
+                <GyanSection />
+              </React.Suspense>
             </ErrorBoundary>
           )}
 
           {activeSection === 'sadhana' && (
             <ErrorBoundary section="sadhana" onGoHome={() => setActiveSection('guru')}>
               <ForcedErrorTester section="sadhana" />
-              <SadhanaSection />
+              <React.Suspense fallback={<SectionSkeleton />}>
+                <SadhanaSection />
+              </React.Suspense>
             </ErrorBoundary>
           )}
 
           {activeSection === 'jyotish' && (
             <ErrorBoundary section="jyotish" onGoHome={() => setActiveSection('guru')}>
               <ForcedErrorTester section="jyotish" />
-              <JyotishSection
-                panchangData={panchangData}
-                setPanchangData={setPanchangData}
-              />
+              <React.Suspense fallback={<SectionSkeleton />}>
+                <JyotishSection
+                  panchangData={panchangData}
+                  setPanchangData={setPanchangData}
+                />
+              </React.Suspense>
             </ErrorBoundary>
           )}
 
           {activeSection === 'karma' && (
             <ErrorBoundary section="karma" onGoHome={() => setActiveSection('guru')}>
               <ForcedErrorTester section="karma" />
-              <KarmaSection />
+              <React.Suspense fallback={<SectionSkeleton />}>
+                <KarmaSection />
+              </React.Suspense>
             </ErrorBoundary>
           )}
         </main>

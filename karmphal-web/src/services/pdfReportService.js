@@ -1,5 +1,3 @@
-import { jsPDF } from 'jspdf';
-import html2canvas from 'html2canvas';
 import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
@@ -35,7 +33,12 @@ class PdfReportService {
     const pageElements = printContainerElement.querySelectorAll('[data-page]');
     const elementsToCapture = pageElements.length > 0 ? Array.from(pageElements) : [printContainerElement];
 
-    // 3. Initialize jsPDF in A4 Portrait mode (210mm x 297mm)
+    // 3. Dynamically import heavy PDF engines (jsPDF and html2canvas) only when exporting
+    const { jsPDF } = await import('jspdf');
+    const html2canvasModule = await import('html2canvas');
+    const html2canvas = html2canvasModule.default || html2canvasModule;
+
+    // Initialize jsPDF in A4 Portrait mode (210mm x 297mm)
     const pdf = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',

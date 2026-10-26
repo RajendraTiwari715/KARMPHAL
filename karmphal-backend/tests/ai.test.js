@@ -285,5 +285,111 @@ describe('AI Routes & OCR Validation Integration Tests (Mocked Gemini - Zero Liv
       expect(res.body.data.name).toBe('');
       expect(res.body.data.notes).toContain('चित्र से विवरण स्पष्ट नहीं हो सका');
     });
+
+    it('correctly parses JSON wrapped in ```json code fences', async () => {
+      const { token } = createAuthenticatedUser();
+      const fencedJson = '```json\n{\n  "name": "राघव शर्मा",\n  "dob": "1995-04-12",\n  "tob": "08:15",\n  "place": "हरिद्वार",\n  "notes": "शुभ कुण्डली चक्र"\n}\n```';
+
+      vi.spyOn(geminiService, 'callGemini').mockResolvedValue({ text: fencedJson });
+      const fakeBase64 = Buffer.from('image-content-longer-than-twenty-characters-valid').toString('base64');
+
+      const res = await request(app)
+        .post('/api/ai/extract-kundali')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ imageBase64: fakeBase64, mimeType: 'image/jpeg' })
+        .expect(200);
+
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.name).toBe('राघव शर्मा');
+      expect(res.body.data.dob).toBe('1995-04-12');
+      expect(res.body.data.tob).toBe('08:15');
+      expect(res.body.data.place).toBe('हरिद्वार');
+    });
+
+    it('correctly extracts JSON surrounded by extra conversational prose', async () => {
+      const { token } = createAuthenticatedUser();
+      const proseWrapped = 'नमस्ते! मैंने आपकी जन्मपत्रिका का अध्ययन किया। यहाँ विवरण प्रस्तुत है:\n\n{\n  "name": "आनन्द कुमार",\n  "dob": "1988-11-20",\n  "tob": "14:45",\n  "place": "काशी",\n  "notes": "सूर्य दशम भाव में स्थित"\n}\n\nआशा है यह विश्लेषण आपके काम आएगा। शुभमस्तु!';
+
+      vi.spyOn(geminiService, 'callGemini').mockResolvedValue({ text: proseWrapped });
+      const fakeBase64 = Buffer.from('image-content-longer-than-twenty-characters-valid').toString('base64');
+
+      const res = await request(app)
+        .post('/api/ai/extract-kundali')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ imageBase64: fakeBase64, mimeType: 'image/jpeg' })
+        .expect(200);
+
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.name).toBe('आनन्द कुमार');
+      expect(res.body.data.place).toBe('काशी');
+    });
+
+    it('gracefully handles truncated or malformed JSON without crashing', async () => {
+      const { token } = createAuthenticatedUser();
+      const truncatedJson = '{\n  "name": "अधूरा नाम",\n  "dob": "1990-';
+
+      vi.spyOn(geminiService, 'callGemini').mockResolvedValue({ text: truncatedJson });
+      const fakeBase64 = Buffer.from('image-content-longer-than-twenty-characters-valid').toString('base64');
+
+      const res = await request(app)
+        .post('/api/ai/extract-kundali')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ imageBase64: fakeBase64, mimeType: 'image/jpeg' })
+        .expect(200);
+
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.name).toBe('');
+      expect(res.body.data.notes).toContain('चित्र से विवरण स्पष्ट नहीं हो सका');
+    });
+
+    it('gracefully handles completely empty model text response', async () => {
+      const { token } = createAuthenticatedUser();
+
+      vi.spyOn(geminiService, 'callGemini').mockResolvedValue({ text: '   \n  ' });
+      const fakeBase64 = Buffer.from('image-content-longer-than-twenty-characters-valid').toString('base64');
+
+      const res = await request(app)
+        .post('/api/ai/extract-kundali')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ imageBase64: fakeBase64, mimeType: 'image/jpeg' })
+        .expect(200);
+
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.name).toBe('');
+      expect(res.body.data.notes).toContain('चित्र से विवरण स्पष्ट नहीं हो सका');
+    });
+
+    it('returns clean generic error without leaking upstream details on model safety block', async () => {
+      const { token } = createAuthenticatedUser();
+
+      vi.spyOn(geminiService, 'callGemini').mockRejectedValue(new Error('SAFETY_BLOCK'));
+
+      const res = await request(app)
+        .post('/api/ai/acharya')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ userMessage: 'अनुचित सामग्री' });
+
+      // Error handler must return clean error without crashing or leaking API keys/stack traces
+      expect(res.status).toBeGreaterThanOrEqual(400);
+      expect(res.body).toBeTruthy();
+      expect(JSON.stringify(res.body)).not.toContain('AIzaSy');
+      expect(JSON.stringify(res.body)).not.toContain('AQ.');
+    });
+
+    it('returns clean generic error without leaking upstream details on model timeout', async () => {
+      const { token } = createAuthenticatedUser();
+
+      vi.spyOn(geminiService, 'callGemini').mockRejectedValue(new Error('TIMEOUT'));
+
+      const res = await request(app)
+        .post('/api/ai/acharya')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ userMessage: 'विलम्बित प्रश्न' });
+
+      expect(res.status).toBeGreaterThanOrEqual(400);
+      expect(res.body).toBeTruthy();
+      expect(JSON.stringify(res.body)).not.toContain('AIzaSy');
+      expect(JSON.stringify(res.body)).not.toContain('AQ.');
+    });
   });
 });

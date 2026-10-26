@@ -157,4 +157,145 @@ describe('ChatProvider State Machine & Integration Tests', () => {
     expect(chatState.messages.length).toBe(1);
     expect(chatState.messages[0].id).toBe('default-greeting');
   });
+
+  it('handles initial fetch history failure with default greeting fallback', async () => {
+    vi.spyOn(apiClient, 'get').mockRejectedValueOnce(new Error('Network error on history'));
+
+    let chatState = null;
+    render(
+      <ChatProvider>
+        <TestConsumer onState={(s) => { chatState = s; }} />
+      </ChatProvider>
+    );
+
+    await waitFor(() => {
+      expect(chatState.isLoading).toBe(false);
+    });
+
+    expect(chatState.messages.length).toBe(1);
+    expect(chatState.messages[0].id).toBe('default-greeting');
+    expect(chatState.hasMore).toBe(false);
+  });
+
+  it('ignores empty, whitespace, or duplicate send calls while sending', async () => {
+    vi.spyOn(apiClient, 'get').mockResolvedValue([]);
+    const postSpy = vi.spyOn(apiClient, 'post').mockResolvedValue({ success: true });
+
+    let chatState = null;
+    render(
+      <ChatProvider>
+        <TestConsumer onState={(s) => { chatState = s; }} />
+      </ChatProvider>
+    );
+
+    await waitFor(() => {
+      expect(chatState.isLoading).toBe(false);
+    });
+
+    await act(async () => {
+      await chatState.sendMessage('');
+      await chatState.sendMessage('   ');
+      await chatState.sendMessage(null);
+    });
+
+    expect(postSpy).not.toHaveBeenCalled();
+    expect(chatState.messages.length).toBe(1);
+  });
+
+  describe('loadOlderMessages pagination', () => {
+    it('prepends older messages and updates hasMore flag', async () => {
+      // Return 50 messages to make hasMore = true
+      const initialBatch = Array.from({ length: 50 }, (_, i) => ({
+        id: i + 10,
+        sender: i % 2 === 0 ? 'user' : 'model',
+        text: `Message ${i + 10}`
+      }));
+
+      vi.spyOn(apiClient, 'get')
+        .mockResolvedValueOnce(initialBatch)
+        .mockResolvedValueOnce([
+          { id: 1, sender: 'user', text: 'Older 1' },
+          { id: 2, sender: 'model', text: 'Older 2' }
+        ]);
+
+      let chatState = null;
+      render(
+        <ChatProvider>
+          <TestConsumer onState={(s) => { chatState = s; }} />
+        </ChatProvider>
+      );
+
+      await waitFor(() => {
+        expect(chatState.isLoading).toBe(false);
+      });
+      expect(chatState.hasMore).toBe(true);
+
+      await act(async () => {
+        await chatState.loadOlderMessages();
+      });
+
+      // Total messages should be 50 + 2 = 52
+      expect(chatState.messages.length).toBe(52);
+      expect(chatState.messages[0].text).toBe('Older 1');
+    });
+
+    it('sets hasMore to false when older messages response is empty or error occurs', async () => {
+      const initialBatch = Array.from({ length: 50 }, (_, i) => ({
+        id: i + 10,
+        sender: 'user',
+        text: `Msg ${i}`
+      }));
+
+      vi.spyOn(apiClient, 'get')
+        .mockResolvedValueOnce(initialBatch)
+        .mockResolvedValueOnce([]); // empty older data
+
+      let chatState = null;
+      render(
+        <ChatProvider>
+          <TestConsumer onState={(s) => { chatState = s; }} />
+        </ChatProvider>
+      );
+
+      await waitFor(() => {
+        expect(chatState.isLoading).toBe(false);
+      });
+
+      await act(async () => {
+        await chatState.loadOlderMessages();
+      });
+
+      expect(chatState.hasMore).toBe(false);
+    });
+
+    it('gracefully handles error in loadOlderMessages', async () => {
+      const initialBatch = Array.from({ length: 50 }, (_, i) => ({
+        id: i + 10,
+        sender: 'user',
+        text: `Msg ${i}`
+      }));
+
+      vi.spyOn(apiClient, 'get')
+        .mockResolvedValueOnce(initialBatch)
+        .mockRejectedValueOnce(new Error('Network error on page'));
+
+      let chatState = null;
+      render(
+        <ChatProvider>
+          <TestConsumer onState={(s) => { chatState = s; }} />
+        </ChatProvider>
+      );
+
+      await waitFor(() => {
+        expect(chatState.isLoading).toBe(false);
+      });
+
+      await act(async () => {
+        await chatState.loadOlderMessages();
+      });
+
+      expect(chatState.isLoadingOlder).toBe(false);
+    });
+  });
 });
+

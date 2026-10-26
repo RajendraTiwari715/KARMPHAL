@@ -40,6 +40,22 @@ export default defineConfig({
           functions: 75,
           branches: 65,
           statements: 75
+        },
+        'src/services/ephemerisEngine.js': {
+          lines: 70,
+          branches: 60
+        },
+        'src/services/libraryService.js': {
+          lines: 70,
+          branches: 60
+        },
+        'src/services/pdfReportService.js': {
+          lines: 70,
+          branches: 60
+        },
+        'src/context/ChatProvider.jsx': {
+          lines: 70,
+          branches: 60
         }
       }
     },

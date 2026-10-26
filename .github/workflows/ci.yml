@@ -51,6 +51,7 @@ jobs:
 
       - name: Run Oxlint (Deny Warnings)
         run: |
+          npx oxlint --deny-warnings
           npx --prefix karmphal-web oxlint --deny-warnings
           npx --prefix karmphal-backend oxlint --deny-warnings
 

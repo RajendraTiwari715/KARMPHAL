@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send, Copy, Check, Trash2, Loader2 } from 'lucide-react';
 import { useChat } from '../../context/useChat';
 import { useToast, useConfirm } from '../../context/useToast';
-import AcharyaMarkdown from './AcharyaMarkdown';
+const AcharyaMarkdown = React.lazy(() => import('./AcharyaMarkdown'));
 import guruAvatar, { handleImageError, OM_FALLBACK_SVG } from '../../assets';
 
 export default function SanatanAIAcharya({ panchangData }) {
@@ -243,7 +243,13 @@ export default function SanatanAIAcharya({ panchangData }) {
                         {msg.text}
                       </div>
                     ) : (
-                      <AcharyaMarkdown content={msg.text} />
+                      <React.Suspense fallback={
+                        <div className="whitespace-pre-line text-[#F7E7D6] leading-[1.75] font-sans font-normal text-xs sm:text-sm break-words">
+                          {msg.text}
+                        </div>
+                      }>
+                        <AcharyaMarkdown content={msg.text} />
+                      </React.Suspense>
                     )}
                   </div>
                 </div>

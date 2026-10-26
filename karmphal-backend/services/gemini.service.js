@@ -49,10 +49,15 @@ async function callGemini(contents, systemInstruction, generationConfig) {
 
       if (response.ok) {
         const data = await response.json();
-        const candidateText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        const candidate = data.candidates?.[0];
+        if (candidate?.finishReason === 'SAFETY' || data.promptFeedback?.blockReason) {
+          throw new Error('SAFETY_BLOCK');
+        }
+        const candidateText = candidate?.content?.parts?.[0]?.text;
         if (candidateText && candidateText.trim().length > 0) {
           return { text: candidateText };
         }
+        lastError = new Error('EMPTY_RESPONSE');
       } else {
         console.warn(`[GeminiService] Model ${model} returned HTTP status ${response.status}`);
         
@@ -86,4 +91,4 @@ async function callGemini(contents, systemInstruction, generationConfig) {
   throw lastError || new Error('ALL_MODELS_FAILED');
 }
 
-module.exports = { callGemini };
+module.exports = { callGemini, fetchWithTimeout };

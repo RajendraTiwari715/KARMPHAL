@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { SACRED_BOOKS } from '../services/scripturesData';
 import { BookOpen, Sparkles, ArrowLeft, Search, Copy, Check, ChevronRight, Download, Library, Globe, CloudOff, Loader, RefreshCcw } from 'lucide-react';
 import { libraryService } from '../services/libraryService';
-import PDFReader from '../components/PDFReader';
+const PDFReader = React.lazy(() => import('../components/PDFReader'));
 import { useToast } from '../context/useToast';
 import { BOOK_COVER_FALLBACK_SVG, handleImageError } from '../assets';
 
@@ -485,7 +485,16 @@ export default function GyanSection() {
 
       {/* PDF Reader Modal */}
       {readingBook && (
-        <PDFReader book={readingBook} onClose={() => setReadingBook(null)} />
+        <React.Suspense fallback={
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+            <div className="text-center p-6 text-[#F3CA9D]">
+              <div className="animate-spin w-10 h-10 border-4 border-[#C58B4E] border-t-transparent rounded-full mx-auto mb-3"></div>
+              <p className="font-dharmik text-lg">शास्त्र ग्रन्थ खोला जा रहा है...</p>
+            </div>
+          </div>
+        }>
+          <PDFReader book={readingBook} onClose={() => setReadingBook(null)} />
+        </React.Suspense>
       )}
     </div>
   );

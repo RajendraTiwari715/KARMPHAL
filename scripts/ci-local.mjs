@@ -23,8 +23,13 @@ const steps = [
     cwd: path.join(ROOT, 'karmphal-web')
   },
   {
-    name: 'Secret Scan & Gitleaks Policy Verification',
-    cmd: 'node scripts/secret_scan.mjs',
+    name: 'Real Gitleaks Secret Scanner (Working Tree)',
+    cmd: 'gitleaks detect --no-git --config .gitleaks.toml -v',
+    cwd: ROOT
+  },
+  {
+    name: 'Oxlint Entire Repository Root (--deny-warnings)',
+    cmd: 'npx oxlint --deny-warnings',
     cwd: ROOT
   },
   {

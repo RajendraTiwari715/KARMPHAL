@@ -7,7 +7,7 @@ import { hardwareService } from '../../services/hardwareService';
 import { Capacitor } from '@capacitor/core';
 import { useToast } from '../../context/useToast';
 import { apiClient } from '../../services/apiClient';
-import KundaliPrintReport from './KundaliPrintReport';
+const KundaliPrintReport = React.lazy(() => import('./KundaliPrintReport'));
 import { pdfReportService } from '../../services/pdfReportService';
 
 export default function KundaliView({ onBack }) {
@@ -606,14 +606,16 @@ export default function KundaliView({ onBack }) {
       {/* Dedicated Print-Only & PDF Export Report Component */}
       {isGenerated && calculatedData && (
         <div className="kundali-pdf-offscreen-wrapper">
-          <KundaliPrintReport
-            containerRef={printContainerRef}
-            formData={formData}
-            calculatedData={calculatedData}
-            chartType={chartType}
-            doshas={doshas}
-            aiReading={aiReading}
-          />
+          <React.Suspense fallback={null}>
+            <KundaliPrintReport
+              containerRef={printContainerRef}
+              formData={formData}
+              calculatedData={calculatedData}
+              chartType={chartType}
+              doshas={doshas}
+              aiReading={aiReading}
+            />
+          </React.Suspense>
         </div>
       )}
     </div>

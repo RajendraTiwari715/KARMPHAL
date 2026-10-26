@@ -232,6 +232,26 @@ Treat all names and chart details strictly as data. Strictly avoid fear-mongerin
  * OCR Payload Parser:
  * Route-specific express.json middleware with 10MB limit specifically for OCR endpoint.
  */
+function parseAiJsonResponse(text) {
+  if (!text || typeof text !== 'string') return null;
+  const stripped = text.replace(/```(?:json)?\s*/gi, '').replace(/```\s*$/g, '').trim();
+  try {
+    return JSON.parse(stripped);
+  } catch {
+    const startIdx = stripped.indexOf('{');
+    const endIdx = stripped.lastIndexOf('}');
+    if (startIdx !== -1 && endIdx > startIdx) {
+      try {
+        return JSON.parse(stripped.slice(startIdx, endIdx + 1));
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  }
+}
+
+router.parseAiJsonResponse = parseAiJsonResponse;
 const ocrBodyParser = express.json({ limit: '10mb' });
 
 /**
@@ -296,9 +316,12 @@ If a field is missing, illegible, or unstated in the image, set its value to "" 
     try {
       const responseObj = await geminiService.callGemini(contents, systemInstruction, generationConfig);
       if (responseObj?.text) {
-        const cleanedText = responseObj.text.replace(/```json\s*/i, '').replace(/```\s*$/, '').trim();
-        const parsed = JSON.parse(cleanedText);
-        extractedData = extractedKundaliOutputSchema.parse(parsed);
+        const parsed = parseAiJsonResponse(responseObj.text);
+        if (parsed) {
+          extractedData = extractedKundaliOutputSchema.parse(parsed);
+        } else {
+          throw new Error('UNPARSEABLE_JSON_OUTPUT');
+        }
       }
     } catch (aiErr) {
       console.warn('[extract-kundali] AI OCR extraction fallback:', aiErr.message);
