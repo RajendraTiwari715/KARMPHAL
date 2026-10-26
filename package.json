@@ -11,6 +11,7 @@
     "test": "npm --prefix karmphal-web run test && npm --prefix karmphal-backend run test",
     "lint": "npm --prefix karmphal-web run lint",
     "check:secrets": "secretlint \"**/*\"",
+    "ci:local": "node scripts/ci-local.mjs",
     "prepare": "husky"
   },
   "lint-staged": {

@@ -152,6 +152,7 @@ test('Global Back Button Handler Test Suite', async (t) => {
 
     assert.strictEqual(result, 'EXITED');
     assert.strictEqual(appExited, true, 'App.exitApp() must be executed');
+    assert.strictEqual(exitPrompted, false, 'Exit prompt should not show on 2nd press');
   });
 
   // Test 7: On Home Screen - Second press after > 2s does NOT exit (resets timer)
