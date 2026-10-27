@@ -14,8 +14,8 @@ android {
         applicationId "com.karmphal.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode (System.getenv("VERSION_CODE")?.toInteger() ?: (project.findProperty("VERSION_CODE") ?: "1").toInteger())
-        versionName (System.getenv("VERSION_NAME") ?: (project.findProperty("VERSION_NAME") ?: "1.0.0"))
+        versionCode (System.getenv("VERSION_CODE")?.toInteger() ?: (project.findProperty("VERSION_CODE")?.toString()?.toInteger() ?: 1))
+        versionName "1.0.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -40,6 +40,12 @@ android {
                 storePassword storePasswordVal
                 keyAlias keyAliasVal
                 keyPassword keyPasswordVal
+            } else {
+                gradle.taskGraph.whenReady { taskGraph ->
+                    if (taskGraph.allTasks.any { it.name.toLowerCase().contains("release") && !it.name.toLowerCase().contains("test") }) {
+                        throw new GradleException("FATAL: Release signing credentials are missing or incomplete. Refusing to build unsigned or fallback release APK/AAB.")
+                    }
+                }
             }
         }
     }
@@ -55,6 +61,37 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+tasks.register("verifyReleaseApiBaseUrl") {
+    doLast {
+        def envUrl = System.getenv("VITE_API_BASE_URL")
+        if (envUrl != null && !envUrl.isEmpty()) {
+            if (!envUrl.startsWith("https://")) {
+                throw new GradleException("FATAL: VITE_API_BASE_URL must begin with https:// for Android release builds, got: " + envUrl)
+            }
+        }
+        def assetsPublic = file("src/main/assets/public")
+        if (assetsPublic.exists()) {
+            def jsFiles = fileTree(dir: assetsPublic, include: '**/*.js')
+            def foundHttpsApi = false
+            for (File f : jsFiles) {
+                if (f.text.contains("https://") && (f.text.contains("/api") || f.text.contains("api."))) {
+                    foundHttpsApi = true
+                    break
+                }
+            }
+            if (!foundHttpsApi && (envUrl == null || !envUrl.startsWith("https://"))) {
+                throw new GradleException("FATAL: Release assets in src/main/assets/public do not contain a valid https API base URL. Set VITE_API_BASE_URL=https://... and rebuild web assets.")
+            }
+        }
+    }
+}
+
+tasks.whenTaskAdded { task ->
+    if (task.name.startsWith("assembleRelease") || task.name.startsWith("bundleRelease")) {
+        task.dependsOn "verifyReleaseApiBaseUrl"
     }
 }
 

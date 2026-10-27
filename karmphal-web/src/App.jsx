@@ -9,12 +9,14 @@ import { computePanchang } from './services/ephemerisEngine';
 import { vedicAshramBg as bgImage } from './assets';
 import { backButtonService } from './services/backButtonService';
 import ErrorBoundary from './components/ErrorBoundary';
+import { languageService } from './services/languageService';
 
 function SectionSkeleton() {
+  const t = languageService.t();
   return (
     <div className="flex flex-col items-center justify-center py-24 px-4 text-center">
       <div className="w-10 h-10 border-3 border-[#C58B4E] border-t-transparent rounded-full animate-spin mb-3"></div>
-      <p className="font-dharmik text-[#F3CA9D] text-sm">लोड हो रहा है...</p>
+      <p className="font-dharmik text-[#F3CA9D] text-sm">{t.loading}</p>
     </div>
   );
 }

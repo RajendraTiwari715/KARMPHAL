@@ -74,3 +74,11 @@ jobs:
       - name: Verify Bundle Size Budget Limits
         run: node scripts/check-bundle-size.mjs
 
+      - name: Install Playwright Browsers
+        working-directory: karmphal-web
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Visual Assets & Screenshots Test
+        working-directory: karmphal-web
+        run: npm run test:visual-assets
+

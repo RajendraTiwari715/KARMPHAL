@@ -200,9 +200,12 @@ keytool -genkeypair -v \
   * **Expected Result**: Synthesizer audio (`playTempleBell` harmonic synthesis) plays on every click. Anti-cheat checks evaluate locally. Beads count from 1 to 108. On 108th bead, celebratory sound triggers and mala count increments in IndexedDB.
   * **Device Status**: *[Can verify on device speaker in Airplane mode]*
 
-* **Test 3.7.3: Cached Scripture Reading in Airplane Mode**
+* **Test 3.7.3: Cached Scripture Reading in Airplane Mode (Two-Tier Offline Cache)**
+  * **Architecture**: Two-tier caching:
+    - **Tier 1 (Persistent Storage)**: Binary PDF blobs are persisted in IndexedDB via `localforage` (`books_cache` store), surviving app restarts and OS sleep.
+    - **Tier 2 (In-Memory DOM Cache)**: An in-memory LRU cache (capped at 3 entries) manages active `blob:` Object URLs and automatically revokes old URLs via `URL.revokeObjectURL` to eliminate memory leaks.
   * **Preconditions**: While online, download any scripture (e.g., Hanuman Chalisa). Turn on Airplane mode. Open Gyan -> Hanuman Chalisa.
-  * **Expected Result**: PDF loads locally from IndexedDB cache via local bundled PDF.js worker.
+  * **Expected Result**: PDF loads locally from IndexedDB persistent cache via local bundled PDF.js worker without network access.
   * **Device Status**: *[Requires physical device or emulator]*
 
 ---

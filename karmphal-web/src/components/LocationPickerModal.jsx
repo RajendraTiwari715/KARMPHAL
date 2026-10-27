@@ -4,8 +4,10 @@ import { locationService, MAJOR_CITIES, DEFAULT_LOCATION } from '../services/loc
 import { CITY_COORDINATES } from '../services/ephemerisEngine';
 import { useProfile } from '../context/useProfile';
 import { backButtonService, BACK_PRIORITY } from '../services/backButtonService';
+import { languageService } from '../services/languageService';
 
 export default function LocationPickerModal({ isOpen, onClose }) {
+  const t = languageService.t();
   const { location, updateLocation } = useProfile();
   const currentLocation = location || locationService.getLocation();
 
@@ -94,7 +96,7 @@ export default function LocationPickerModal({ isOpen, onClose }) {
         <button
           onClick={onClose}
           className="absolute top-4 right-4 p-2 text-[#D4A373] hover:text-[#FFF] rounded-full bg-black/60 border border-[#C58B4E]/40 transition-colors"
-          title="बंद करें"
+          title={t.close}
         >
           <X className="w-4 h-4" />
         </button>
@@ -106,10 +108,10 @@ export default function LocationPickerModal({ isOpen, onClose }) {
           </div>
           <div>
             <h3 className="font-dharmik text-lg sm:text-xl font-bold text-[#F3CA9D]">
-              साधना नगर एवं स्थान चयन
+              {t.locationPickerTitle}
             </h3>
             <p className="text-[11px] text-[#C58B4E] mt-0.5">
-              पञ्चाङ्ग, सूर्योदय एवं शुभ मुहूर्तों की सटीक गणना हेतु
+              {t.locationPickerDesc}
             </p>
           </div>
         </div>
@@ -119,7 +121,7 @@ export default function LocationPickerModal({ isOpen, onClose }) {
           <div className="flex items-center gap-2">
             <MapPin className="w-4 h-4 text-[#E0A96D] shrink-0" />
             <div>
-              <span className="text-[#A67C52] text-[10px] block">वर्तमान सक्रिय स्थान:</span>
+              <span className="text-[#A67C52] text-[10px] block">{t.currentActiveLocation}</span>
               <strong className="text-[#F7E7D6] text-sm">
                 {currentLocation.cityName}
               </strong>
@@ -130,11 +132,11 @@ export default function LocationPickerModal({ isOpen, onClose }) {
           </div>
           {currentLocation.isDefaultLocation ? (
             <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-semibold">
-              पूर्वनिर्धारित (दिल्ली)
+              {t.defaultLocationTag}
             </span>
           ) : (
             <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-semibold flex items-center gap-1">
-              <Check className="w-3 h-3" /> सक्रिय
+              <Check className="w-3 h-3" /> {t.activeLocationTag}
             </span>
           )}
         </div>
@@ -146,7 +148,7 @@ export default function LocationPickerModal({ isOpen, onClose }) {
           className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#C58B4E]/20 to-[#E0A96D]/20 border border-[#C58B4E]/50 text-[#F3CA9D] hover:bg-[#C58B4E]/30 text-xs font-bold transition-all shadow mb-4 disabled:opacity-50"
         >
           <Navigation className={`w-3.5 h-3.5 text-[#E0A96D] ${isDetectingGps ? 'animate-spin' : ''}`} />
-          <span>{isDetectingGps ? 'जीपीएस स्थान प्राप्त किया जा रहा है...' : 'वर्तमान जीपीएस स्थान से स्वतः पहचानें'}</span>
+          <span>{isDetectingGps ? t.detectingGpsText : t.detectGpsButton}</span>
         </button>
 
         {gpsError && (

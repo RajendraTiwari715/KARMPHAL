@@ -3,9 +3,18 @@ const errorHandler = (err, req, res, _next) => {
   // Safe internal logging (no sensitive tokens or headers)
   console.error(`[Error] [${req.method} ${req.url}] ${err.name || 'Error'}: ${err.message}`);
 
+  // CORS error handling
+  if (err.message === 'Blocked by CORS') {
+    return res.status(403).json({
+      error: 'CORS_ERROR',
+      message: 'Not allowed by CORS policy'
+    });
+  }
+
   // Zod validation errors
   if (err.name === 'ZodError') {
-    const errorMessages = err.errors ? err.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ') : 'अमान्य अनुरोध डेटा।';
+    const issues = err.issues || err.errors || [];
+    const errorMessages = issues.length > 0 ? issues.map(e => `${e.path.join('.')}: ${e.message}`).join(', ') : 'अमान्य अनुरोध डेटा।';
     return res.status(400).json({
       error: 'VALIDATION_ERROR',
       message: errorMessages

@@ -73,6 +73,31 @@ describe('Rate Limits & Daily AI Quota Integration Tests', () => {
         delete process.env.TEST_SIMULATE_DAILY_QUOTA;
       }
     });
+
+    it('returns friendly 503 GLOBAL_DAILY_LIMIT_REACHED when global daily Gemini limit is reached', async () => {
+      const { token } = createAuthenticatedUser();
+      const today = new Date().toISOString().slice(0, 10);
+
+      // Seed global usage to cap
+      db.prepare('INSERT OR REPLACE INTO AiGlobalDailyUsage (date, count) VALUES (?, ?)')
+        .run(today, 1000);
+
+      process.env.TEST_SIMULATE_GLOBAL_QUOTA = 'true';
+      vi.spyOn(geminiService, 'callGemini').mockResolvedValue({ text: 'उत्तर' });
+
+      try {
+        const res = await request(app)
+          .post('/api/ai/acharya')
+          .set('Authorization', `Bearer ${token}`)
+          .send({ userMessage: 'क्या सर्वर सीमा समाप्त है?' })
+          .expect(503);
+
+        expect(res.body.error).toBe('GLOBAL_DAILY_LIMIT_REACHED');
+        expect(res.body.message).toContain('दैनिक सर्वर AI अनुरोध सीमा पूर्ण हो चुकी है');
+      } finally {
+        delete process.env.TEST_SIMULATE_GLOBAL_QUOTA;
+      }
+    });
   });
 
   describe('Global & Auth Rate Limiting Standard Headers', () => {

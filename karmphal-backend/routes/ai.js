@@ -19,29 +19,46 @@ router.use(requireAuth);
 const CHAT_RATE_LIMIT_HOUR = parseInt(process.env.AI_CHAT_RATE_LIMIT_HOUR, 10) || 20;
 const OCR_RATE_LIMIT_HOUR = parseInt(process.env.AI_OCR_RATE_LIMIT_HOUR, 10) || 5;
 const DAILY_QUOTA_PER_USER = parseInt(process.env.AI_DAILY_QUOTA_PER_USER, 10) || 50;
+const GLOBAL_DAILY_AI_LIMIT = parseInt(process.env.GLOBAL_DAILY_AI_LIMIT, 10) || 1000;
 const MAX_OUTPUT_TOKENS = parseInt(process.env.AI_MAX_OUTPUT_TOKENS, 10) || 1500;
 
-// Daily Per-User Quota Check
+// Daily Global & Per-User Quota Check
 const checkDailyQuota = (req, res, next) => {
   const userId = req.user?.id;
   if (!userId) return next();
 
   // Test environment override: allow high quota in tests unless simulating quota limit
-  if (process.env.NODE_ENV === 'test' && !process.env.TEST_SIMULATE_DAILY_QUOTA) {
+  if (process.env.NODE_ENV === 'test' && !process.env.TEST_SIMULATE_DAILY_QUOTA && !process.env.TEST_SIMULATE_GLOBAL_QUOTA) {
     return next();
   }
 
   const today = new Date().toISOString().slice(0, 10);
   try {
-    const row = db.prepare('SELECT count FROM AiUsageDaily WHERE userId = ? AND date = ?').get(userId, today);
-    if (row && row.count >= DAILY_QUOTA_PER_USER) {
+    // 1. Global Daily AI Cap across all users
+    const globalRow = db.prepare('SELECT count FROM AiGlobalDailyUsage WHERE date = ?').get(today);
+    if (globalRow && globalRow.count >= GLOBAL_DAILY_AI_LIMIT) {
+      return res.status(503).json({
+        error: 'GLOBAL_DAILY_LIMIT_REACHED',
+        message: 'दैनिक सर्वर AI अनुरोध सीमा पूर्ण हो चुकी है। कृपया कल पुनः प्रयास करें।'
+      });
+    }
+
+    // 2. Per-User Daily AI Quota
+    const userRow = db.prepare('SELECT count FROM AiUsageDaily WHERE userId = ? AND date = ?').get(userId, today);
+    if (userRow && userRow.count >= DAILY_QUOTA_PER_USER) {
       return res.status(429).json({
         error: 'DAILY_QUOTA_EXCEEDED',
         message: `दैनिक AI कोटा समाप्त हो गया है (${DAILY_QUOTA_PER_USER} अनुरोध/दिन)। कृपया कल पुनः प्रयास करें।`
       });
     }
 
-    // Increment count atomically
+    // Atomically increment global and per-user count
+    db.prepare(`
+      INSERT INTO AiGlobalDailyUsage (date, count)
+      VALUES (?, 1)
+      ON CONFLICT(date) DO UPDATE SET count = count + 1
+    `).run(today);
+
     db.prepare(`
       INSERT INTO AiUsageDaily (userId, date, count) 
       VALUES (?, ?, 1)

@@ -210,6 +210,17 @@ const migrations = [
 
       CREATE INDEX IF NOT EXISTS idx_aiusagedaily_user_date ON AiUsageDaily(userId, date);
     `
+  },
+  {
+    name: '006_legacy_migration_and_global_ai_limits',
+    up: `
+      ALTER TABLE Users ADD COLUMN migratedAt DATETIME DEFAULT NULL;
+
+      CREATE TABLE IF NOT EXISTS AiGlobalDailyUsage (
+        date TEXT PRIMARY KEY,
+        count INTEGER DEFAULT 0
+      );
+    `
   }
 ];
 

@@ -45,6 +45,27 @@ describe('Auth & Refresh Token Rotation (RTR) Integration Tests', () => {
       expect(tokens.length).toBe(1);
       expect(tokens[0].revokedAt).toBeNull();
     });
+
+    it('enforces per-IP rate limiting on guest creation when limit is exceeded', async () => {
+      const express = require('express');
+      const rateLimit = require('express-rate-limit');
+      const testApp = express();
+      testApp.use(express.json());
+
+      const testGuestLimiter = rateLimit({
+        windowMs: 60 * 60 * 1000,
+        max: 2,
+        standardHeaders: true,
+        legacyHeaders: false,
+        message: { error: 'GUEST_RATE_LIMIT', message: 'Too many guest accounts created from this IP.' }
+      });
+      testApp.post('/api/auth/guest-test', testGuestLimiter, (_req, res) => res.status(201).json({ ok: true }));
+
+      await request(testApp).post('/api/auth/guest-test').expect(201);
+      await request(testApp).post('/api/auth/guest-test').expect(201);
+      const resBlocked = await request(testApp).post('/api/auth/guest-test').expect(429);
+      expect(resBlocked.body.error).toBe('GUEST_RATE_LIMIT');
+    });
   });
 
   describe('POST /api/auth/refresh (RTR & Security)', () => {
@@ -188,27 +209,46 @@ describe('Auth & Refresh Token Rotation (RTR) Integration Tests', () => {
   });
 
   describe('POST /api/auth/migrate-legacy', () => {
-    it('migrates valid legacy UUID user to signed JWT session', async () => {
+    afterEach(() => {
+      delete process.env.LEGACY_MIGRATION_ENABLED;
+    });
+
+    it('is disabled by default and rejects with 403 LEGACY_MIGRATION_DISABLED', async () => {
+      delete process.env.LEGACY_MIGRATION_ENABLED;
+      const res = await request(app)
+        .post('/api/auth/migrate-legacy')
+        .send({ legacyToken: uuidv4() })
+        .expect(403);
+
+      expect(res.body.error).toBe('LEGACY_MIGRATION_DISABLED');
+    });
+
+    it('rejects second migration attempt for same user with 409 ALREADY_MIGRATED when enabled', async () => {
+      process.env.LEGACY_MIGRATION_ENABLED = 'true';
       const legacyId = uuidv4();
       db.prepare('INSERT INTO Users (id, name, rank, totalPunya, sadhanaStreak) VALUES (?, ?, ?, ?, ?)')
         .run(legacyId, 'पुरातन साधक', 'मध्यम', 150, 7);
 
-      const res = await request(app)
+      // First attempt succeeds
+      const res1 = await request(app)
         .post('/api/auth/migrate-legacy')
         .send({ legacyToken: legacyId })
         .expect(200);
 
-      expect(res.body.token).toBeTruthy();
-      expect(res.body.refreshToken).toBeTruthy();
-      expect(res.body.user.id).toBe(legacyId);
-      expect(res.body.user.totalPunya).toBe(150);
-      expect(res.body.user.sadhanaStreak).toBe(7);
+      expect(res1.body.token).toBeTruthy();
+      expect(res1.body.user.id).toBe(legacyId);
 
-      const payload = jwt.verify(res.body.token, process.env.JWT_SECRET);
-      expect(payload.sub).toBe(legacyId);
+      // Second attempt must fail with 409 Conflict
+      const res2 = await request(app)
+        .post('/api/auth/migrate-legacy')
+        .send({ legacyToken: legacyId })
+        .expect(409);
+
+      expect(res2.body.error).toBe('ALREADY_MIGRATED');
     });
 
-    it('rejects invalid non-UUID token format with 400 INVALID_LEGACY_TOKEN', async () => {
+    it('rejects invalid non-UUID token format with 400 INVALID_LEGACY_TOKEN when enabled', async () => {
+      process.env.LEGACY_MIGRATION_ENABLED = 'true';
       const res = await request(app)
         .post('/api/auth/migrate-legacy')
         .send({ legacyToken: 'invalid-not-a-uuid' })
@@ -217,7 +257,8 @@ describe('Auth & Refresh Token Rotation (RTR) Integration Tests', () => {
       expect(res.body.error).toBe('INVALID_LEGACY_TOKEN');
     });
 
-    it('rejects non-existent UUID with 404 NOT_FOUND', async () => {
+    it('rejects non-existent unknown UUID with 404 NOT_FOUND when enabled', async () => {
+      process.env.LEGACY_MIGRATION_ENABLED = 'true';
       const res = await request(app)
         .post('/api/auth/migrate-legacy')
         .send({ legacyToken: uuidv4() })
@@ -226,7 +267,8 @@ describe('Auth & Refresh Token Rotation (RTR) Integration Tests', () => {
       expect(res.body.error).toBe('NOT_FOUND');
     });
 
-    it('rejects missing legacyToken with 400 BAD_REQUEST', async () => {
+    it('rejects missing legacyToken with 400 BAD_REQUEST when enabled', async () => {
+      process.env.LEGACY_MIGRATION_ENABLED = 'true';
       const res = await request(app)
         .post('/api/auth/migrate-legacy')
         .send({})

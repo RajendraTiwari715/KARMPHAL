@@ -244,8 +244,10 @@ export default function KundaliView({ onBack }) {
 
         <form onSubmit={handleGenerate} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 pt-2">
           <div>
-            <label className="block text-xs font-bold text-slate-300 mb-1">आपका नाम</label>
+            <label htmlFor="kundali-name-input" className="block text-xs font-bold text-slate-300 mb-1">आपका नाम</label>
             <input
+              id="kundali-name-input"
+              aria-label="आपका नाम (Your Name)"
               type="text"
               required
               value={formData.name}
@@ -256,8 +258,10 @@ export default function KundaliView({ onBack }) {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-300 mb-1">जन्म दिनांक</label>
+            <label htmlFor="kundali-dob-input" className="block text-xs font-bold text-slate-300 mb-1">जन्म दिनांक</label>
             <input
+              id="kundali-dob-input"
+              aria-label="जन्म दिनांक (Date of Birth)"
               type="date"
               required
               value={formData.dob}
@@ -267,8 +271,10 @@ export default function KundaliView({ onBack }) {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-300 mb-1">जन्म समय</label>
+            <label htmlFor="kundali-time-input" className="block text-xs font-bold text-slate-300 mb-1">जन्म समय</label>
             <input
+              id="kundali-time-input"
+              aria-label="जन्म समय (Birth Time)"
               type="time"
               required
               value={formData.time}
@@ -278,9 +284,11 @@ export default function KundaliView({ onBack }) {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-300 mb-1">जन्म स्थान</label>
+            <label htmlFor="kundali-place-input" className="block text-xs font-bold text-slate-300 mb-1">जन्म स्थान</label>
             <div className="flex gap-2">
               <input
+                id="kundali-place-input"
+                aria-label="जन्म स्थान (Place of Birth)"
                 type="text"
                 required
                 value={formData.place}

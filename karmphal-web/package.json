@@ -13,6 +13,7 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:legacy": "vite-node tests/markdown.test.js && vite-node tests/anticheat_and_audio.test.js && node tests/library_memory.test.js && vite-node tests/pdf_report.test.js && vite-node tests/japa_profiler.test.js && vite-node tests/panchang_performance.test.js && vite-node tests/profile_settings_discoverability.test.js && vite-node tests/auth_single_flight.test.js && node tests/japa_anti_cheat.test.js && vite-node tests/error_boundary.test.jsx && vite-node tests/back_button.test.js",
+    "test:visual-assets": "node tests/visual_assets.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -49,8 +50,10 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.4",
     "@vitest/coverage-v8": "^5.0.5",
+    "axe-core": "^4.14.0",
     "jsdom": "^29.1.1",
     "oxlint": "^1.75.0",
+    "playwright": "^1.64.1",
     "sharp": "^0.35.5",
     "vite": "^8.3.5",
     "vite-node": "^6.0.0",

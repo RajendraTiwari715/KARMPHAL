@@ -41,6 +41,9 @@ const parsedEnvOrigins = (env.CORS_ORIGINS || '')
   .filter(Boolean);
 
 const isOriginAllowed = (origin, envOrigins = parsedEnvOrigins, nodeEnv = process.env.NODE_ENV) => {
+  // Reject string "null" (sent by sandboxed iframes or privacy exploits)
+  if (origin === 'null') return false;
+
   // Allow non-browser requests (native mobile apps, curl, server-to-server)
   if (!origin) return true;
 

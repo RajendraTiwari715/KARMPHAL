@@ -7,6 +7,7 @@ import VastuView from '../components/VastuShastra/VastuView';
 import { Calendar, Compass, HeartHandshake, Star, Home, ChevronRight } from 'lucide-react';
 import { audioService } from '../services/audioService';
 import { backButtonService, BACK_PRIORITY } from '../services/backButtonService';
+import { languageService } from '../services/languageService';
 
 const JYOTISH_MODULES = [
   {
@@ -57,6 +58,7 @@ const JYOTISH_MODULES = [
 ];
 
 export default function JyotishSection({ panchangData }) {
+  const t = languageService.t();
   const [activeModule, setActiveModule] = useState(null); // 'panchang', 'kundali', 'vivah', 'rashi', 'vastu', 'lalkitab'
 
   const handleOpenModule = (moduleId) => {
@@ -135,9 +137,9 @@ export default function JyotishSection({ panchangData }) {
               </div>
 
               <div className="mt-5 pt-3 border-t border-white/5 flex items-center justify-between text-xs">
-                <span className="text-slate-400 text-[11px]">क्लिक करके खोलें</span>
+                <span className="text-slate-400 text-[11px]">{t.clickToOpen}</span>
                 <span className="text-amber-400 font-bold flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                  <span>प्रवेश करें</span>
+                  <span>{t.enterModule}</span>
                   <ChevronRight className="w-4 h-4" />
                 </span>
               </div>

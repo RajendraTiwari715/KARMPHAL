@@ -305,7 +305,9 @@ export default function SanatanAIAcharya({ panchangData }) {
             type="button"
             onClick={() => handleSend()}
             disabled={isSending || isLoading || !inputQuery.trim()}
-            className="btn-gold py-2.5 sm:py-3 px-4 sm:px-5 disabled:opacity-40 shrink-0"
+            aria-label="संदेश भेजें (Send Message)"
+            title="संदेश भेजें (Send Message)"
+            className="btn-gold py-2.5 sm:py-3 px-4 sm:px-5 disabled:opacity-40 shrink-0 cursor-pointer"
           >
             <Send className="w-4 h-4" />
           </button>

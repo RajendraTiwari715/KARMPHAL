@@ -8,22 +8,51 @@ This guide details the final production-ready architecture for deploying the **K
 
 The Node.js (Express) backend provides secure authentication, rate limiting, and proxied Gemini AI integration.
 
-**Prerequisites & Environment Variables:**
-- Node.js >= 18
-- Environment variables (in `.env` or cloud dashboard):
-  - `PORT`: (Default: `5000`)
-  - `JWT_SECRET`: **Required** (Minimum 16 characters). Used for signing HS256 tokens. The server will fail fast on startup if this is missing.
-  - `GEMINI_API_KEY`: **Required**. Loaded strictly server-side (never exposed to clients/APKs).
-  - `DB_PATH`: Persistent volume path for SQLite with WAL mode (e.g., `/data/karmphal.db`).
-  - `FRONTEND_URL`: Allowed CORS origin for production web frontend (e.g., `https://karmphal.app`).
-  - `BACKEND_URL`: Optional custom backend domain for CORS allowlist.
+### Environment Variables Validated by `config/env.js`
+The backend fails fast on startup with exit code 1 if required variables are missing. Secret values are never printed to logs.
+
+| Variable Name | Status | Default | Description & Placeholder Example |
+| :--- | :--- | :--- | :--- |
+| `NODE_ENV` | Optional | `development` | Deployment environment (`development`, `production`, `test`). Example: `NODE_ENV=production` |
+| `PORT` | Optional | `5000` | Port on which Express listens. Example: `PORT=5000` |
+| `DB_PATH` | Optional | `./karmphal.db` | Persistent volume path for SQLite with WAL mode. Example: `DB_PATH=/data/karmphal.db` |
+| `JWT_SECRET` | **REQUIRED** | _None_ | Cryptographic signing secret (min 16 chars) for HS256 JWTs. Example: `JWT_SECRET=your_jwt_secret_min_32_chars_long_here` |
+| `GEMINI_API_KEY` | **REQUIRED** | _None_ | Google Cloud Gemini API key (strictly server-side, never exposed to clients). Example: `GEMINI_API_KEY=AIzaSy...` |
+| `CORS_ORIGINS` | **REQUIRED** | _None_ | Comma-separated allowed web origins. Example: `CORS_ORIGINS=https://karmphal.app,https://localhost,capacitor://localhost` |
+| `CHAT_RETENTION_LIMIT` | Optional | `100` | Number of chat messages stored per user. Example: `CHAT_RETENTION_LIMIT=100` |
+| `AI_CHAT_RATE_LIMIT_HOUR` | Optional | `20` | Max Acharya AI chat requests per user and per IP per hour. Example: `AI_CHAT_RATE_LIMIT_HOUR=20` |
+| `AI_OCR_RATE_LIMIT_HOUR` | Optional | `5` | Max Kundali OCR requests per user and per IP per hour. Example: `AI_OCR_RATE_LIMIT_HOUR=5` |
+| `AI_DAILY_QUOTA_PER_USER` | Optional | `50` | Max total AI requests per user per calendar day. Example: `AI_DAILY_QUOTA_PER_USER=50` |
+| `AI_MAX_OUTPUT_TOKENS` | Optional | `1500` | Token limit for AI response generation. Example: `AI_MAX_OUTPUT_TOKENS=1500` |
+| `GLOBAL_DAILY_AI_LIMIT` | Optional | `1000` | Global daily Gemini request cap across all users. When reached, returns friendly 503 (`SERVICE_UNAVAILABLE`). Example: `GLOBAL_DAILY_AI_LIMIT=1000` |
+| `GUEST_RATE_LIMIT_HOUR` | Optional | `5` | Max guest registration attempts per IP per hour to prevent quota-bypass churning. Example: `GUEST_RATE_LIMIT_HOUR=5` |
+| `LEGACY_MIGRATION_ENABLED` | Optional | `false` | Gate for `/api/auth/migrate-legacy`. Disabled by default in production. **Hard Removal Date: 2026-12-31**. Example: `LEGACY_MIGRATION_ENABLED=false` |
+| `TRUST_PROXY` | Optional | `1` (in prod) | Proxy hop count or CIDR. Protects against spoofed `X-Forwarded-For` headers. Example: `TRUST_PROXY=1` |
+
+### Proxy Topology & IP Spoofing Protection
+Express uses `app.set('trust proxy', ...)`:
+- In production (`NODE_ENV=production`), defaults to `1` (trusting the immediate reverse proxy such as Cloud Run, Render, Nginx, or AWS ALB).
+- If your architecture has multiple proxy hops (e.g., Cloudflare -> Cloud Run), set `TRUST_PROXY=2` or specify trusted subnet ranges.
+- **Security guarantee**: Setting `trust proxy: 1` ensures Express only reads the client IP appended by your trusted edge proxy, rejecting forged `X-Forwarded-For` headers sent by malicious clients.
+
+### Critical External Cloud Configurations (Action Required Outside Code)
+1. **Google Cloud Budget Alert**:
+   - Go to Google Cloud Console > **Billing** > **Budgets & alerts**.
+   - Create a monthly budget (e.g., $25 / month) with threshold alerts at 50%, 90%, and 100% sending email/PubSub notifications.
+2. **Gemini API Key Restrictions**:
+   - In Google Cloud Console > **APIs & Services** > **Credentials**:
+   - Under **API restrictions**: Restrict key strictly to **Generative Language API**.
+   - Under **Application restrictions**: Restrict key by IP address to your production backend server IP / VPC egress IP (or Cloud Run egress IP).
+3. **Gemini Quota Cap**:
+   - Under **APIs & Services** > **Generative Language API** > **Quotas**:
+   - Set an explicit cap on queries per minute (e.g., 60 QPM) and daily queries (e.g., 1000/day) matching `GLOBAL_DAILY_AI_LIMIT` to prevent unexpected billing.
 
 **Deployment Steps:**
 1. Navigate to `karmphal-backend`.
 2. Run `npm install --production`.
-3. Configure environment variables.
+3. Configure environment variables in `.env` or container settings.
 4. Mount persistent storage for `DB_PATH` if using containers.
-5. Run `npm start` (or `npm test` to verify smoke test suite).
+5. Run `npm start` (or `npm test` to verify test suite).
 
 ---
 

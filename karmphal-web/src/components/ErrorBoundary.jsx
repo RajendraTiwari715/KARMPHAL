@@ -122,6 +122,7 @@ export class ErrorBoundary extends React.Component {
 
     const retryText = isEnglish ? 'Retry / Refresh' : isSanskrit ? 'पुनः प्रयतताम्' : 'पुनः प्रयास करें';
     const goHomeText = isEnglish ? 'Go Home' : isSanskrit ? 'मुख्य-पृष्ठम्' : 'मुख्य पृष्ठ (होम)';
+    const detailsText = isEnglish ? 'Details:' : isSanskrit ? 'विवरणम्:' : 'विवरण:';
 
     // Section-level fallback: compact in-place card
     if (this.props.section) {
@@ -151,7 +152,7 @@ export class ErrorBoundary extends React.Component {
 
           {this.state.error?.message && (
             <div className="p-3 mb-6 rounded-xl bg-black/50 border border-[#8C5318]/40 text-xs text-[#D4A373] font-mono break-words">
-              <span className="text-[#E0A96D] font-bold">विवरण:</span> {this.state.error.message}
+              <span className="text-[#E0A96D] font-bold">{detailsText}</span> {this.state.error.message}
             </div>
           )}
 
