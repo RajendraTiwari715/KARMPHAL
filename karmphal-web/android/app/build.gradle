@@ -14,7 +14,15 @@ android {
         applicationId "com.karmphal.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode (System.getenv("VERSION_CODE")?.toInteger() ?: (project.findProperty("VERSION_CODE")?.toString()?.toInteger() ?: 1))
+        def rawVersionCode = System.getenv("VERSION_CODE") ?: project.findProperty("VERSION_CODE")?.toString()
+        if (!rawVersionCode) {
+            gradle.taskGraph.whenReady { taskGraph ->
+                if (taskGraph.allTasks.any { it.name.toLowerCase().contains("release") && !it.name.toLowerCase().contains("test") }) {
+                    throw new GradleException("FATAL: VERSION_CODE environment variable or -PVERSION_CODE property must be explicitly provided for release builds (first release = 1).")
+                }
+            }
+        }
+        versionCode (rawVersionCode ? rawVersionCode.toInteger() : 1)
         versionName "1.0.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {

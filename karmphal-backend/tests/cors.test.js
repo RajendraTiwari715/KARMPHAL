@@ -6,7 +6,7 @@ const { errorHandler } = require('../middlewares/errorHandler');
 
 describe('Production CORS Policy Verification for Native Android & Web', () => {
   let prodApp;
-  const prodOrigins = ['https://karmphal.app'];
+  const prodOrigins = ['https://example-frontend.com'];
 
   beforeAll(() => {
     prodApp = express();
@@ -50,13 +50,13 @@ describe('Production CORS Policy Verification for Native Android & Web', () => {
       expect(res.body.status).toBe('ok');
     });
 
-    it('allows Origin: https://karmphal.app (configured in CORS_ORIGINS)', async () => {
+    it('allows Origin: https://example-frontend.com (configured in CORS_ORIGINS)', async () => {
       const res = await request(prodApp)
         .get('/test-cors')
-        .set('Origin', 'https://karmphal.app')
+        .set('Origin', 'https://example-frontend.com')
         .expect(200);
 
-      expect(res.headers['access-control-allow-origin']).toBe('https://karmphal.app');
+      expect(res.headers['access-control-allow-origin']).toBe('https://example-frontend.com');
       expect(res.body.status).toBe('ok');
     });
   });

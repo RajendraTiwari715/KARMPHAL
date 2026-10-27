@@ -238,7 +238,7 @@ export default function SanatanAIAcharya({ panchangData }) {
                       </div>
                     )}
 
-                    {isUser ? (
+                    {isUser || msg.id === 'default-greeting' ? (
                       <div className="whitespace-pre-line text-[#F7E7D6] leading-[1.75] font-sans font-normal text-xs sm:text-sm break-words">
                         {msg.text}
                       </div>

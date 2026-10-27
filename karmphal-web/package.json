@@ -14,6 +14,7 @@
     "test:coverage": "vitest run --coverage",
     "test:legacy": "vite-node tests/markdown.test.js && vite-node tests/anticheat_and_audio.test.js && node tests/library_memory.test.js && vite-node tests/pdf_report.test.js && vite-node tests/japa_profiler.test.js && vite-node tests/panchang_performance.test.js && vite-node tests/profile_settings_discoverability.test.js && vite-node tests/auth_single_flight.test.js && node tests/japa_anti_cheat.test.js && vite-node tests/error_boundary.test.jsx && vite-node tests/back_button.test.js",
     "test:visual-assets": "node tests/visual_assets.mjs",
+    "test:lazy-loading": "node tests/lazy_loading_playwright.test.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -27,6 +28,7 @@
     "@capacitor/share": "^8.0.3",
     "@capacitor/status-bar": "^8.0.4",
     "@tailwindcss/vite": "^4.3.3",
+    "astronomy-engine": "^2.1.19",
     "canvas-confetti": "^1.9.4",
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1",

@@ -176,40 +176,11 @@ export async function apiFetch(path, options = {}, isRetry = false) {
   // 1. Manage Auth Token & Legacy Non-JWT Handling
   let token = await tokenStorage.getToken();
 
-  // If token exists but is not a valid JWT (e.g. legacy UUID from pre-JWT era or corrupt string)
+  // If token exists but is not a valid JWT format, purge invalid token
   if (token && !isValidJwtFormat(token) && !isAuthRoute) {
-    console.warn('[apiClient] Legacy non-JWT token detected. Migrating to signed JWT or resetting...');
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    let migrated = false;
-
-    if (uuidRegex.test(token.trim())) {
-      try {
-        const migRes = await fetch(`${baseUrl}/api/auth/migrate-legacy`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-          body: JSON.stringify({ legacyToken: token.trim() })
-        });
-        if (migRes.ok) {
-          const migData = await migRes.json();
-          if (migData?.token) {
-            await tokenStorage.setTokens(migData.token, migData.refreshToken);
-            token = migData.token;
-            migrated = true;
-          }
-        }
-      } catch {
-        // Migration call failed; proceed to clean reset
-      }
-    }
-
-    if (!migrated) {
-      await tokenStorage.clearTokens();
-      try {
-        token = await createGuestSession();
-      } catch (err) {
-        console.warn('[apiClient] Clean guest reset after legacy token failed:', err.message);
-      }
-    }
+    console.warn('[apiClient] Invalid token format detected. Purging invalid token...');
+    await tokenStorage.clearTokens();
+    token = null;
   }
 
   // If still no token and not an auth endpoint, initialize guest session

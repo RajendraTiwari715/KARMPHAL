@@ -160,7 +160,7 @@ async function runProductionHardeningTests() {
       AI_DAILY_QUOTA_PER_USER: '5',
       TEST_FORCE_CHAT_LIMIT: 'true',      // Force rate limit activation in test
       CHAT_RETENTION_LIMIT: '20',
-      CORS_ORIGINS: 'https://karmphal.app,https://admin.karmphal.app'
+      CORS_ORIGINS: 'https://example-frontend.com,https://admin.example-frontend.com'
     },
     stdio: ['ignore', 'pipe', 'pipe']
   });
@@ -386,14 +386,14 @@ async function runProductionHardeningTests() {
     const { isOriginAllowed } = require('./server');
 
     // 7a. Production Policy Verification
-    const prodOrigins = ['https://karmphal.app', 'https://admin.karmphal.app'];
+    const prodOrigins = ['https://example-frontend.com', 'https://admin.example-frontend.com'];
     const resCap = isOriginAllowed('capacitor://localhost', prodOrigins, 'production');
     const resHttpsLocal = isOriginAllowed('https://localhost', prodOrigins, 'production');
     const resLocal = isOriginAllowed('http://localhost:5173', prodOrigins, 'production');
     const resIp10 = isOriginAllowed('http://10.0.2.2:5000', prodOrigins, 'production');
     const resInsecure = isOriginAllowed('http://insecure-domain.com', prodOrigins, 'production');
-    const resProd = isOriginAllowed('https://karmphal.app', prodOrigins, 'production');
-    const resAdmin = isOriginAllowed('https://admin.karmphal.app', prodOrigins, 'production');
+    const resProd = isOriginAllowed('https://example-frontend.com', prodOrigins, 'production');
+    const resAdmin = isOriginAllowed('https://admin.example-frontend.com', prodOrigins, 'production');
     const resAttacker = isOriginAllowed('https://evil-attacker.com', prodOrigins, 'production');
 
     console.log('  [PRODUCTION CORS POLICY EVALUATION]:');
@@ -402,7 +402,7 @@ async function runProductionHardeningTests() {
     console.log(`  - http://localhost:5173:  ${resLocal} (Expected: false - forbidden in prod)`);
     console.log(`  - http://10.0.2.2:5000:   ${resIp10} (Expected: false - forbidden in prod)`);
     console.log(`  - http://insecure-domain: ${resInsecure} (Expected: false - insecure http forbidden in prod)`);
-    console.log(`  - https://karmphal.app:   ${resProd} (Expected: true - in allowlist)`);
+    console.log(`  - https://example-frontend: ${resProd} (Expected: true - in allowlist)`);
     console.log(`  - https://evil-attacker:  ${resAttacker} (Expected: false - not in allowlist)`);
 
     assert.strictEqual(resCap, true, 'Capacitor origin MUST be allowed in production');

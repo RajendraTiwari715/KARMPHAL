@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "totalCount": 485,
+  "filesCount": 15,
+  "perFileCounts": {
+    "karmphal-web/src/components/AstrologicalCore/KundaliPrintReport.jsx": 52,
+    "karmphal-web/src/components/AstrologicalCore/KundaliView.jsx": 56,
+    "karmphal-web/src/components/AstrologicalCore/PanchangView.jsx": 47,
+    "karmphal-web/src/components/AstrologicalCore/RashiView.jsx": 15,
+    "karmphal-web/src/components/KarmicEschatology/Narakas28Explorer.jsx": 30,
+    "karmphal-web/src/components/PDFReader.jsx": 13,
+    "karmphal-web/src/components/ProfileModal.jsx": 54,
+    "karmphal-web/src/components/RitualVault/PujaVidhanStateMachine.jsx": 8,
+    "karmphal-web/src/components/SadhanaGamification/DigitalJapaMala.jsx": 17,
+    "karmphal-web/src/components/SwapnaShastra/DreamAnalyzer.jsx": 13,
+    "karmphal-web/src/components/TheologicalChatbot/SanatanAIAcharya.jsx": 14,
+    "karmphal-web/src/components/VastuShastra/VastuView.jsx": 24,
+    "karmphal-web/src/components/VivahMilan/VivahMilanView.jsx": 62,
+    "karmphal-web/src/sections/GyanSection.jsx": 32,
+    "karmphal-web/src/sections/SadhanaSection.jsx": 48
+  }
+}

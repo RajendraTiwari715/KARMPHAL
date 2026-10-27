@@ -27,10 +27,12 @@ import { useProfile } from '../context/useProfile';
 import { apiClient } from '../services/apiClient';
 import LocationPickerModal from './LocationPickerModal';
 import { backButtonService, BACK_PRIORITY } from '../services/backButtonService';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 function ProfileModal({ isOpen, onClose, initialTab = 'profile' }) {
   const { punyaLedger, currentStreak, location, updateCity } = useProfile();
   const [currentLang, setCurrentLang] = useState(() => languageService.getLang());
+  const modalRef = useFocusTrap(isOpen, onClose);
 
   useEffect(() => {
     return languageService.subscribe((l) => setCurrentLang(l));
@@ -55,7 +57,7 @@ function ProfileModal({ isOpen, onClose, initialTab = 'profile' }) {
   const [isEditing, setIsEditing] = useState(false);
   const [userData, setUserData] = useState(() => ({
     name: 'साधक',
-    phoneOrEmail: 'satyendra@karmphal.app',
+    phoneOrEmail: 'sadhaka@example.com',
     gotra: 'कश्यप (Kashyapa)',
     city: location?.cityName || 'वाराणसी (Varanasi)',
     isLoggedIn: true
@@ -88,17 +90,6 @@ function ProfileModal({ isOpen, onClose, initialTab = 'profile' }) {
         .catch(err => console.warn('Failed to load profile', err.message));
     }
   }, [isOpen, initialTab, location]);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
 
   const handleToggleSound = () => {
     const nextMuted = audioService.toggleMute();
@@ -189,7 +180,7 @@ function ProfileModal({ isOpen, onClose, initialTab = 'profile' }) {
         aria-modal="true"
         aria-labelledby="profile-modal-title"
       >
-        <div className="glass-card max-w-lg w-full p-5 sm:p-7 relative rounded-3xl border border-[#C58B4E]/40 shadow-2xl bg-[#140B06]/95 text-[#F7E7D6] max-h-[90vh] overflow-y-auto">
+        <div ref={modalRef} tabIndex={-1} className="glass-card max-w-lg w-full p-5 sm:p-7 relative rounded-3xl border border-[#C58B4E]/40 shadow-2xl bg-[#140B06]/95 text-[#F7E7D6] max-h-[90vh] overflow-y-auto outline-none">
           {/* Close Button (min 44x44px tap target) */}
           <button
             type="button"
@@ -370,7 +361,6 @@ function ProfileModal({ isOpen, onClose, initialTab = 'profile' }) {
               <button
                 type="button"
                 onClick={() => setActiveTab('settings')}
-                aria-label="विन्यास एवं सेटिंग्स पर जाएं"
                 className="w-full min-h-[44px] p-3 rounded-2xl bg-gradient-to-r from-black/40 to-[#2A170C]/40 border border-[#C58B4E]/30 hover:border-[#E0A96D] flex items-center justify-between text-xs transition-all cursor-pointer group"
               >
                 <div className="flex items-center gap-2">
@@ -402,7 +392,7 @@ function ProfileModal({ isOpen, onClose, initialTab = 'profile' }) {
                         type="button"
                         role="radio"
                         aria-checked={isSelected}
-                        aria-label={`भाषा: ${lang.label}`}
+                        aria-label={`${lang.label} - ${lang.desc}`}
                         onClick={() => handleLanguageSelect(lang.code)}
                         className={`w-full min-h-[48px] p-3 rounded-2xl border cursor-pointer transition-all flex items-center justify-between text-left ${
                           isSelected
@@ -443,7 +433,7 @@ function ProfileModal({ isOpen, onClose, initialTab = 'profile' }) {
                     <button
                       type="button"
                       onClick={handleToggleSound}
-                      aria-label={isMuted ? "ध्वनि चालू करें (Unmute Bell & Chimes)" : "ध्वनि म्यूट करें (Mute Sound)"}
+                      aria-label={`${isMuted ? 'म्यूट' : 'सक्रिय'} - ${isMuted ? 'ध्वनि चालू करें (Unmute Bell & Chimes)' : 'ध्वनि म्यूट करें (Mute Sound)'}`}
                       className={`min-w-[44px] min-h-[44px] px-3.5 py-2 rounded-xl border font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                         isMuted 
                           ? 'bg-rose-950/40 border-rose-500/40 text-rose-300' 
@@ -460,7 +450,7 @@ function ProfileModal({ isOpen, onClose, initialTab = 'profile' }) {
                     <button
                       type="button"
                       onClick={() => audioService.playTempleBell(528, 2.5)}
-                      aria-label="मन्दिर घण्टा नाद बजाएं और परीक्षण करें"
+                      aria-label="मन्दिर घण्टा नाद सुनें और परीक्षण करें"
                       className="w-full sm:flex-1 min-h-[44px] py-2 px-3 rounded-xl border border-[#C58B4E]/30 bg-black/30 hover:bg-[#C58B4E]/20 text-xs text-[#F3CA9D] font-medium transition-colors cursor-pointer flex items-center justify-center gap-1.5"
                     >
                       <span>🔔</span>
@@ -469,7 +459,7 @@ function ProfileModal({ isOpen, onClose, initialTab = 'profile' }) {
                     <button
                       type="button"
                       onClick={() => audioService.playShankh()}
-                      aria-label="दिव्य शंख नाद बजाएं और परीक्षण करें"
+                      aria-label="दिव्य शंख नाद सुनें और परीक्षण करें"
                       className="w-full sm:flex-1 min-h-[44px] py-2 px-3 rounded-xl border border-[#C58B4E]/30 bg-black/30 hover:bg-[#C58B4E]/20 text-xs text-[#F3CA9D] font-medium transition-colors cursor-pointer flex items-center justify-center gap-1.5"
                     >
                       <span>🐚</span>
@@ -610,7 +600,6 @@ function ProfileModal({ isOpen, onClose, initialTab = 'profile' }) {
             <button
               type="button"
               onClick={onClose}
-              aria-label="साधना एवं विन्यास पटल बंद करें"
               className="btn-gold w-full min-h-[44px] justify-center text-xs py-2.5 flex items-center gap-2 cursor-pointer"
             >
               <Check className="w-4 h-4" />

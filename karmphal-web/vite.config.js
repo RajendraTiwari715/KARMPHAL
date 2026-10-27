@@ -15,28 +15,29 @@ export default defineConfig({
     }
   },
   build: {
+    modulePreload: {
+      resolveDependencies(filename, deps) {
+        return deps.filter(dep => 
+          !dep.includes('vendor-markdown') &&
+          !dep.includes('vendor-pdf') &&
+          !dep.includes('vendor-pdfjs') &&
+          !dep.includes('AcharyaMarkdown') &&
+          !dep.includes('PDFReader') &&
+          !dep.includes('KundaliPrintReport')
+        );
+      }
+    },
     rollupOptions: {
       output: {
         manualChunks(id) {
           if (id.includes('node_modules')) {
-            if (id.includes('pdfjs-dist')) return 'vendor-pdfjs';
-            if (id.includes('jspdf') || id.includes('html2canvas')) return 'vendor-pdf';
-            if (
-              id.includes('react-markdown') ||
-              id.includes('remark') ||
-              id.includes('rehype') ||
-              id.includes('micromark') ||
-              id.includes('unified') ||
-              id.includes('unist') ||
-              id.includes('vfile') ||
-              id.includes('mdast') ||
-              id.includes('hast')
-            ) {
-              return 'vendor-markdown';
+            if (id.includes('/react/') || id.includes('/react-dom/') || id.includes('\\react\\') || id.includes('\\react-dom\\')) {
+              return 'vendor-react';
             }
             if (id.includes('lucide-react')) return 'vendor-icons';
-            if (id.includes('react') || id.includes('react-dom')) return 'vendor-react';
             if (id.includes('@capacitor')) return 'vendor-capacitor';
+            if (id.includes('pdfjs-dist')) return 'vendor-pdfjs';
+            if (id.includes('jspdf') || id.includes('html2canvas')) return 'vendor-pdf';
             return 'vendor-common';
           }
         }

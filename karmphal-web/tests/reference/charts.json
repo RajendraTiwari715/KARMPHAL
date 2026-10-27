@@ -1,0 +1,88 @@
+{
+  "charts": [
+    {
+      "chartId": 1,
+      "source": "TODO: Fill from Drik Panchang / Jagannatha Hora",
+      "date": "TODO: YYYY-MM-DD",
+      "time": "TODO: HH:MM (24-hour IST)",
+      "place": "TODO: e.g. Varanasi",
+      "latitude": "TODO: e.g. 25.3176",
+      "longitude": "TODO: e.g. 82.9739",
+      "expectedLagna": {
+        "sign": "TODO",
+        "degreeInSign": "TODO"
+      },
+      "planets": {
+        "Sun": { "sign": "TODO", "degreeInSign": "TODO" },
+        "Moon": { "sign": "TODO", "degreeInSign": "TODO" },
+        "Mars": { "sign": "TODO", "degreeInSign": "TODO" },
+        "Mercury": { "sign": "TODO", "degreeInSign": "TODO" },
+        "Jupiter": { "sign": "TODO", "degreeInSign": "TODO" },
+        "Venus": { "sign": "TODO", "degreeInSign": "TODO" },
+        "Saturn": { "sign": "TODO", "degreeInSign": "TODO" },
+        "Rahu": { "sign": "TODO", "degreeInSign": "TODO" },
+        "Ketu": { "sign": "TODO", "degreeInSign": "TODO" }
+      },
+      "tithi": "TODO",
+      "nakshatra": "TODO",
+      "sunrise": "TODO: HH:MM AM/PM",
+      "sunset": "TODO: HH:MM AM/PM"
+    },
+    {
+      "chartId": 2,
+      "source": "TODO: Fill from Drik Panchang / Jagannatha Hora",
+      "date": "TODO: YYYY-MM-DD",
+      "time": "TODO: HH:MM (24-hour IST)",
+      "place": "TODO: e.g. New Delhi",
+      "latitude": "TODO: e.g. 28.6139",
+      "longitude": "TODO: e.g. 77.2090",
+      "expectedLagna": {
+        "sign": "TODO",
+        "degreeInSign": "TODO"
+      },
+      "planets": {
+        "Sun": { "sign": "TODO", "degreeInSign": "TODO" },
+        "Moon": { "sign": "TODO", "degreeInSign": "TODO" },
+        "Mars": { "sign": "TODO", "degreeInSign": "TODO" },
+        "Mercury": { "sign": "TODO", "degreeInSign": "TODO" },
+        "Jupiter": { "sign": "TODO", "degreeInSign": "TODO" },
+        "Venus": { "sign": "TODO", "degreeInSign": "TODO" },
+        "Saturn": { "sign": "TODO", "degreeInSign": "TODO" },
+        "Rahu": { "sign": "TODO", "degreeInSign": "TODO" },
+        "Ketu": { "sign": "TODO", "degreeInSign": "TODO" }
+      },
+      "tithi": "TODO",
+      "nakshatra": "TODO",
+      "sunrise": "TODO: HH:MM AM/PM",
+      "sunset": "TODO: HH:MM AM/PM"
+    },
+    {
+      "chartId": 3,
+      "source": "TODO: Fill from Drik Panchang / Jagannatha Hora",
+      "date": "TODO: YYYY-MM-DD",
+      "time": "TODO: HH:MM (24-hour IST)",
+      "place": "TODO: e.g. Mumbai",
+      "latitude": "TODO: e.g. 19.0760",
+      "longitude": "TODO: e.g. 72.8777",
+      "expectedLagna": {
+        "sign": "TODO",
+        "degreeInSign": "TODO"
+      },
+      "planets": {
+        "Sun": { "sign": "TODO", "degreeInSign": "TODO" },
+        "Moon": { "sign": "TODO", "degreeInSign": "TODO" },
+        "Mars": { "sign": "TODO", "degreeInSign": "TODO" },
+        "Mercury": { "sign": "TODO", "degreeInSign": "TODO" },
+        "Jupiter": { "sign": "TODO", "degreeInSign": "TODO" },
+        "Venus": { "sign": "TODO", "degreeInSign": "TODO" },
+        "Saturn": { "sign": "TODO", "degreeInSign": "TODO" },
+        "Rahu": { "sign": "TODO", "degreeInSign": "TODO" },
+        "Ketu": { "sign": "TODO", "degreeInSign": "TODO" }
+      },
+      "tithi": "TODO",
+      "nakshatra": "TODO",
+      "sunrise": "TODO: HH:MM AM/PM",
+      "sunset": "TODO: HH:MM AM/PM"
+    }
+  ]
+}

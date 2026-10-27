@@ -212,33 +212,32 @@ describe('Frontend apiClient 401 Flow & Single-Flight Refresh Test Suite', () =>
     expect(await tokenStorage.getRefreshToken()).toBeNull();
   });
 
-  it('migrates legacy UUID token to signed JWT on the fly', async () => {
-    const legacyUuid = 'a1b2c3d4-e5f6-4a1b-8c2d-3e4f5a6b7c8d';
-    const newJwt = signMockJwt('migrated-user');
-    const newRefresh = signMockJwt('migrated-user', 'refresh');
-    await tokenStorage.setTokens(legacyUuid, null);
+  it('purges invalid non-JWT token format and creates clean guest session', async () => {
+    const invalidToken = 'not-a-valid-jwt-token-string';
+    const guestJwt = signMockJwt('guest-user-123');
+    await tokenStorage.setTokens(invalidToken, null);
 
     vi.spyOn(global, 'fetch').mockImplementation(async (url) => {
       const urlStr = String(url);
-      if (urlStr.includes('/api/auth/migrate-legacy')) {
+      if (urlStr.includes('/api/auth/guest')) {
         return {
           ok: true,
-          status: 200,
+          status: 201,
           headers: new Headers({ 'content-type': 'application/json' }),
-          json: async () => ({ token: newJwt, refreshToken: newRefresh })
+          json: async () => ({ token: guestJwt, refreshToken: signMockJwt('guest-user-123', 'refresh') })
         };
       }
       return {
         ok: true,
         status: 200,
         headers: new Headers({ 'content-type': 'application/json' }),
-        json: async () => ({ user: 'migrated' })
+        json: async () => ({ user: 'fresh-guest' })
       };
     });
 
     const res = await apiClient.get('/api/user/profile');
-    expect(res.user).toBe('migrated');
-    expect(await tokenStorage.getToken()).toBe(newJwt);
+    expect(res.user).toBe('fresh-guest');
+    expect(await tokenStorage.getToken()).toBe(guestJwt);
   });
 
   it('supports post, put, and delete helper methods with typed ApiError on failures', async () => {

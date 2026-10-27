@@ -35,7 +35,6 @@ paths = [
   '''\.env\.example$''',
   '''node_modules''',
   '''dist/''',
-  '''package-lock\.json''',
-  '''tests/''',
-  '''\.test\.(js|jsx|mjs)$'''
+  '''package-lock\.json'''
 ]
+

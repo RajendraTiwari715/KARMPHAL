@@ -197,13 +197,18 @@ keytool -genkeypair -v \
 * **Test 3.7.2: Offline Japa Mala Counter & Web Audio Bell**
   * **Preconditions**: Device in Airplane Mode. Navigate to Sadhana -> 108 Japa Mala.
   * **Action**: Tap Mala beads sequentially.
-  * **Expected Result**: Synthesizer audio (`playTempleBell` harmonic synthesis) plays on every click. Anti-cheat checks evaluate locally. Beads count from 1 to 108. On 108th bead, celebratory sound triggers and mala count increments in IndexedDB.
+  * **Expected Result**: Synthesizer audio (`playTempleBell` harmonic synthesis) plays on every click. Anti-cheat checks evaluate locally:
+    - **Minimum Tap Interval**: Rapid taps under **250 ms** (and impossible speed < 150 ms) are rejected/throttled.
+    - **Natural Human Cadence**: Intervals > 250 ms with normal human variance are accepted as pure.
+    - **Robotic Cadence**: Uniform intervals (variance < 2 ms across 15+ taps) or zero pointer jitter are flagged as mechanical macros and rejected.
+    - Beads count from 1 to 108. On 108th bead, celebratory sound triggers and mala count increments in IndexedDB.
   * **Device Status**: *[Can verify on device speaker in Airplane mode]*
 
 * **Test 3.7.3: Cached Scripture Reading in Airplane Mode (Two-Tier Offline Cache)**
   * **Architecture**: Two-tier caching:
     - **Tier 1 (Persistent Storage)**: Binary PDF blobs are persisted in IndexedDB via `localforage` (`books_cache` store), surviving app restarts and OS sleep.
     - **Tier 2 (In-Memory DOM Cache)**: An in-memory LRU cache (capped at 3 entries) manages active `blob:` Object URLs and automatically revokes old URLs via `URL.revokeObjectURL` to eliminate memory leaks.
+  * **Note on Tier Synchronicity**: The two tiers have distinct execution semantics: Tier 1 (IndexedDB via `localforage`) is inherently **asynchronous** (Promise-based I/O), while Tier 2 (the in-memory LRU Map) is **synchronous**. Any prior claim that "both tiers work synchronously" was incorrect.
   * **Preconditions**: While online, download any scripture (e.g., Hanuman Chalisa). Turn on Airplane mode. Open Gyan -> Hanuman Chalisa.
   * **Expected Result**: PDF loads locally from IndexedDB persistent cache via local bundled PDF.js worker without network access.
   * **Device Status**: *[Requires physical device or emulator]*

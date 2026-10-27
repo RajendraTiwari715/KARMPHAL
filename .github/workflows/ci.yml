@@ -55,6 +55,9 @@ jobs:
           npx --prefix karmphal-web oxlint --deny-warnings
           npx --prefix karmphal-backend oxlint --deny-warnings
 
+      - name: Verify i18n Hardcoded Strings Baseline (check:i18n)
+        run: npm run check:i18n
+
       - name: Verify Asset Integrity (check:assets)
         working-directory: karmphal-web
         run: npm run check:assets

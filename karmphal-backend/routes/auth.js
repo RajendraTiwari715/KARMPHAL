@@ -19,18 +19,6 @@ const guestLimiter = rateLimit({
   }
 });
 
-// Strict per-IP rate limit for legacy migration (5 attempts/hour/IP)
-const migrateLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000,
-  max: process.env.NODE_ENV === 'test' && !process.env.TEST_FORCE_MIGRATE_LIMIT ? 1000 : 5,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: {
-    error: 'MIGRATE_RATE_LIMIT',
-    message: 'Too many migration attempts from this IP. Please try again after 1 hour.'
-  }
-});
-
 /**
  * Computes a SHA-256 hash of a token for secure database storage.
  */
@@ -203,93 +191,6 @@ router.post(['/revoke', '/logout'], (req, res, next) => {
   }
 });
 
-/**
- * POST /api/auth/migrate-legacy
- * HARD REMOVAL DATE: 2026-12-31.
- * Security controls:
- * - Disabled by default unless LEGACY_MIGRATION_ENABLED=true.
- * - One-time per user (stores migratedAt timestamp; second call returns 409 Conflict).
- * - Strict per-IP rate limit (5 requests / hour / IP).
- * - Logs attempts using SHA-256 hash of id only (raw id is never printed).
- */
-router.post('/migrate-legacy', migrateLimiter, (req, res, next) => {
-  try {
-    if (process.env.LEGACY_MIGRATION_ENABLED !== 'true') {
-      return res.status(403).json({
-        error: 'LEGACY_MIGRATION_DISABLED',
-        message: 'Legacy token migration is disabled by security policy. (Scheduled for permanent removal on 2026-12-31).'
-      });
-    }
-
-    const { legacyToken } = req.body;
-    if (!legacyToken || typeof legacyToken !== 'string') {
-      return res.status(400).json({ error: 'BAD_REQUEST', message: 'legacyToken is required' });
-    }
-
-    const cleanId = legacyToken.trim();
-    // Validate UUID format
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(cleanId)) {
-      return res.status(400).json({ error: 'INVALID_LEGACY_TOKEN', message: 'Legacy token is not a valid UUID' });
-    }
-
-    // Log attempt using hash of id ONLY
-    const idHash = crypto.createHash('sha256').update(cleanId).digest('hex');
-    console.info(`[Migration] Legacy migration attempt for hashed user id: ${idHash}`);
-
-    // Check if legacy user exists in Users table
-    const user = db.prepare('SELECT id, name, rank, totalPunya, sadhanaStreak, migratedAt FROM Users WHERE id = ?').get(cleanId);
-    if (!user) {
-      return res.status(404).json({ error: 'NOT_FOUND', message: 'Legacy user record not found' });
-    }
-
-    // One-time check: if already migrated, reject with 409 Conflict
-    if (user.migratedAt) {
-      return res.status(409).json({
-        error: 'ALREADY_MIGRATED',
-        message: 'This legacy account has already been migrated. Please log in using your session credentials.'
-      });
-    }
-
-    // Record migration timestamp atomically
-    db.prepare('UPDATE Users SET migratedAt = CURRENT_TIMESTAMP WHERE id = ?').run(user.id);
-
-    // Issue fresh JWTs preserving the user's id
-    const token = jwt.sign(
-      { sub: user.id, role: 'guest' },
-      process.env.JWT_SECRET,
-      { algorithm: 'HS256', expiresIn: '30d' }
-    );
-    const refreshToken = jwt.sign(
-      { sub: user.id, type: 'refresh', jti: uuidv4() },
-      process.env.JWT_SECRET,
-      { algorithm: 'HS256', expiresIn: '90d' }
-    );
-
-    const tokenHash = hashToken(refreshToken);
-    const expiresAt = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString();
-    db.prepare('INSERT INTO RefreshTokens (userId, tokenHash, expiresAt) VALUES (?, ?, ?)')
-      .run(user.id, tokenHash, expiresAt);
-
-    res.json({
-      token,
-      refreshToken,
-      user: {
-        id: user.id,
-        name: user.name,
-        rank: user.rank,
-        totalPunya: user.totalPunya,
-        sadhanaStreak: user.sadhanaStreak,
-        migratedAt: new Date().toISOString()
-      },
-      message: 'Legacy user successfully migrated to signed JWT'
-    });
-  } catch (err) {
-    next(err);
-  }
-});
-
-
 module.exports = router;
 module.exports.guestLimiter = guestLimiter;
-module.exports.migrateLimiter = migrateLimiter;
+

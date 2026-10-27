@@ -20,12 +20,15 @@ const PORT = env.PORT || 5000;
 // State management for graceful shutdown
 let isShuttingDown = false;
 
-// Trust Proxy Configuration: safely resolve real client IP via patched proxy-addr for rate limiting
-if (process.env.TRUST_PROXY) {
-  app.set('trust proxy', process.env.TRUST_PROXY === 'true' ? 1 : process.env.TRUST_PROXY);
-} else if (process.env.NODE_ENV === 'production') {
-  app.set('trust proxy', 1);
+// Trust Proxy Configuration: env-driven (TRUST_PROXY: false / number / list), default false unless set
+function resolveTrustProxy(val) {
+  if (!val || val === 'false') return false;
+  if (val === 'true') return true;
+  if (/^\d+$/.test(val)) return parseInt(val, 10);
+  if (val.includes(',')) return val.split(',').map(s => s.trim());
+  return val;
 }
+app.set('trust proxy', resolveTrustProxy(env.TRUST_PROXY));
 
 // Security Headers
 app.use(helmet());

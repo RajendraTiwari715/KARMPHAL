@@ -1,11 +1,18 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { CheckCircle2, AlertCircle, Info, AlertTriangle, X, HelpCircle } from 'lucide-react';
 import { ToastContext } from './toastContextDef';
+import { languageService } from '../services/languageService';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 export const ToastProvider = ({ children }) => {
   const [toasts, setToasts] = useState([]);
   const [confirmDialog, setConfirmDialog] = useState(null);
+  const [, setLang] = useState(languageService.getLang());
   const toastTimersRef = useRef(new Map());
+
+  useEffect(() => {
+    return languageService.subscribe(setLang);
+  }, []);
 
   // Dismiss a specific toast
   const dismiss = useCallback((id) => {
@@ -72,19 +79,20 @@ export const ToastProvider = ({ children }) => {
   // Themed Confirm Dialog Promise
   const confirm = useCallback(
     ({
-      title = 'पुष्टि आवश्यक है (Confirmation)',
-      message = 'क्या आप निश्चित रूप से यह क्रिया संपन्न करना चाहते हैं?',
-      confirmText = 'स्वीकार करें',
-      cancelText = 'रद्द करें',
+      title,
+      message,
+      confirmText,
+      cancelText,
       isDestructive = false
-    }) => {
+    } = {}) => {
+      const activeT = languageService.t();
       return new Promise((resolve) => {
         setConfirmDialog({
           isOpen: true,
-          title,
-          message,
-          confirmText,
-          cancelText,
+          title: title || activeT.confirmDefaultTitle,
+          message: message || activeT.confirmDefaultMessage,
+          confirmText: confirmText || activeT.confirmDefaultYes,
+          cancelText: cancelText || activeT.confirmDefaultNo,
           isDestructive,
           onConfirm: () => {
             setConfirmDialog(null);
@@ -110,16 +118,9 @@ export const ToastProvider = ({ children }) => {
     confirm
   };
 
-  useEffect(() => {
-    if (!confirmDialog) return;
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        confirmDialog.onCancel();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [confirmDialog]);
+  const confirmTrapRef = useFocusTrap(Boolean(confirmDialog?.isOpen), confirmDialog?.onCancel);
+
+  const activeT = languageService.t();
 
   return (
     <ToastContext.Provider value={toastMethods}>
@@ -130,7 +131,7 @@ export const ToastProvider = ({ children }) => {
         aria-live="polite"
         aria-atomic="true"
         role="region"
-        aria-label="सूचनाएं (Notifications)"
+        aria-label={activeT.notificationsRegion}
         className="fixed z-[9999] top-3 right-3 sm:top-5 sm:right-5 left-3 sm:left-auto flex flex-col gap-2.5 max-w-sm w-full pointer-events-none pt-[env(safe-area-inset-top,10px)]"
       >
         {toasts.map((item) => {
@@ -191,7 +192,7 @@ export const ToastProvider = ({ children }) => {
               <button
                 type="button"
                 onClick={() => dismiss(item.id)}
-                aria-label="बंद करें"
+                aria-label={activeT.dismissToast}
                 className="shrink-0 p-1 text-[#D4A373] hover:text-[#FFF] rounded-lg transition-colors hover:bg-white/10"
               >
                 <X className="w-4 h-4" />
@@ -210,7 +211,7 @@ export const ToastProvider = ({ children }) => {
           aria-describedby="confirm-dialog-desc"
           className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in"
         >
-          <div className="relative max-w-md w-full rounded-3xl bg-[#140A04]/95 border border-[#C58B4E]/50 shadow-2xl p-6 sm:p-7 text-[#F7E7D6] space-y-4">
+          <div ref={confirmTrapRef} tabIndex={-1} className="relative max-w-md w-full rounded-3xl bg-[#140A04]/95 border border-[#C58B4E]/50 shadow-2xl p-6 sm:p-7 text-[#F7E7D6] space-y-4 outline-none">
             {/* Header with Diya / Question Icon */}
             <div className="flex items-center gap-3 pb-3 border-b border-[#C58B4E]/20">
               <div

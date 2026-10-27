@@ -16,7 +16,7 @@ const hindiInput = `### सनातन धर्म विचार
 *महत्वपूर्ण श्लोक:*
 > कर्मण्येवाधिकारस्ते मा फलेषु कदाचन।
 
-अधिक जानकारी हेतु [वेबसाइट](https://karmphal.app) देखें।`;
+अधिक जानकारी हेतु [वेबसाइट](https://example.com) देखें।`;
 
 const hindiHtml = renderToString(React.createElement(AcharyaMarkdown, { content: hindiInput }));
 

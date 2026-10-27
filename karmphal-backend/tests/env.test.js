@@ -45,14 +45,14 @@ describe('Environment Variable Validation (config/env.js)', () => {
       DB_PATH: './test.db',
       JWT_SECRET: 'test-mock-jwt-secret-for-unit-test',
       GEMINI_API_KEY: 'test-mock-gemini-key',
-      CORS_ORIGINS: 'https://karmphal.app,https://localhost'
+      CORS_ORIGINS: 'https://REPLACE_ME_FRONTEND_DOMAIN,https://localhost'
     });
 
     expect(valid.JWT_SECRET).toBe('test-mock-jwt-secret-for-unit-test');
-    expect(valid.CORS_ORIGINS).toBe('https://karmphal.app,https://localhost');
+    expect(valid.CORS_ORIGINS).toBe('https://REPLACE_ME_FRONTEND_DOMAIN,https://localhost');
     expect(valid.GLOBAL_DAILY_AI_LIMIT).toBe('1000');
     expect(valid.GUEST_RATE_LIMIT_HOUR).toBe('5');
-    expect(valid.LEGACY_MIGRATION_ENABLED).toBe('false');
+    expect(valid.TRUST_PROXY).toBe('false');
   });
 
   it('ensures every variable in envSchema appears in .env.example and DEPLOYMENT.md', () => {

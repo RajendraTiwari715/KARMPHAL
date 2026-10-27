@@ -25,7 +25,7 @@ export default function GuruSection({ panchangData }) {
         <div className="relative w-full sm:w-48 h-28 sm:h-32 rounded-2xl overflow-hidden border border-[#C58B4E]/40 shrink-0 shadow-lg">
           <img
             src={templeHero}
-            alt="वैदिक मन्दिर एवं आध्यात्मिक पीठ (Vedic Temple Banner)"
+            alt={t.templeBannerAlt}
             width="1080"
             height="720"
             fetchpriority="high"

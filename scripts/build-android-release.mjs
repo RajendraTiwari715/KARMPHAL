@@ -17,21 +17,41 @@ const apiBaseUrl = process.env.VITE_API_BASE_URL;
 if (!apiBaseUrl || !apiBaseUrl.startsWith('https://')) {
   console.error('❌ FATAL: VITE_API_BASE_URL must be non-empty and must start with https:// for production release.');
   console.error(`   Received: "${apiBaseUrl || ''}"`);
-  console.error('   Usage: VITE_API_BASE_URL=https://api.karmphal.app node scripts/build-android-release.mjs');
+  console.error('   Usage: VERSION_CODE=1 VITE_API_BASE_URL=https://<your-real-api-domain> node scripts/build-android-release.mjs');
   process.exit(1);
 }
-console.log(`✅ [1/7] VITE_API_BASE_URL validated: ${apiBaseUrl}`);
 
-// 2. Derive versionCode and versionName
-let versionCode = process.env.VERSION_CODE;
-if (!versionCode) {
-  try {
-    const gitCount = execSync('git rev-list --count HEAD', { cwd: rootDir, encoding: 'utf8' }).trim();
-    versionCode = gitCount || '1';
-  } catch (err) {
-    console.warn('⚠️ Unable to query git rev-list, defaulting versionCode to 1:', err.message);
-    versionCode = '1';
+if (apiBaseUrl.includes('REPLACE_ME') || apiBaseUrl.includes('karmphal.app')) {
+  console.error('❌ FATAL: VITE_API_BASE_URL contains unconfigured placeholder (REPLACE_ME) or unconfirmed domain.');
+  console.error(`   Received: "${apiBaseUrl}"`);
+  console.error('   Please provide your real production API domain (e.g. https://api.yourdomain.com).');
+  process.exit(1);
+}
+
+console.log(`Checking API health: GET ${apiBaseUrl}/health ...`);
+try {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000);
+  const healthRes = await fetch(`${apiBaseUrl}/health`, { signal: controller.signal });
+  clearTimeout(timeout);
+  if (healthRes.status !== 200) {
+    console.error(`❌ FATAL: API health probe failed with HTTP status ${healthRes.status}. Expected 200 OK.`);
+    process.exit(1);
   }
+  console.log(`✅ [1/7] VITE_API_BASE_URL probe succeeded (200 OK): ${apiBaseUrl}`);
+} catch (err) {
+  console.error(`❌ FATAL: Failed to reach API health endpoint at ${apiBaseUrl}/health: ${err.message}`);
+  console.error('   A live, reachable backend is required before building a production release.');
+  process.exit(1);
+}
+
+// 2. Validate VERSION_CODE
+const versionCode = process.env.VERSION_CODE;
+if (!versionCode || !/^\d+$/.test(versionCode) || parseInt(versionCode, 10) < 1) {
+  console.error('❌ FATAL: VERSION_CODE environment variable must be explicitly provided as a positive integer (e.g. VERSION_CODE=1 for first release).');
+  console.error('   Git rev-list fallback has been removed to avoid accidental Play Store version code collisions.');
+  console.error('   Usage: VERSION_CODE=1 VITE_API_BASE_URL=https://<your-real-api-domain> node scripts/build-android-release.mjs');
+  process.exit(1);
 }
 const versionName = '1.0.0';
 console.log(`✅ [2/7] Release version configured: versionCode=${versionCode}, versionName=${versionName}`);

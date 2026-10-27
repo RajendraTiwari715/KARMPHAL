@@ -22,8 +22,7 @@ const envSchema = z.object({
   AI_MAX_OUTPUT_TOKENS: z.string().regex(/^\d+$/).default('1500'),
   GLOBAL_DAILY_AI_LIMIT: z.string().regex(/^\d+$/).default('1000'),
   GUEST_RATE_LIMIT_HOUR: z.string().regex(/^\d+$/).default('5'),
-  LEGACY_MIGRATION_ENABLED: z.string().optional().default('false'),
-  TRUST_PROXY: z.string().optional()
+  TRUST_PROXY: z.string().optional().default('false')
 });
 
 function validateEnv(rawEnv = process.env) {

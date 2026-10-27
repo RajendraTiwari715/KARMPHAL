@@ -1,12 +1,16 @@
+import * as Astronomy from 'astronomy-engine';
+
 // High Precision Astrological & Ephemeris Computation Engine
-// Implements Drik Ganita Jyotish, Lahiri Ayanamsa, Panchang Formulas & Vimshottari Cascades
+// Powered by Astronomy Engine (VSOP87 & ELP2000-82, MIT License by Donald Cross)
+// Stated Ephemeris Accuracy: Sun/Planets ~0.016°, Moon ~0.03° vs NASA JPL Horizons (1700–2200)
 
 export const EPHEMERIS_METADATA = {
-  engineVersion: "1.0.0-verified",
+  engineVersion: "2.0.0-astronomy-engine",
   ayanamsa: "Lahiri (Chitra Paksha)",
   houseSystem: "Whole Sign (Rashi Tulya Bhava)",
-  algorithms: "Meeus/VSOP87 Approximations",
-  constraints: "Precision limited to +/- 1 degree. Not for critical planetary warfare (Graha Yuddha) calculations."
+  algorithms: "Astronomy Engine VSOP87/ELP2000-82 & High-Precision Numerical Ephemeris",
+  statedAccuracy: "Sun/Planets ~0.016°, Moon ~0.03° vs JPL Horizons (1700–2200). Mean Rahu/Ketu.",
+  license: "MIT (Donald Cross)"
 };
 
 export const CITY_COORDINATES = [
@@ -226,9 +230,12 @@ export const DASHA_ORDER = [
 
 // Calculate Lahiri Ayanamsa for a given Julian Day / Year
 export function calculateLahiriAyanamsa(date = new Date()) {
-  const year = date.getUTCFullYear() + (date.getUTCMonth() + date.getUTCDate() / 30) / 12;
-  // Standard approximation: 23.85° at 2000.0, expanding ~50.29 arcseconds per year
-  const ayanamsa = 23.85 + (year - 2000) * (50.29 / 3600);
+  const jd = getJulianDay(date);
+  const T = (jd - 2451545.0) / 36525.0; // Julian centuries from J2000.0
+  // Standard high-precision Lahiri (Chitra Paksha) Ayanamsa:
+  // Base at J2000.0 = 23° 51' 25.53" = 23.857092°
+  // Precession: 50.290966" / year = 1.396971° / century
+  const ayanamsa = 23.857092 + 1.396971 * T - 0.000308 * T * T;
   return ayanamsa;
 }
 
@@ -238,29 +245,61 @@ export function getJulianDay(date = new Date()) {
   return (time / 86400000) + 2440587.5;
 }
 
-// Mean celestial longitudes estimation
+// High-precision planetary longitudes using astronomy-engine
 export function computePlanetaryPositions(date = new Date(), lat = 28.6139, lon = 77.2090) {
   const jd = getJulianDay(date);
   const T = (jd - 2451545.0) / 36525.0; // Centuries since J2000
   const ayanamsa = calculateLahiriAyanamsa(date);
+  const astroTime = Astronomy.MakeTime(date);
 
-  // Mean geometric longitudes (tropical)
-  const sunTrop = (280.46646 + 36000.76983 * T + 0.0003032 * T * T) % 360;
-  const moonTrop = (218.3165 + 481267.8813 * T) % 360;
-  const marsTrop = (355.433 + 19140.299 * T) % 360;
-  const mercuryTrop = (252.25 + 149472.67 * T) % 360;
-  const jupiterTrop = (34.35 + 3034.9 * T) % 360;
-  const venusTrop = (181.98 + 58517.81 * T) % 360;
-  const saturnTrop = (50.08 + 1222.11 * T) % 360;
-  const rahuTrop = (259.18 - 1934.14 * T) % 360;
+  // 1. High-precision tropical positions via astronomy-engine
+  // Sun: apparent true ecliptic of date
+  const sunPos = Astronomy.SunPosition(astroTime);
+  const sunTrop = (sunPos.elon % 360 + 360) % 360;
+
+  // Moon: geocentric ecliptic longitude of date
+  const moonPos = Astronomy.EclipticGeoMoon(astroTime);
+  const moonTrop = (moonPos.lon % 360 + 360) % 360;
+
+  // Helper to obtain planet ecliptic position, daily angular speed, and retrograde status
+  const getPlanetState = (body) => {
+    const geoVec = Astronomy.GeoVector(body, astroTime, true);
+    const ecl = Astronomy.Ecliptic(geoVec);
+    const lon1 = (ecl.elon % 360 + 360) % 360;
+
+    // Small forward step (1 hour) to compute instantaneous speed and retrograde motion
+    const nextTime = astroTime.AddDays(1 / 24);
+    const nextVec = Astronomy.GeoVector(body, nextTime, true);
+    const nextEcl = Astronomy.Ecliptic(nextVec);
+    const lon2 = (nextEcl.elon % 360 + 360) % 360;
+
+    let diff = lon2 - lon1;
+    if (diff > 180) diff -= 360;
+    if (diff < -180) diff += 360;
+    const speed = diff * 24;
+    const isRetro = speed < 0;
+
+    return { lon: lon1, speed, isRetro };
+  };
+
+  const marsState = getPlanetState(Astronomy.Body.Mars);
+  const mercuryState = getPlanetState(Astronomy.Body.Mercury);
+  const jupiterState = getPlanetState(Astronomy.Body.Jupiter);
+  const venusState = getPlanetState(Astronomy.Body.Venus);
+  const saturnState = getPlanetState(Astronomy.Body.Saturn);
+
+  // Mean Rahu (Madhyama Rahu per standard Jyotish Drik Ganita)
+  // IAU / Meeus Mean Ascending Lunar Node polynomial formula:
+  let rahuTrop = (125.044522 - 1934.1362608 * T + 0.0020708 * T * T + 0.0000022 * T * T * T) % 360;
+  if (rahuTrop < 0) rahuTrop += 360;
   const ketuTrop = (rahuTrop + 180) % 360;
 
-  // Convert to Sidereal longitudes: lambda_sidereal = (lambda_tropical - ayanamsa + 360) % 360
+  // Convert to Sidereal longitudes: lambda_sidereal = (lambda_tropical - ayanamsa + 720) % 360
   const toSidereal = (trop) => (trop - ayanamsa + 720) % 360;
 
   // Local Sidereal Time (LST) & Ascendant (Lagna)
-  const gmst = (280.46061837 + 360.98564736629 * (jd - 2451545.0)) % 360;
-  const lstDeg = (gmst + lon) % 360;
+  const gastHours = Astronomy.SiderealTime(astroTime);
+  const lstDeg = ((gastHours * 15) + lon + 720) % 360;
   const lstRad = (lstDeg * Math.PI) / 180;
   const latRad = (lat * Math.PI) / 180;
   const epsRad = (23.43928 * Math.PI) / 180; // Obliquity of ecliptic
@@ -274,15 +313,15 @@ export function computePlanetaryPositions(date = new Date(), lat = 28.6139, lon 
 
   const planets = [
     { name: 'लग्न', sanskrit: 'लग्न', longitude: ascSidereal, speed: 1.0, isRetro: false, lord: 'स्वयं' },
-    { name: 'सूर्य', sanskrit: 'सूर्य', longitude: toSidereal(sunTrop), speed: 0.98, isRetro: false, exaltation: 10, debilitation: 190 },
-    { name: 'चन्द्र', sanskrit: 'चन्द्र', longitude: toSidereal(moonTrop), speed: 13.1, isRetro: false, exaltation: 33, debilitation: 213 },
-    { name: 'मंगल', sanskrit: 'मंगल', longitude: toSidereal(marsTrop), speed: 0.52, isRetro: false, exaltation: 298, debilitation: 118 },
-    { name: 'बुध', sanskrit: 'बुध', longitude: toSidereal(mercuryTrop), speed: 1.2, isRetro: false, exaltation: 165, debilitation: 345 },
-    { name: 'गुरु', sanskrit: 'गुरु', longitude: toSidereal(jupiterTrop), speed: 0.08, isRetro: false, exaltation: 95, debilitation: 275 },
-    { name: 'शुक्र', sanskrit: 'शुक्र', longitude: toSidereal(venusTrop), speed: 1.1, isRetro: false, exaltation: 357, debilitation: 177 },
-    { name: 'शनि', sanskrit: 'शनि', longitude: toSidereal(saturnTrop), speed: 0.03, isRetro: false, exaltation: 200, debilitation: 20 },
-    { name: 'राहु', sanskrit: 'राहु', longitude: toSidereal(rahuTrop), speed: -0.05, isRetro: true, exaltation: 50, debilitation: 230 },
-    { name: 'केतु', sanskrit: 'केतु', longitude: toSidereal(ketuTrop), speed: -0.05, isRetro: true, exaltation: 230, debilitation: 50 }
+    { name: 'सूर्य', sanskrit: 'सूर्य', longitude: toSidereal(sunTrop), speed: 0.985, isRetro: false, exaltation: 10, debilitation: 190 },
+    { name: 'चन्द्र', sanskrit: 'चन्द्र', longitude: toSidereal(moonTrop), speed: 13.176, isRetro: false, exaltation: 33, debilitation: 213 },
+    { name: 'मंगल', sanskrit: 'मंगल', longitude: toSidereal(marsState.lon), speed: marsState.speed, isRetro: marsState.isRetro, exaltation: 298, debilitation: 118 },
+    { name: 'बुध', sanskrit: 'बुध', longitude: toSidereal(mercuryState.lon), speed: mercuryState.speed, isRetro: mercuryState.isRetro, exaltation: 165, debilitation: 345 },
+    { name: 'गुरु', sanskrit: 'गुरु', longitude: toSidereal(jupiterState.lon), speed: jupiterState.speed, isRetro: jupiterState.isRetro, exaltation: 95, debilitation: 275 },
+    { name: 'शुक्र', sanskrit: 'शुक्र', longitude: toSidereal(venusState.lon), speed: venusState.speed, isRetro: venusState.isRetro, exaltation: 357, debilitation: 177 },
+    { name: 'शनि', sanskrit: 'शनि', longitude: toSidereal(saturnState.lon), speed: saturnState.speed, isRetro: saturnState.isRetro, exaltation: 200, debilitation: 20 },
+    { name: 'राहु', sanskrit: 'राहु', longitude: toSidereal(rahuTrop), speed: -0.053, isRetro: true, exaltation: 50, debilitation: 230 },
+    { name: 'केतु', sanskrit: 'केतु', longitude: toSidereal(ketuTrop), speed: -0.053, isRetro: true, exaltation: 230, debilitation: 50 }
   ];
 
   return planets.map(p => {
@@ -377,28 +416,26 @@ export function computePanchang(date = new Date(), lat = 28.6139, lon = 77.2090)
   const dayIndex = date.getDay();
   const currentVara = varas[dayIndex];
 
-  // Solar calculation for accurate local Sunrise & Sunset based on latitude and longitude
-  const rad = Math.PI / 180;
-  const startOfYear = new Date(date.getFullYear(), 0, 0);
-  const diffTime = date - startOfYear;
-  const dayOfYear = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  // Solar calculation for accurate local Sunrise & Sunset using astronomy-engine
+  // Standard atmospheric refraction: -0.833° (-50 arcmin: -34' refraction - 16' solar semi-diameter)
+  const obs = new Astronomy.Observer(lat, lon, 0);
+  const midnight = new Date(date);
+  midnight.setHours(0, 0, 0, 0);
+  const t0 = Astronomy.MakeTime(midnight);
 
-  const declination = 23.44 * Math.sin(rad * ((360 / 365) * (dayOfYear - 81)));
-  const decRad = declination * rad;
-  const latRad = lat * rad;
+  const riseEvent = Astronomy.SearchRiseSet(Astronomy.Body.Sun, obs, +1, t0, 1);
+  const setEvent = Astronomy.SearchRiseSet(Astronomy.Body.Sun, obs, -1, t0, 1);
 
-  const cosH0 = (Math.sin(-0.833 * rad) - Math.sin(latRad) * Math.sin(decRad)) / 
-                (Math.cos(latRad) * Math.cos(decRad));
-  const clampedCosH0 = Math.max(-1, Math.min(1, cosH0));
-  const H0 = Math.acos(clampedCosH0) * (180 / Math.PI);
+  let sunriseMinutes = 360; // 06:00 AM fallback
+  let sunsetMinutes = 1080; // 06:00 PM fallback
 
-  const B = (360 / 365) * (dayOfYear - 81) * rad;
-  const eqTime = 9.87 * Math.sin(2 * B) - 7.53 * Math.cos(B) - 1.5 * Math.sin(B);
+  if (riseEvent && setEvent) {
+    const riseDate = riseEvent.date;
+    const setDate = setEvent.date;
+    sunriseMinutes = riseDate.getHours() * 60 + riseDate.getMinutes() + riseDate.getSeconds() / 60;
+    sunsetMinutes = setDate.getHours() * 60 + setDate.getMinutes() + setDate.getSeconds() / 60;
+  }
 
-  // Solar noon in IST (standard reference meridian 82.5° E, UTC+5:30)
-  const solarNoonMinutes = 12 * 60 + (82.5 - lon) * 4 - eqTime;
-  const sunriseMinutes = Math.round(solarNoonMinutes - H0 * 4);
-  const sunsetMinutes = Math.round(solarNoonMinutes + H0 * 4);
   const diurnalDuration = sunsetMinutes - sunriseMinutes; // D = T_set - T_rise
   const oneMuhurta = diurnalDuration / 15;
 

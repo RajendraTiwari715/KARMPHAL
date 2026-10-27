@@ -11,7 +11,7 @@ async function runTests() {
   console.log(`🚀 Starting backend server on port ${TEST_PORT} for security & test suite...`);
   server = spawn('node', ['server.js'], {
     stdio: 'inherit',
-    env: { ...process.env, PORT: TEST_PORT, JWT_SECRET, NODE_ENV: 'test', CHAT_RETENTION_LIMIT: '15', LEGACY_MIGRATION_ENABLED: 'true' }
+    env: { ...process.env, PORT: TEST_PORT, JWT_SECRET, NODE_ENV: 'test', CHAT_RETENTION_LIMIT: '15' }
   });
 
   // Wait for server to start
@@ -468,40 +468,7 @@ async function runTests() {
     assert.strictEqual(refreshRevokedData.error, 'TOKEN_REVOKED');
     console.log('✅ Refresh token revocation and logout confirmed');
 
-    // ----------------------------------------------------
-    // TEST 15: Legacy Non-JWT Token Migration
-    // ----------------------------------------------------
-    console.log('\n[15/15] Testing Legacy Non-JWT Token Migration (/api/auth/migrate-legacy)...');
-    // Test migrating the user created in Test 12 using their raw UUID
-    const migrateRes = await fetch(`${BASE_URL}/api/auth/migrate-legacy`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ legacyToken: rtrUserId })
-    });
-    assert.strictEqual(migrateRes.status, 200, 'Legacy UUID must migrate to valid signed JWT');
-    const migrateData = await migrateRes.json();
-    assert.strictEqual(migrateData.user.id, rtrUserId, 'Migrated user ID must match original user');
-    assert.ok(migrateData.token && migrateData.token.split('.').length === 3, 'Migrated token must be valid JWT');
-
-    // Second migration attempt on same user must return 409
-    const secondMigrateRes = await fetch(`${BASE_URL}/api/auth/migrate-legacy`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ legacyToken: rtrUserId })
-    });
-    assert.strictEqual(secondMigrateRes.status, 409, 'Second attempt must return 409 ALREADY_MIGRATED');
-
-    // Invalid non-UUID format rejection
-    const invalidMigrateRes = await fetch(`${BASE_URL}/api/auth/migrate-legacy`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ legacyToken: 'not-a-valid-uuid' })
-    });
-    assert.strictEqual(invalidMigrateRes.status, 400);
-
-    console.log('✅ Legacy UUID migration and invalid non-JWT token handling verified');
-
-    console.log('\n🎉 ALL 15 BACKEND SECURITY, RTR & CHAT TESTS PASSED WITH 100% SUCCESS!');
+    console.log('\n🎉 ALL 14 BACKEND SECURITY, RTR & CHAT TESTS PASSED WITH 100% SUCCESS!');
   } catch (err) {
     console.error('\n❌ Security tests failed:', err);
     process.exitCode = 1;

@@ -50,11 +50,11 @@ function Navbar({ activeSection, setActiveSection, panchangData: _panchangData }
   const t = languageService.t();
 
   const sections = [
-    { id: 'guru', label: 'गुरु', title: 'गुरु', sub: 'AI आचार्य RAG', icon: GuruIcon },
-    { id: 'gyan', label: 'ज्ञान', title: 'ज्ञान', sub: 'वेद, गीता व पुराण', icon: GyanIcon },
-    { id: 'sadhana', label: 'साधना', title: 'साधना', sub: 'पञ्चाङ्ग, आरती व जप', icon: SadhanaIcon },
-    { id: 'jyotish', label: 'ज्योतिष', title: 'ज्योतिष', sub: 'कुण्डली, विवाह व वास्तु', icon: JyotishIcon },
-    { id: 'karma', label: 'कर्म', title: 'कर्म', sub: '२८ नरक व स्वप्न', icon: KarmaIcon }
+    { id: 'guru', label: t.sections.guru.label, title: t.sections.guru.title, sub: t.sections.guru.sub, icon: GuruIcon },
+    { id: 'gyan', label: t.sections.gyan.label, title: t.sections.gyan.title, sub: t.sections.gyan.sub, icon: GyanIcon },
+    { id: 'sadhana', label: t.sections.sadhana.label, title: t.sections.sadhana.title, sub: t.sections.sadhana.sub, icon: SadhanaIcon },
+    { id: 'jyotish', label: t.sections.jyotish.label, title: t.sections.jyotish.title, sub: t.sections.jyotish.sub, icon: JyotishIcon },
+    { id: 'karma', label: t.sections.karma.label, title: t.sections.karma.title, sub: t.sections.karma.sub, icon: KarmaIcon }
   ];
 
   return (
@@ -68,13 +68,13 @@ function Navbar({ activeSection, setActiveSection, panchangData: _panchangData }
             <button
               type="button"
               onClick={() => setActiveSection('guru')}
-              aria-label="कर्मफल मुख्य पृष्ठ पर जाएं (Go to Home)"
-              title="कर्मफल मुख्य पृष्ठ (Home)"
+              aria-label={t.navHomeAria}
+              title={t.navHomeTitle}
               className="relative min-w-[44px] min-h-[44px] w-11 h-11 sm:w-14 sm:h-14 rounded-2xl overflow-hidden shadow-2xl shadow-[#C58B4E]/30 hover:scale-105 active:scale-95 transition-all border-2 border-[#E0A96D]/80 cursor-pointer group shrink-0 flex items-center justify-center"
             >
               <img 
                 src={appLogo} 
-                alt="कर्मफल ॐ प्रतीक (Karmphal Divine OM Logo)" 
+                alt={t.navLogoAlt} 
                 width="56"
                 height="56"
                 loading="eager"
@@ -85,10 +85,6 @@ function Navbar({ activeSection, setActiveSection, panchangData: _panchangData }
 
             <div 
               onClick={() => setActiveSection('guru')}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setActiveSection('guru'); }}
-              aria-label="कर्मफल मुख्य पृष्ठ पर जाएं"
               className="cursor-pointer"
             >
               <h1 className="font-dharmik text-xl sm:text-3xl tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-[#F7E7D6] via-[#F3CA9D] to-[#C58B4E] font-bold">
@@ -106,8 +102,8 @@ function Navbar({ activeSection, setActiveSection, panchangData: _panchangData }
             <button
               type="button"
               onClick={handleToggleSound}
-              aria-label={isMuted ? "ध्वनि चालू करें (Unmute Bell & Chimes)" : "ध्वनि म्यूट करें (Mute Sound)"}
-              title={isMuted ? "ध्वनि चालू करें (Unmute Bell & Chimes)" : "ध्वनि म्यूट करें (Mute Sound)"}
+              aria-label={`${isMuted ? t.navMutedText : t.navUnmutedText} - ${isMuted ? t.navUnmuteAria : t.navMuteAria}`}
+              title={isMuted ? t.navUnmuteAria : t.navMuteAria}
               className={`min-w-[44px] min-h-[44px] px-3 py-2 rounded-2xl border transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                 isMuted 
                   ? 'bg-rose-950/40 border-rose-500/40 text-rose-300 hover:border-rose-400' 
@@ -120,7 +116,7 @@ function Navbar({ activeSection, setActiveSection, panchangData: _panchangData }
                 <Volume2 className="w-4 h-4 text-amber-300" />
               )}
               <span className="text-[11px] font-bold font-dharmik hidden lg:inline">
-                {isMuted ? 'म्यूट' : 'नाद सक्रिय'}
+                {isMuted ? t.navMutedText : t.navUnmutedText}
               </span>
             </button>
 
@@ -128,20 +124,20 @@ function Navbar({ activeSection, setActiveSection, panchangData: _panchangData }
             <button
               type="button"
               onClick={handleOpenSettings}
-              aria-label="एप्लिकेशन विन्यास एवं सेटिंग्स (Settings: भाषा, ध्वनि, स्थान, गोपनीयता)"
-              title="विन्यास एवं सेटिंग्स (Settings)"
+              aria-label={t.navSettingsAria}
+              title={t.navSettingsTitle}
               className="min-w-[44px] min-h-[44px] px-3 py-2 rounded-2xl border border-[#C58B4E]/40 bg-black/40 text-[#F3CA9D] hover:text-white hover:border-[#E0A96D] hover:bg-[#C58B4E]/20 transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-sm group"
             >
               <Settings className="w-4 h-4 text-[#E0A96D] group-hover:rotate-45 transition-transform duration-300" />
-              <span className="text-xs font-bold font-dharmik hidden sm:inline">विन्यास</span>
+              <span className="text-xs font-bold font-dharmik hidden sm:inline">{t.navSettingsLabel}</span>
             </button>
 
             {/* Profile Avatar Button (min 44x44px tap target, gold aesthetic) */}
             <button
               type="button"
               onClick={handleOpenProfile}
-              aria-label="साधक प्रोफाइल (Seeker Profile & Sadhana Stats)"
-              title="साधक प्रोफाइल (Profile)"
+              aria-label={t.navProfileAria}
+              title={t.navProfileTitle}
               className="min-w-[44px] min-h-[44px] pl-2.5 pr-3 py-1.5 rounded-2xl border border-[#E0A96D] bg-gradient-to-r from-[#2A170C]/90 to-[#120A05]/90 text-[#F3CA9D] hover:scale-105 active:scale-95 hover:border-[#FFF2D4] hover:shadow-lg hover:shadow-[#C58B4E]/30 transition-all cursor-pointer flex items-center justify-center gap-2 shadow-md group"
             >
               <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-[#C58B4E] via-[#F3CA9D] to-[#FFF2D4] p-0.5 shadow-sm shrink-0">
@@ -149,7 +145,7 @@ function Navbar({ activeSection, setActiveSection, panchangData: _panchangData }
                   <User className="w-3.5 h-3.5 text-[#F3CA9D] group-hover:text-white transition-colors" />
                 </div>
               </div>
-              <span className="text-xs font-bold font-dharmik text-[#F7E7D6] hidden xs:inline sm:inline">प्रोफाइल</span>
+              <span className="text-xs font-bold font-dharmik text-[#F7E7D6] hidden xs:inline sm:inline">{t.navProfileLabel}</span>
             </button>
           </div>
         </div>
@@ -166,7 +162,7 @@ function Navbar({ activeSection, setActiveSection, panchangData: _panchangData }
                   key={section.id}
                   type="button"
                   onClick={() => setActiveSection(section.id)}
-                  aria-label={`${section.label} खण्ड पर जाएं (${section.sub})`}
+                  aria-label={`${section.label} - ${section.sub}`}
                   className={`flex-1 min-h-[44px] flex items-center gap-3 p-2.5 rounded-2xl transition-all cursor-pointer ${
                     isActive
                       ? 'bg-gradient-to-r from-[#C58B4E]/40 via-[#C58B4E]/20 to-transparent border border-[#E0A96D] shadow-lg shadow-[#C58B4E]/30 backdrop-blur-md'
@@ -207,7 +203,7 @@ function Navbar({ activeSection, setActiveSection, panchangData: _panchangData }
                 key={section.id}
                 type="button"
                 onClick={() => setActiveSection(section.id)}
-                aria-label={`${section.title} खण्ड`}
+                aria-label={section.title}
                 className={`flex flex-col items-center justify-center min-w-[44px] min-h-[44px] p-1 rounded-xl transition-all ${
                   isActive
                     ? 'text-[#F3CA9D] scale-105'
@@ -232,14 +228,14 @@ function Navbar({ activeSection, setActiveSection, panchangData: _panchangData }
           <button
             type="button"
             onClick={handleOpenProfile}
-            aria-label="साधक प्रोफाइल एवं सेटिंग्स (Profile & Settings)"
+            aria-label={t.navProfileAria}
             className="flex flex-col items-center justify-center min-w-[44px] min-h-[44px] p-1 rounded-xl transition-all text-[#A67C52] hover:text-[#E6D0BA]"
           >
             <div className="w-8 h-8 rounded-xl flex items-center justify-center p-1 transition-all bg-gradient-to-br from-[#2A170C]/70 to-[#120A05]/70 border border-[#E0A96D]/60 shadow-sm hover:border-[#E0A96D]">
               <User className="w-4 h-4 text-[#F3CA9D]" />
             </div>
             <span className="text-[9px] mt-0.5 font-serif font-bold text-[#E6D0BA]">
-              प्रोफाइल
+              {t.navProfileLabel}
             </span>
           </button>
         </div>

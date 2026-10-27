@@ -6,8 +6,7 @@
     "androidScheme": "https",
     "cleartext": false,
     "allowNavigation": [
-      "https://*.karmphal.app",
-      "https://karmphal.app"
+      "https://REPLACE_ME_API_DOMAIN"
     ]
   },
   "plugins": {

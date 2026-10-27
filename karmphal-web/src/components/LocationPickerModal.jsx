@@ -5,11 +5,13 @@ import { CITY_COORDINATES } from '../services/ephemerisEngine';
 import { useProfile } from '../context/useProfile';
 import { backButtonService, BACK_PRIORITY } from '../services/backButtonService';
 import { languageService } from '../services/languageService';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 export default function LocationPickerModal({ isOpen, onClose }) {
   const t = languageService.t();
   const { location, updateLocation } = useProfile();
   const currentLocation = location || locationService.getLocation();
+  const modalRef = useFocusTrap(isOpen, onClose);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [isDetectingGps, setIsDetectingGps] = useState(false);
@@ -22,16 +24,7 @@ export default function LocationPickerModal({ isOpen, onClose }) {
       return true;
     }, BACK_PRIORITY.MODAL + 1);
 
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      unregister();
-      window.removeEventListener('keydown', handleKeyDown);
-    };
+    return unregister;
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
@@ -90,13 +83,23 @@ export default function LocationPickerModal({ isOpen, onClose }) {
     : [];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-fade-in">
-      <div className="glass-card max-w-lg w-full p-6 sm:p-7 relative rounded-3xl border border-[#C58B4E]/50 shadow-2xl bg-gradient-to-b from-[#25150C] to-[#120904] text-[#F7E7D6] max-h-[90vh] flex flex-col">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-fade-in"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="location-modal-title"
+    >
+      <div 
+        ref={modalRef} 
+        tabIndex={-1}
+        className="glass-card max-w-lg w-full p-6 sm:p-7 relative rounded-3xl border border-[#C58B4E]/50 shadow-2xl bg-gradient-to-b from-[#25150C] to-[#120904] text-[#F7E7D6] max-h-[90vh] flex flex-col outline-none"
+      >
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-[#D4A373] hover:text-[#FFF] rounded-full bg-black/60 border border-[#C58B4E]/40 transition-colors"
+          className="absolute top-4 right-4 p-2 text-[#D4A373] hover:text-[#FFF] rounded-full bg-black/60 border border-[#C58B4E]/40 transition-colors cursor-pointer"
           title={t.close}
+          aria-label={t.close}
         >
           <X className="w-4 h-4" />
         </button>
@@ -107,7 +110,7 @@ export default function LocationPickerModal({ isOpen, onClose }) {
             <Compass className="w-6 h-6 text-[#120A05]" />
           </div>
           <div>
-            <h3 className="font-dharmik text-lg sm:text-xl font-bold text-[#F3CA9D]">
+            <h3 id="location-modal-title" className="font-dharmik text-lg sm:text-xl font-bold text-[#F3CA9D]">
               {t.locationPickerTitle}
             </h3>
             <p className="text-[11px] text-[#C58B4E] mt-0.5">
@@ -165,7 +168,7 @@ export default function LocationPickerModal({ isOpen, onClose }) {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="नगर का नाम खोजें (उदा: Varanasi, Mumbai, Ujjain)..."
+            placeholder={t.searchCityPlaceholder}
             className="w-full pl-9 pr-3 py-2 rounded-xl bg-black/50 border border-[#C58B4E]/40 text-xs text-[#F7E7D6] placeholder-slate-400 outline-none focus:border-[#E0A96D]"
           />
         </div>
@@ -175,7 +178,7 @@ export default function LocationPickerModal({ isOpen, onClose }) {
           {searchQuery.trim() ? (
             <div>
               <span className="text-[10px] font-bold text-[#C58B4E] uppercase block mb-1.5">
-                खोज परिणाम ({filteredAllCities.length}):
+                {t.searchResults} ({filteredAllCities.length}):
               </span>
               <div className="grid grid-cols-2 gap-2">
                 {filteredAllCities.map(city => (
@@ -194,14 +197,14 @@ export default function LocationPickerModal({ isOpen, onClose }) {
                   </button>
                 ))}
                 {filteredAllCities.length === 0 && (
-                  <p className="col-span-2 text-center text-xs text-slate-400 py-4">कोई नगर नहीं मिला।</p>
+                  <p className="col-span-2 text-center text-xs text-slate-400 py-4">{t.noCitiesFound}</p>
                 )}
               </div>
             </div>
           ) : (
             <div>
               <span className="text-[10px] font-bold text-[#C58B4E] uppercase block mb-2">
-                प्रमुख तीर्थ एवं महानगर (त्वरित चयन):
+                {t.majorPilgrimages}
               </span>
               <div className="grid grid-cols-2 gap-2">
                 {MAJOR_CITIES.map(city => {
@@ -233,12 +236,12 @@ export default function LocationPickerModal({ isOpen, onClose }) {
 
         {/* Footer Note */}
         <div className="pt-3 mt-3 border-t border-[#C58B4E]/20 text-[10px] text-slate-400 flex items-center justify-between">
-          <span>पूर्वनिर्धारित: नई दिल्ली</span>
+          <span>{t.defaultCityDelhi}</span>
           <button
             onClick={() => handleSelectMajorCity(DEFAULT_LOCATION)}
             className="text-[#E0A96D] hover:underline"
           >
-            दिल्ली पर रीसेट करें
+            {t.resetToDelhi}
           </button>
         </div>
       </div>

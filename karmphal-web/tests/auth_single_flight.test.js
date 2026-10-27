@@ -296,29 +296,29 @@ async function runAuthTests() {
     console.log('✔ Expired refresh token successfully created a fresh guest session and notified via toast');
 
     // ------------------------------------------------------------------------
-    // TEST 5: Legacy Non-JWT Token in Storage Handled Cleanly (No Error Loops)
+    // TEST 5: Non-JWT or Corrupt Token Clean Purge & Guest Re-initialization
     // ------------------------------------------------------------------------
-    console.log('\n[Test 5/5] Testing legacy non-JWT token (pre-JWT raw UUID) handling...');
-    const legacyRawUuid = '12345678-abcd-ef01-2345-6789abcdef01';
+    console.log('\n[Test 5/5] Testing invalid non-JWT token clean purge and guest reset...');
+    const corruptToken = '12345678-invalid-token-format-not-jwt';
     await tokenStorage.clearTokens();
-    // Intentionally inject raw UUID into storage like pre-JWT version
-    globalThis.localStorage.setItem('karmphal_jwt_token', legacyRawUuid);
+    // Intentionally inject non-JWT string into storage
+    globalThis.localStorage.setItem('karmphal_jwt_token', corruptToken);
 
-    let migrationCalled = false;
+    let guestInitCalled = false;
+    const freshGuestId = 'fresh-guest-user-999';
+    const guestAccess = signJwt({ sub: freshGuestId, role: 'guest' }, TEST_SECRET, 30 * 86400);
+    const guestRefresh = signJwt({ sub: freshGuestId, type: 'refresh' }, TEST_SECRET, 90 * 86400);
+
     globalThis.fetch = async (url, options = {}) => {
       const urlStr = String(url);
 
-      if (urlStr.includes('/api/auth/migrate-legacy')) {
-        migrationCalled = true;
-        const body = JSON.parse(options.body);
-        assert.strictEqual(body.legacyToken, legacyRawUuid);
-        const migratedAccess = signJwt({ sub: legacyRawUuid, role: 'guest' }, TEST_SECRET, 30 * 86400);
-        const migratedRefresh = signJwt({ sub: legacyRawUuid, type: 'refresh' }, TEST_SECRET, 90 * 86400);
+      if (urlStr.includes('/api/auth/guest')) {
+        guestInitCalled = true;
         return {
           ok: true,
-          status: 200,
+          status: 201,
           headers: new Headers({ 'content-type': 'application/json' }),
-          json: async () => ({ token: migratedAccess, refreshToken: migratedRefresh, user: { id: legacyRawUuid } })
+          json: async () => ({ token: guestAccess, refreshToken: guestRefresh, user: { id: freshGuestId } })
         };
       }
 
@@ -330,21 +330,21 @@ async function runAuthTests() {
           ok: true,
           status: 200,
           headers: new Headers({ 'content-type': 'application/json' }),
-          json: async () => ({ id: payload.sub, name: 'माइग्रेटेड साधक' })
+          json: async () => ({ id: payload.sub, name: 'नवीन साधक' })
         };
       }
 
       throw new Error(`Unhandled mock fetch URL: ${urlStr}`);
     };
 
-    const migratedResult = await apiClient.get('/api/user/profile');
-    assert.strictEqual(migrationCalled, true, 'Legacy migration must be attempted on non-JWT token');
-    assert.strictEqual(migratedResult.id, legacyRawUuid, 'User ID preserved after legacy migration');
-    const migratedTokenInStore = await tokenStorage.getToken();
-    assert.strictEqual(isValidJwtFormat(migratedTokenInStore), true, 'Store now holds valid JWT');
+    const profileResult = await apiClient.get('/api/user/profile');
+    assert.strictEqual(guestInitCalled, true, 'Corrupt token must be purged and guest session initialized');
+    assert.strictEqual(profileResult.id, freshGuestId, 'Profile successfully fetched with new guest session');
+    const tokenInStore = await tokenStorage.getToken();
+    assert.strictEqual(isValidJwtFormat(tokenInStore), true, 'Store now holds valid JWT');
 
-    console.log(`    [LOG PROOF] Legacy UUID: ${legacyRawUuid} -> Migrated to Valid Signed JWT: ${migratedTokenInStore.slice(0, 30)}... ✅`);
-    console.log('✔ Legacy non-JWT token cleanly migrated with zero error loops');
+    console.log(`    [LOG PROOF] Corrupt token purged -> New guest session established: ${tokenInStore.slice(0, 30)}... ✅`);
+    console.log('✔ Non-JWT invalid token cleanly purged and replaced with zero error loops');
 
     console.log('\n====================================================');
     console.log('🎉 ALL 5 FRONTEND SINGLE-FLIGHT AUTH TESTS PASSED 100%!');

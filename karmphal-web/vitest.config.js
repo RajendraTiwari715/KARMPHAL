@@ -16,7 +16,9 @@ export default defineConfig({
       'tests/library_lru.test.js',
       'tests/error_boundary.test.jsx',
       'tests/pdf_service.test.js',
-      'tests/anti_cheat.test.js'
+      'tests/anti_cheat.test.js',
+      'tests/astronomy_crosscheck.test.js',
+      'tests/reference_charts.test.js'
     ],
     coverage: {
       provider: 'v8',
