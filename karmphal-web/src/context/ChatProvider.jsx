@@ -132,10 +132,22 @@ export const ChatProvider = ({ children }) => {
           );
       } catch (error) {
         console.error('[ChatProvider] Acharya generation error:', error);
+
+
+        
+        let errorText;
+        if (error?.status === 429 || error?.code === 'RATE_LIMIT' || error?.code === 'DAILY_QUOTA_EXCEEDED') {
+          errorText = error.message || 'AI चैट अनुरोध सीमा पूर्ण हो चुकी है। कृपया कुछ समय बाद पुनः प्रयास करें।';
+        } else if (error?.status === 503 || error?.code === 'GLOBAL_DAILY_LIMIT_REACHED') {
+          errorText = error.message || 'सर्वर पर दैनिक AI सीमा पूर्ण हो चुकी है। कृपया कल पुनः प्रयास करें।';
+        } else {
+          errorText = 'कर्म का नियम सनातन और अटल है। श्रीमद्भगवद्गीता (२.४७) के अनुसार निष्काम कर्म और सात्विक पुरुषार्थ से चित्त की शुद्धि होती है। कृपया नेटवर्क की जाँच कर पुनः प्रयास करें।';
+        }
+
         const fallbackMsg = {
           id: Date.now() + 1,
           sender: 'model',
-          text: 'कर्म का नियम सनातन और अटल है। श्रीमद्भगवद्गीता (२.४७) के अनुसार निष्काम कर्म और सात्विक पुरुषार्थ से चित्त की शुद्धि होती है। कृपया अपना प्रश्न पुनः पूछें।',
+          text: errorText,
           timestamp: new Date().toISOString()
         };
         setMessages((prev) => [...prev, fallbackMsg]);

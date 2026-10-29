@@ -117,8 +117,9 @@ export default function KundaliView({ onBack }) {
       }
     } catch (err) {
       console.error(err);
-      setAiReadingError('AI फलादेश प्राप्त करने में बाधा आई। कृपया पुनः प्रयास करें।');
-      toast.error('AI फलादेश प्राप्त करने में बाधा आई। कृपया पुनः प्रयास करें।');
+      const errorMsg = err.message || 'AI फलादेश प्राप्त करने में बाधा आई। कृपया पुनः प्रयास करें।';
+      setAiReadingError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setIsGeneratingAi(false);
     }

@@ -373,7 +373,7 @@ export function computePlanetaryPositions(date = new Date(), lat = 28.6139, lon 
 }
 
 // Compute Complete Panchang (5 Limbs of Time)
-export function computePanchang(date = new Date(), lat = 28.6139, lon = 77.2090) {
+export function computePanchang(date = new Date(), lat = 28.6139, lon = 77.2090, timezoneOffsetHours = 5.5) {
   const planets = computePlanetaryPositions(date, lat, lon);
   const sun = planets.find(p => p.name === 'सूर्य');
   const moon = planets.find(p => p.name === 'चन्द्र');
@@ -421,14 +421,21 @@ export function computePanchang(date = new Date(), lat = 28.6139, lon = 77.2090)
     { name: 'शुक्रवार', deity: 'शुक्र', color: '#E91E63', rahuK: 3 },
     { name: 'शनिवार', deity: 'शनि', color: '#3F51B5', rahuK: 2 }
   ];
-  const dayIndex = date.getDay();
+  // Target civil timezone representation (defaulting to IST UTC+05:30 for Vedic panchang in India)
+  const targetTimeMillis = date.getTime() + timezoneOffsetHours * 3600 * 1000;
+  const targetDate = new Date(targetTimeMillis);
+  const targetYear = targetDate.getUTCFullYear();
+  const targetMonth = targetDate.getUTCMonth();
+  const targetDay = targetDate.getUTCDate();
+  const dayIndex = targetDate.getUTCDay();
   const currentVara = varas[dayIndex];
 
   // Solar calculation for accurate local Sunrise & Sunset using astronomy-engine
   // Standard atmospheric refraction: -0.833° (-50 arcmin: -34' refraction - 16' solar semi-diameter)
   const obs = new Astronomy.Observer(lat, lon, 0);
-  const midnight = new Date(date);
-  midnight.setHours(0, 0, 0, 0);
+  const localMidnightUtcMillis = Date.UTC(targetYear, targetMonth, targetDay, 0, 0, 0, 0) - timezoneOffsetHours * 3600 * 1000;
+  const midnight = new Date(localMidnightUtcMillis);
+
   const t0 = Astronomy.MakeTime(midnight);
 
   const riseEvent = Astronomy.SearchRiseSet(Astronomy.Body.Sun, obs, +1, t0, 1);
@@ -440,8 +447,11 @@ export function computePanchang(date = new Date(), lat = 28.6139, lon = 77.2090)
   if (riseEvent && setEvent) {
     const riseDate = riseEvent.date;
     const setDate = setEvent.date;
-    sunriseMinutes = riseDate.getHours() * 60 + riseDate.getMinutes() + riseDate.getSeconds() / 60;
-    sunsetMinutes = setDate.getHours() * 60 + setDate.getMinutes() + setDate.getSeconds() / 60;
+    const localRise = new Date(riseDate.getTime() + timezoneOffsetHours * 3600 * 1000);
+    const localSet = new Date(setDate.getTime() + timezoneOffsetHours * 3600 * 1000);
+    sunriseMinutes = localRise.getUTCHours() * 60 + localRise.getUTCMinutes() + localRise.getUTCSeconds() / 60;
+    sunsetMinutes = localSet.getUTCHours() * 60 + localSet.getUTCMinutes() + localSet.getUTCSeconds() / 60;
+
   }
 
   const diurnalDuration = sunsetMinutes - sunriseMinutes; // D = T_set - T_rise
@@ -471,8 +481,10 @@ export function computePanchang(date = new Date(), lat = 28.6139, lon = 77.2090)
   };
 
   const formatClockTime = (d) => {
-    const h = d.getHours();
-    const m = d.getMinutes();
+    if (!d) return '';
+    const localD = new Date(d.getTime() + timezoneOffsetHours * 3600 * 1000);
+    const h = localD.getUTCHours();
+    const m = localD.getUTCMinutes();
     const ampm = h >= 12 ? 'PM' : 'AM';
     const displayH = h % 12 === 0 ? 12 : h % 12;
     return `${displayH.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${ampm}`;

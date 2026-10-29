@@ -78,10 +78,22 @@ class GeminiService {
 
       return { text: data.text };
     } catch (err) {
-      console.warn('Backend AI API unavailable, falling back to local theological engine:', err.message);
-      // Fallback to local theological engine
-      const localResolution = resolveTheologicalInquiry(userMessage, { planets: panchangContext?.planets });
-      return { text: localResolution.content };
+      // Differentiate honest API errors (rate limits, quotas, 503s) from offline network failure
+      const isRateOrQuotaLimit = err.status === 429 || err.code === 'RATE_LIMIT' || err.code === 'DAILY_QUOTA_EXCEEDED';
+      const isServerCapacityError = err.status === 503 || err.code === 'GLOBAL_DAILY_LIMIT_REACHED';
+
+      if (isRateOrQuotaLimit || isServerCapacityError) {
+        throw err;
+      }
+
+      const isOffline = typeof navigator !== 'undefined' && !navigator.onLine;
+      if (isOffline || err.code === 'NETWORK_ERROR') {
+        console.warn('Network offline, falling back to local theological engine:', err.message);
+        const localResolution = resolveTheologicalInquiry(userMessage, { planets: panchangContext?.planets });
+        return { text: localResolution.content };
+      }
+
+      throw err;
     }
   }
 
@@ -92,10 +104,13 @@ class GeminiService {
         planetsData,
         dashaTimeline
       });
-      return data.text || 'कुण्डली विश्लेषण प्राप्त नहीं हो सका।';
+      if (!data?.text) {
+        throw new Error('कुण्डली विश्लेषण प्राप्त नहीं हो सका।');
+      }
+      return data.text;
     } catch (err) {
-      console.error('Kundali generation failed:', err.message);
-      return err.message || 'सर्वर व्यस्त है या सेवा अनुपलब्ध है। कृपया कुछ समय बाद पुनः प्रयास करें।';
+      console.error('Kundali generation failed:', err);
+      throw err;
     }
   }
 
@@ -106,10 +121,13 @@ class GeminiService {
         brideData,
         ashtakootScore
       });
-      return data.text || 'विवाह मिलान विश्लेषण प्राप्त नहीं हो सका।';
+      if (!data?.text) {
+        throw new Error('विवाह मिलान विश्लेषण प्राप्त नहीं हो सका।');
+      }
+      return data.text;
     } catch (err) {
-      console.error('Vivah Milan generation failed:', err.message);
-      return err.message || 'सर्वर व्यस्त है या सेवा अनुपलब्ध है। कृपया कुछ समय बाद पुनः प्रयास करें।';
+      console.error('Vivah Milan generation failed:', err);
+      throw err;
     }
   }
 }

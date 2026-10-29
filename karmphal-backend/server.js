@@ -13,6 +13,7 @@ const { errorHandler } = require('./middlewares/errorHandler');
 const aiRoutes = require('./routes/ai');
 const userRoutes = require('./routes/user');
 const authRoutes = require('./routes/auth');
+const libraryRoutes = require('./routes/library');
 
 const app = express();
 const PORT = env.PORT || 5000;
@@ -169,6 +170,7 @@ app.get('/api/ready', readinessHandler);
 app.use('/api/auth', authRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/user', userRoutes);
+app.use('/api/library', libraryRoutes);
 
 // Global Error Handler
 app.use(errorHandler);

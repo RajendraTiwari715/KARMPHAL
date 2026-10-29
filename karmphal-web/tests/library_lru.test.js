@@ -61,7 +61,8 @@ describe('Library Service LRU Cache & Methods Unit Tests', () => {
       });
 
       const url = await libraryService.getPdfUrl('gita_identifier');
-      expect(url).toBe('https://archive.org/download/gita_identifier/bhagavad_gita.pdf');
+      expect(url).toContain('/api/library/proxy?url=');
+      expect(url).toContain('https%3A%2F%2Farchive.org%2Fdownload%2Fgita_identifier%2Fbhagavad_gita.pdf');
     });
 
     it('returns null when metadata contains no PDF file', async () => {

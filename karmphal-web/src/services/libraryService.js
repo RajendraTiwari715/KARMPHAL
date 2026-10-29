@@ -1,5 +1,6 @@
 import localforage from 'localforage';
 import { SACRED_BOOKS } from '../data/sacredBooks.js';
+import { getApiBaseUrl } from './apiClient.js';
 
 // Configure localforage for IndexedDB storage
 localforage.config({
@@ -30,7 +31,7 @@ export const libraryService = {
   },
 
   /**
-   * Get the direct PDF URL for a book from Internet Archive
+   * Get the proxied PDF URL for a book from Internet Archive via backend proxy
    * @param {string} identifier 
    */
   async getPdfUrl(identifier) {
@@ -38,9 +39,11 @@ export const libraryService = {
       const response = await fetch(`https://archive.org/metadata/${identifier}`);
       const data = await response.json();
       
-      const pdfFile = data.files.find(f => f.name.endsWith('.pdf'));
+      const pdfFile = data.files?.find(f => f.name.endsWith('.pdf'));
       if (pdfFile) {
-        return `https://archive.org/download/${identifier}/${pdfFile.name}`;
+        const directDownloadUrl = `https://archive.org/download/${identifier}/${pdfFile.name}`;
+        const baseUrl = getApiBaseUrl();
+        return `${baseUrl}/api/library/proxy?url=${encodeURIComponent(directDownloadUrl)}`;
       }
       return null;
     } catch (error) {
