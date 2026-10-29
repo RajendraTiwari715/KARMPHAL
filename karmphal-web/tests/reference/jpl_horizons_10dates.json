@@ -1,0 +1,127 @@
+{
+  "description": "NASA JPL Horizons API (DE441 Ephemeris) Geocentric Apparent Ecliptic Longitudes (QUANTITIES=31, CENTER=500@399)",
+  "source": "NASA/JPL Horizons On-Line Ephemeris System (https://ssd.jpl.nasa.gov/horizons/)",
+  "benchmarkTargetLimitArcmin": 1.0,
+  "samples": [
+    {
+      "index": 1,
+      "dateUtc": "1942-11-10T16:41:35.898Z",
+      "bodies": {
+        "Sun": { "jplLon": 227.6596276 },
+        "Moon": { "jplLon": 256.0381914 },
+        "Mars": { "jplLon": 215.9063336 },
+        "Venus": { "jplLon": 226.2109549 },
+        "Jupiter": { "jplLon": 115.2324129 },
+        "Saturn": { "jplLon": 70.6973801 }
+      }
+    },
+    {
+      "index": 2,
+      "dateUtc": "2075-03-02T04:05:11.655Z",
+      "bodies": {
+        "Sun": { "jplLon": 341.6948056 },
+        "Moon": { "jplLon": 153.6139914 },
+        "Mars": { "jplLon": 343.2192030 },
+        "Venus": { "jplLon": 304.2453502 },
+        "Jupiter": { "jplLon": 159.3820634 },
+        "Saturn": { "jplLon": 257.9678250 }
+      }
+    },
+    {
+      "index": 3,
+      "dateUtc": "2004-11-13T12:22:35.416Z",
+      "bodies": {
+        "Sun": { "jplLon": 231.4686883 },
+        "Moon": { "jplLon": 243.9520038 },
+        "Mars": { "jplLon": 211.5295914 },
+        "Venus": { "jplLon": 198.8637562 },
+        "Jupiter": { "jplLon": 190.1786938 },
+        "Saturn": { "jplLon": 117.3176043 }
+      }
+    },
+    {
+      "index": 4,
+      "dateUtc": "1968-09-17T14:05:31.070Z",
+      "bodies": {
+        "Sun": { "jplLon": 174.7298317 },
+        "Moon": { "jplLon": 115.1567232 },
+        "Mars": { "jplLon": 147.3639428 },
+        "Venus": { "jplLon": 198.8168902 },
+        "Jupiter": { "jplLon": 168.2402597 },
+        "Saturn": { "jplLon": 24.1451680 }
+      }
+    },
+    {
+      "index": 5,
+      "dateUtc": "2008-12-26T14:45:15.144Z",
+      "bodies": {
+        "Sun": { "jplLon": 275.2095537 },
+        "Moon": { "jplLon": 265.4793698 },
+        "Mars": { "jplLon": 269.4771343 },
+        "Venus": { "jplLon": 321.2920835 },
+        "Jupiter": { "jplLon": 297.6927239 },
+        "Saturn": { "jplLon": 171.7423732 }
+      }
+    },
+    {
+      "index": 6,
+      "dateUtc": "1974-07-17T14:34:40.761Z",
+      "bodies": {
+        "Sun": { "jplLon": 114.6320349 },
+        "Moon": { "jplLon": 87.9321720 },
+        "Mars": { "jplLon": 143.7725516 },
+        "Venus": { "jplLon": 85.7035932 },
+        "Jupiter": { "jplLon": 347.7067406 },
+        "Saturn": { "jplLon": 100.5400438 }
+      }
+    },
+    {
+      "index": 7,
+      "dateUtc": "1957-10-12T00:33:43.770Z",
+      "bodies": {
+        "Sun": { "jplLon": 198.4206262 },
+        "Moon": { "jplLon": 53.4948733 },
+        "Mars": { "jplLon": 191.5984737 },
+        "Venus": { "jplLon": 242.2522986 },
+        "Jupiter": { "jplLon": 193.5187515 },
+        "Saturn": { "jplLon": 250.5159616 }
+      }
+    },
+    {
+      "index": 8,
+      "dateUtc": "2006-12-21T02:59:04.136Z",
+      "bodies": {
+        "Sun": { "jplLon": 269.0922572 },
+        "Moon": { "jplLon": 275.7504938 },
+        "Mars": { "jplLon": 250.6005574 },
+        "Venus": { "jplLon": 282.4168735 },
+        "Jupiter": { "jplLon": 245.9119389 },
+        "Saturn": { "jplLon": 144.8627473 }
+      }
+    },
+    {
+      "index": 9,
+      "dateUtc": "1978-12-29T22:04:56.253Z",
+      "bodies": {
+        "Sun": { "jplLon": 277.8445025 },
+        "Moon": { "jplLon": 279.3021915 },
+        "Mars": { "jplLon": 283.1036399 },
+        "Venus": { "jplLon": 232.6485743 },
+        "Jupiter": { "jplLon": 127.2138612 },
+        "Saturn": { "jplLon": 163.9151147 }
+      }
+    },
+    {
+      "index": 10,
+      "dateUtc": "1925-08-31T12:44:49.951Z",
+      "bodies": {
+        "Sun": { "jplLon": 157.5736066 },
+        "Moon": { "jplLon": 305.6046467 },
+        "Mars": { "jplLon": 161.8591783 },
+        "Venus": { "jplLon": 191.4316773 },
+        "Jupiter": { "jplLon": 282.8067988 },
+        "Saturn": { "jplLon": 219.6325696 }
+      }
+    }
+  ]
+}

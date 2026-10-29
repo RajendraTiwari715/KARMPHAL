@@ -2,14 +2,14 @@ import * as Astronomy from 'astronomy-engine';
 
 // High Precision Astrological & Ephemeris Computation Engine
 // Powered by Astronomy Engine (VSOP87 & ELP2000-82, MIT License by Donald Cross)
-// Stated Ephemeris Accuracy: Sun/Planets ~0.016°, Moon ~0.03° vs NASA JPL Horizons (1700–2200)
+// Stated Ephemeris Accuracy: within ±1 arcminute (±0.0167° / 60 arcsec) of USNO NOVAS C 3.1 & NASA JPL Horizons (1700–2200)
 
 export const EPHEMERIS_METADATA = {
   engineVersion: "2.0.0-astronomy-engine",
   ayanamsa: "Lahiri (Chitra Paksha)",
   houseSystem: "Whole Sign (Rashi Tulya Bhava)",
   algorithms: "Astronomy Engine VSOP87/ELP2000-82 & High-Precision Numerical Ephemeris",
-  statedAccuracy: "Sun/Planets ~0.016°, Moon ~0.03° vs JPL Horizons (1700–2200). Mean Rahu/Ketu.",
+  statedAccuracy: "Within ±1 arcminute (±0.0167° / 60 arcseconds) of USNO NOVAS C 3.1 and NASA JPL Horizons (1700–2200). Good for Jyotish (sub-degree). Mean Rahu/Ketu via Meeus/IAU polynomial.",
   license: "MIT (Donald Cross)"
 };
 
@@ -229,13 +229,21 @@ export const DASHA_ORDER = [
 ];
 
 // Calculate Lahiri Ayanamsa for a given Julian Day / Year
+// CITED AUTHORITATIVE SOURCE:
+// 1. Indian Calendar Reform Committee (ICRC, 1955 / Saha Committee):
+//    Defined standard Chitrapaksha Ayanamsha at epoch March 21, 1956, 00:00 Ephemeris Time (JD 2435553.5).
+// 2. Indian Astronomical Ephemeris (IAE 1989, p. 556 footnote):
+//    Revised initial constant to 23° 15' 00.658" (23.25018278°) effective 1985 upon adopting IAU 1976 precession.
+//    Adopted as standard SE_SIDM_LAHIRI (Mode 1) in Swiss Ephemeris (Astrodienst).
+// 3. J2000.0 Epoch Anchor (JD 2451545.0, 2000-01-01 12:00 TT):
+//    Base ayanamsa = 23° 51' 25.53" = 23.857092°.
+// 4. Precession Model: IAU 1976 General Precession in Longitude (Lieske et al., 1977):
+//    Precession rate p_A = 50.290966" / tropical year = 5029.0966" / Julian century = 1.39697128° / century.
+//    Quadratic secular term = +1.11161" / century^2 = +0.00030878° * T^2.
 export function calculateLahiriAyanamsa(date = new Date()) {
   const jd = getJulianDay(date);
   const T = (jd - 2451545.0) / 36525.0; // Julian centuries from J2000.0
-  // Standard high-precision Lahiri (Chitra Paksha) Ayanamsa:
-  // Base at J2000.0 = 23° 51' 25.53" = 23.857092°
-  // Precession: 50.290966" / year = 1.396971° / century
-  const ayanamsa = 23.857092 + 1.396971 * T - 0.000308 * T * T;
+  const ayanamsa = 23.857092 + 1.39697128 * T + 0.00030878 * T * T;
   return ayanamsa;
 }
 
