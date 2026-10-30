@@ -106,9 +106,14 @@ export function resolveTheologicalInquiry(userPrompt, contextData = {}) {
   }
 
   // 4. वेदान्त / दर्शन सम्बन्धी सामान्य प्रश्न
-  const matched = THEOLOGICAL_TOPICS.find(() => 
-    query.includes('ब्रह्म') || query.includes('अद्वैत') || query.includes('द्वैत') || query.includes('शंकराचार्य') || query.includes('रामानुज') || query.includes('ईश्वर') || query.includes('भगवान')
-  ) || THEOLOGICAL_TOPICS[0];
+  let matched;
+  if (query.includes('कर्म') || query.includes('प्रारब्ध') || query.includes('फल') || query.includes('गीता')) {
+    matched = THEOLOGICAL_TOPICS.find(t => t.id === 'karma-doctrine') || THEOLOGICAL_TOPICS[1];
+  } else if (query.includes('भाग्य') || query.includes('पुरुषार्थ') || query.includes('कुण्डली')) {
+    matched = THEOLOGICAL_TOPICS.find(t => t.id === 'kundali-fate-freewill') || THEOLOGICAL_TOPICS[2];
+  } else {
+    matched = THEOLOGICAL_TOPICS.find(t => t.id === 'brahman-nature') || THEOLOGICAL_TOPICS[0];
+  }
 
   return {
     type: 'THEOLOGICAL_SYNTHESIS',

@@ -143,10 +143,14 @@ export default function PDFReader({ book, onClose }) {
         if (isCancelled) return;
 
         // Load document through pdf.js using standard Uint8Array or URL
+        const wasmBaseUrl = typeof window !== 'undefined' ? `${window.location.origin}/pdfjs-wasm/` : '/pdfjs-wasm/';
+        const cMapBaseUrl = typeof window !== 'undefined' ? `${window.location.origin}/pdfjs-cmaps/` : '/pdfjs-cmaps/';
+
         const loadingTask = pdfjsLib.getDocument({
           url: pdfSourceUrl,
-          cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/cmaps/', // standard fallback for glyphs if needed
-          cMapPacked: true
+          cMapUrl: cMapBaseUrl,
+          cMapPacked: true,
+          wasmUrl: wasmBaseUrl
         });
 
         const doc = await loadingTask.promise;

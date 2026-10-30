@@ -1,5 +1,5 @@
-const MODELS = ['gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-flash-latest'];
-const TIMEOUT_MS = 35000; // 35 seconds request timeout
+const MODELS = ['gemini-3.5-flash-lite', 'gemini-3.5-flash'];
+const TIMEOUT_MS = 25000; // 25 seconds per model attempt
 
 async function fetchWithTimeout(resource, options = {}) {
   const { timeout = TIMEOUT_MS } = options;
@@ -63,20 +63,18 @@ async function callGemini(contents, systemInstruction, generationConfig) {
         
         if (response.status === 429) {
           isRateLimited = true;
-          // Continue to fallback model if available
         } else if (response.status >= 500) {
           lastError = new Error('PROVIDER_ERROR');
+        } else if (response.status === 404) {
+          lastError = new Error('MODEL_NOT_FOUND');
         } else {
-          // Client request format issue
-          throw new Error('INVALID_AI_REQUEST');
+          lastError = new Error('INVALID_AI_REQUEST');
         }
       }
     } catch (err) {
       if (err.name === 'AbortError') {
         console.warn(`[GeminiService] Model ${model} request timed out`);
         lastError = new Error('TIMEOUT');
-      } else if (err.message === 'INVALID_AI_REQUEST') {
-        throw err;
       } else {
         console.warn(`[GeminiService] Model ${model} request failed: ${err.message}`);
         lastError = err;
@@ -91,4 +89,4 @@ async function callGemini(contents, systemInstruction, generationConfig) {
   throw lastError || new Error('ALL_MODELS_FAILED');
 }
 
-module.exports = { callGemini, fetchWithTimeout };
+module.exports = { callGemini, fetchWithTimeout, MODELS };

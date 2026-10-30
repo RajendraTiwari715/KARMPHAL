@@ -21,7 +21,7 @@
     "*": [
       "secretlint"
     ],
-    "karmphal-web/**/*.{js,jsx}": [
+    "karmphal-web/src/**/*.{js,jsx}": [
       "npx --prefix karmphal-web oxlint"
     ],
     "karmphal-backend/**/*.js": [

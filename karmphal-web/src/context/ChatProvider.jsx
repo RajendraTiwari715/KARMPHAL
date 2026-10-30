@@ -132,8 +132,6 @@ export const ChatProvider = ({ children }) => {
           );
       } catch (error) {
         console.error('[ChatProvider] Acharya generation error:', error);
-
-
         
         let errorText;
         if (error?.status === 429 || error?.code === 'RATE_LIMIT' || error?.code === 'DAILY_QUOTA_EXCEEDED') {
@@ -151,11 +149,7 @@ export const ChatProvider = ({ children }) => {
           timestamp: new Date().toISOString()
         };
         setMessages((prev) => [...prev, fallbackMsg]);
-        apiClient
-          .post('/api/user/chat-history', { sender: 'model', text: fallbackMsg.text })
-          .catch((err) =>
-            console.warn('[ChatProvider] Failed to persist fallback message:', err.message)
-          );
+        // Note: Do NOT persist transient errors to DB chat history
       } finally {
         setIsSending(false);
       }
