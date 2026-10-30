@@ -1,4 +1,4 @@
-import React, { useState, useEffect, memo } from 'react';
+﻿import React, { useState, useEffect, memo } from 'react';
 import { 
   User, 
   Globe, 
@@ -56,11 +56,11 @@ function ProfileModal({ isOpen, onClose, initialTab = 'profile' }) {
   const [isLocationPickerOpen, setIsLocationPickerOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [userData, setUserData] = useState(() => ({
-    name: 'साधक',
-    phoneOrEmail: 'sadhaka@example.com',
-    gotra: 'कश्यप (Kashyapa)',
-    city: location?.cityName || 'वाराणसी (Varanasi)',
-    isLoggedIn: true
+    name: '',
+    phoneOrEmail: '',
+    gotra: '',
+    city: location?.cityName || '',
+    isLoggedIn: false
   }));
   const [isMuted, setIsMuted] = useState(() => audioService.isSoundMuted());
 
@@ -104,8 +104,8 @@ function ProfileModal({ isOpen, onClose, initialTab = 'profile' }) {
     window.dispatchEvent(new CustomEvent('karmphal:toast', {
       detail: {
         type: 'success',
-        title: 'डेटा बैकअप सम्पन्न',
-        message: 'समस्त साधना, जप एवं कुण्डली बैकअप (JSON) सुरक्षित डाउनलोड हो गया।'
+        title: 'à¤¡à¥‡à¤Ÿà¤¾ à¤¬à¥ˆà¤•à¤…à¤ª à¤¸à¤®à¥à¤ªà¤¨à¥à¤¨',
+        message: 'à¤¸à¤®à¤¸à¥à¤¤ à¤¸à¤¾à¤§à¤¨à¤¾, à¤œà¤ª à¤à¤µà¤‚ à¤•à¥à¤£à¥à¤¡à¤²à¥€ à¤¬à¥ˆà¤•à¤…à¤ª (JSON) à¤¸à¥à¤°à¤•à¥à¤·à¤¿à¤¤ à¤¡à¤¾à¤‰à¤¨à¤²à¥‹à¤¡ à¤¹à¥‹ à¤—à¤¯à¤¾à¥¤'
       }
     }));
   };
@@ -121,7 +121,7 @@ function ProfileModal({ isOpen, onClose, initialTab = 'profile' }) {
         window.dispatchEvent(new CustomEvent('karmphal:toast', {
           detail: {
             type: 'success',
-            title: 'डेटा आयात सम्पन्न',
+            title: 'à¤¡à¥‡à¤Ÿà¤¾ à¤†à¤¯à¤¾à¤¤ à¤¸à¤®à¥à¤ªà¤¨à¥à¤¨',
             message: res.message
           }
         }));
@@ -129,7 +129,7 @@ function ProfileModal({ isOpen, onClose, initialTab = 'profile' }) {
         window.dispatchEvent(new CustomEvent('karmphal:toast', {
           detail: {
             type: 'error',
-            title: 'आयात विफल',
+            title: 'à¤†à¤¯à¤¾à¤¤ à¤µà¤¿à¤«à¤²',
             message: res.error
           }
         }));
@@ -159,18 +159,18 @@ function ProfileModal({ isOpen, onClose, initialTab = 'profile' }) {
   };
 
   const languages = [
-    { code: 'hi', label: 'हिन्दी (Hindi - पूर्वनिर्धारित)', desc: 'शुद्ध एवं प्रामाणिक वैदिक हिन्दी' },
-    { code: 'sa', label: 'संस्कृतम् (Sanskrit)', desc: 'देववाणी मूल संस्कृतम्' },
+    { code: 'hi', label: 'à¤¹à¤¿à¤¨à¥à¤¦à¥€ (Hindi - à¤ªà¥‚à¤°à¥à¤µà¤¨à¤¿à¤°à¥à¤§à¤¾à¤°à¤¿à¤¤)', desc: 'à¤¶à¥à¤¦à¥à¤§ à¤à¤µà¤‚ à¤ªà¥à¤°à¤¾à¤®à¤¾à¤£à¤¿à¤• à¤µà¥ˆà¤¦à¤¿à¤• à¤¹à¤¿à¤¨à¥à¤¦à¥€' },
+    { code: 'sa', label: 'à¤¸à¤‚à¤¸à¥à¤•à¥ƒà¤¤à¤®à¥ (Sanskrit)', desc: 'à¤¦à¥‡à¤µà¤µà¤¾à¤£à¥€ à¤®à¥‚à¤² à¤¸à¤‚à¤¸à¥à¤•à¥ƒà¤¤à¤®à¥' },
     { code: 'en', label: 'English', desc: 'International English' }
   ];
 
   // Calculate spiritual milestone rank from Punya points
   const points = punyaLedger || 108;
-  let rank = 'भक्त (Bhakta)';
-  if (points >= 1000) rank = 'परमहंस (Paramahamsa)';
-  else if (points >= 500) rank = 'ऋषि (Rishi)';
-  else if (points >= 300) rank = 'तपस्वी (Tapasvi)';
-  else if (points >= 150) rank = 'साधक (Sadhaka)';
+  let rank = 'à¤­à¤•à¥à¤¤ (Bhakta)';
+  if (points >= 1000) rank = 'à¤ªà¤°à¤®à¤¹à¤‚à¤¸ (Paramahamsa)';
+  else if (points >= 500) rank = 'à¤‹à¤·à¤¿ (Rishi)';
+  else if (points >= 300) rank = 'à¤¤à¤ªà¤¸à¥à¤µà¥€ (Tapasvi)';
+  else if (points >= 150) rank = 'à¤¸à¤¾à¤§à¤• (Sadhaka)';
 
   return (
     <>
@@ -185,30 +185,30 @@ function ProfileModal({ isOpen, onClose, initialTab = 'profile' }) {
           <button
             type="button"
             onClick={onClose}
-            aria-label="पटल बंद करें (Close Modal)"
+            aria-label="à¤ªà¤Ÿà¤² à¤¬à¤‚à¤¦ à¤•à¤°à¥‡à¤‚ (Close Modal)"
             className="absolute top-4 right-4 min-w-[44px] min-h-[44px] p-2 text-[#D4A373] hover:text-[#FFF] rounded-full bg-black/60 backdrop-blur-sm border border-[#C58B4E]/40 hover:border-[#E0A96D] transition-all flex items-center justify-center cursor-pointer shadow-sm"
           >
             <X className="w-5 h-5" />
           </button>
 
-          {/* Modal Header with ॐ Emblem */}
+          {/* Modal Header with à¥ Emblem */}
           <div className="flex items-center gap-3.5 mb-4 pb-3.5 border-b border-[#C58B4E]/25">
             <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-[#E0A96D] via-[#C58B4E] to-[#6A3B18] flex items-center justify-center text-[#120A05] font-black text-2xl shadow-xl shadow-[#C58B4E]/30 border border-[#F3CA9D] shrink-0">
-              ॐ
+              à¥
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h2 id="profile-modal-title" className="font-dharmik text-lg sm:text-xl font-bold text-[#F3CA9D]">
-                  ॐ साधना एवं विन्यास
+                  à¥ à¤¸à¤¾à¤§à¤¨à¤¾ à¤à¤µà¤‚ à¤µà¤¿à¤¨à¥à¤¯à¤¾à¤¸
                 </h2>
-                <span className="badge-gold text-[10px]">प्रमाणित साधक</span>
+                <span className="badge-gold text-[10px]">à¤ªà¥à¤°à¤®à¤¾à¤£à¤¿à¤¤ à¤¸à¤¾à¤§à¤•</span>
               </div>
-              <p className="text-xs text-[#C58B4E] mt-0.5">साधक परिचय, भाषा चयन, ध्वनि एवं आध्यात्मिक विन्यास</p>
+              <p className="text-xs text-[#C58B4E] mt-0.5">à¤¸à¤¾à¤§à¤• à¤ªà¤°à¤¿à¤šà¤¯, à¤­à¤¾à¤·à¤¾ à¤šà¤¯à¤¨, à¤§à¥à¤µà¤¨à¤¿ à¤à¤µà¤‚ à¤†à¤§à¥à¤¯à¤¾à¤¤à¥à¤®à¤¿à¤• à¤µà¤¿à¤¨à¥à¤¯à¤¾à¤¸</p>
             </div>
           </div>
 
           {/* Tab Navigation: Profile vs Settings (Accessible Tabs with min 44px tap target) */}
-          <div className="flex items-center gap-2 p-1 bg-black/50 rounded-2xl border border-[#C58B4E]/30 mb-5" role="tablist" aria-label="प्रोफाइल एवं विन्यास टैब्स">
+          <div className="flex items-center gap-2 p-1 bg-black/50 rounded-2xl border border-[#C58B4E]/30 mb-5" role="tablist" aria-label="à¤ªà¥à¤°à¥‹à¤«à¤¾à¤‡à¤² à¤à¤µà¤‚ à¤µà¤¿à¤¨à¥à¤¯à¤¾à¤¸ à¤Ÿà¥ˆà¤¬à¥à¤¸">
             <button
               type="button"
               role="tab"
@@ -223,7 +223,7 @@ function ProfileModal({ isOpen, onClose, initialTab = 'profile' }) {
               }`}
             >
               <User className="w-4 h-4 shrink-0" />
-              <span>साधक प्रोफाइल</span>
+              <span>à¤¸à¤¾à¤§à¤• à¤ªà¥à¤°à¥‹à¤«à¤¾à¤‡à¤²</span>
             </button>
 
             <button
@@ -240,11 +240,11 @@ function ProfileModal({ isOpen, onClose, initialTab = 'profile' }) {
               }`}
             >
               <Settings className="w-4 h-4 shrink-0" />
-              <span>विन्यास एवं सेटिंग्स</span>
+              <span>à¤µà¤¿à¤¨à¥à¤¯à¤¾à¤¸ à¤à¤µà¤‚ à¤¸à¥‡à¤Ÿà¤¿à¤‚à¤—à¥à¤¸</span>
             </button>
           </div>
 
-          {/* TAB 1: साधक प्रोफाइल (PROFILE TABPANEL) */}
+          {/* TAB 1: à¤¸à¤¾à¤§à¤• à¤ªà¥à¤°à¥‹à¤«à¤¾à¤‡à¤² (PROFILE TABPANEL) */}
           {activeTab === 'profile' && (
             <div id="tabpanel-profile" role="tabpanel" aria-labelledby="tab-profile" className="space-y-4 animate-fade-in">
               {/* User Identity Card */}
@@ -252,23 +252,23 @@ function ProfileModal({ isOpen, onClose, initialTab = 'profile' }) {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-xs font-bold text-[#F3CA9D]">
                     <User className="w-4 h-4 text-[#E0A96D]" />
-                    <span>साधक परिचय एवं विवरण</span>
+                    <span>à¤¸à¤¾à¤§à¤• à¤ªà¤°à¤¿à¤šà¤¯ à¤à¤µà¤‚ à¤µà¤¿à¤µà¤°à¤£</span>
                   </div>
                   <button
                     type="button"
                     onClick={() => setIsEditing(!isEditing)}
-                    aria-label={isEditing ? "संशोधन रद्द करें" : "प्रोफाइल विवरण में संशोधन करें"}
+                    aria-label={isEditing ? "à¤¸à¤‚à¤¶à¥‹à¤§à¤¨ à¤°à¤¦à¥à¤¦ à¤•à¤°à¥‡à¤‚" : "à¤ªà¥à¤°à¥‹à¤«à¤¾à¤‡à¤² à¤µà¤¿à¤µà¤°à¤£ à¤®à¥‡à¤‚ à¤¸à¤‚à¤¶à¥‹à¤§à¤¨ à¤•à¤°à¥‡à¤‚"}
                     className="min-h-[44px] px-2 flex items-center gap-1.5 text-xs text-[#E0A96D] hover:text-[#FFF] font-bold cursor-pointer"
                   >
                     <Edit3 className="w-3.5 h-3.5" />
-                    <span>{isEditing ? 'रद्द करें' : 'संशोधन करें'}</span>
+                    <span>{isEditing ? 'à¤°à¤¦à¥à¤¦ à¤•à¤°à¥‡à¤‚' : 'à¤¸à¤‚à¤¶à¥‹à¤§à¤¨ à¤•à¤°à¥‡à¤‚'}</span>
                   </button>
                 </div>
 
                 {isEditing ? (
                   <form onSubmit={handleSaveProfile} className="space-y-3 pt-2 text-xs">
                     <div>
-                      <label htmlFor="edit-name" className="block text-[#C58B4E] mb-1 font-bold">आपका नाम (Name):</label>
+                      <label htmlFor="edit-name" className="block text-[#C58B4E] mb-1 font-bold">à¤†à¤ªà¤•à¤¾ à¤¨à¤¾à¤® (Name):</label>
                       <input
                         id="edit-name"
                         type="text"
@@ -281,7 +281,7 @@ function ProfileModal({ isOpen, onClose, initialTab = 'profile' }) {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <div>
-                        <label htmlFor="edit-gotra" className="block text-[#C58B4E] mb-1 font-bold">गोत्र (Gotra):</label>
+                        <label htmlFor="edit-gotra" className="block text-[#C58B4E] mb-1 font-bold">à¤—à¥‹à¤¤à¥à¤° (Gotra):</label>
                         <input
                           id="edit-gotra"
                           type="text"
@@ -291,7 +291,7 @@ function ProfileModal({ isOpen, onClose, initialTab = 'profile' }) {
                         />
                       </div>
                       <div>
-                        <label htmlFor="edit-city" className="block text-[#C58B4E] mb-1 font-bold">स्थान (City):</label>
+                        <label htmlFor="edit-city" className="block text-[#C58B4E] mb-1 font-bold">à¤¸à¥à¤¥à¤¾à¤¨ (City):</label>
                         <input
                           id="edit-city"
                           type="text"
@@ -304,31 +304,31 @@ function ProfileModal({ isOpen, onClose, initialTab = 'profile' }) {
 
                     <button 
                       type="submit" 
-                      aria-label="प्रोफाइल विवरण सहेजें"
+                      aria-label="à¤ªà¥à¤°à¥‹à¤«à¤¾à¤‡à¤² à¤µà¤¿à¤µà¤°à¤£ à¤¸à¤¹à¥‡à¤œà¥‡à¤‚"
                       className="btn-gold w-full min-h-[44px] text-xs py-2.5 mt-2 flex items-center justify-center gap-2 cursor-pointer"
                     >
                       <Save className="w-4 h-4" />
-                      <span>विवरण सहेजें (Save Profile)</span>
+                      <span>à¤µà¤¿à¤µà¤°à¤£ à¤¸à¤¹à¥‡à¤œà¥‡à¤‚ (Save Profile)</span>
                     </button>
                   </form>
                 ) : (
                   <div className="grid grid-cols-2 gap-2 text-xs pt-1">
                     <div className="p-2.5 rounded-xl bg-white/5 border border-[#C58B4E]/20">
-                      <span className="text-[#A67C52] text-[10px] block">नाम:</span>
+                      <span className="text-[#A67C52] text-[10px] block">à¤¨à¤¾à¤®:</span>
                       <strong className="text-[#F7E7D6]">{userData.name}</strong>
                     </div>
                     <div className="p-2.5 rounded-xl bg-white/5 border border-[#C58B4E]/20">
-                      <span className="text-[#A67C52] text-[10px] block">गोत्र:</span>
+                      <span className="text-[#A67C52] text-[10px] block">à¤—à¥‹à¤¤à¥à¤°:</span>
                       <strong className="text-[#F3CA9D]">{userData.gotra}</strong>
                     </div>
                     <div className="p-2.5 rounded-xl bg-white/5 border border-[#C58B4E]/20">
-                      <span className="text-[#A67C52] text-[10px] block">स्थान:</span>
+                      <span className="text-[#A67C52] text-[10px] block">à¤¸à¥à¤¥à¤¾à¤¨:</span>
                       <strong className="text-[#F7E7D6]">{userData.city}</strong>
                     </div>
                     <div className="p-2.5 rounded-xl bg-white/5 border border-[#C58B4E]/20 flex items-center justify-between">
                       <div>
-                        <span className="text-[#A67C52] text-[10px] block">स्थिति:</span>
-                        <strong className="text-emerald-400">सक्रिय</strong>
+                        <span className="text-[#A67C52] text-[10px] block">à¤¸à¥à¤¥à¤¿à¤¤à¤¿:</span>
+                        <strong className="text-emerald-400">à¤¸à¤•à¥à¤°à¤¿à¤¯</strong>
                       </div>
                       <CheckCircle className="w-4 h-4 text-emerald-400" />
                     </div>
@@ -341,19 +341,19 @@ function ProfileModal({ isOpen, onClose, initialTab = 'profile' }) {
                 <div className="p-3.5 rounded-2xl bg-black/40 border border-[#C58B4E]/30">
                   <div className="flex items-center gap-1.5 text-[11px] text-[#E0A96D] font-bold mb-1">
                     <Sparkles className="w-3.5 h-3.5" />
-                    <span>कुल पुण्य अर्जन</span>
+                    <span>à¤•à¥à¤² à¤ªà¥à¤£à¥à¤¯ à¤…à¤°à¥à¤œà¤¨</span>
                   </div>
                   <div className="text-xl font-bold font-mono text-[#F3CA9D]">+{points} pts</div>
-                  <span className="text-[10px] text-[#C58B4E] block mt-0.5">साधना पद: <strong className="text-[#F7E7D6]">{rank}</strong></span>
+                  <span className="text-[10px] text-[#C58B4E] block mt-0.5">à¤¸à¤¾à¤§à¤¨à¤¾ à¤ªà¤¦: <strong className="text-[#F7E7D6]">{rank}</strong></span>
                 </div>
 
                 <div className="p-3.5 rounded-2xl bg-black/40 border border-[#C58B4E]/30">
                   <div className="flex items-center gap-1.5 text-[11px] text-[#E0A96D] font-bold mb-1">
                     <Flame className="w-3.5 h-3.5" />
-                    <span>साधना निरन्तरता</span>
+                    <span>à¤¸à¤¾à¤§à¤¨à¤¾ à¤¨à¤¿à¤°à¤¨à¥à¤¤à¤°à¤¤à¤¾</span>
                   </div>
-                  <div className="text-xl font-bold font-mono text-[#F3CA9D]">{currentStreak || 3} दिवस</div>
-                  <span className="text-[10px] text-emerald-400 block mt-0.5">नित्य सङ्कल्प सक्रिय</span>
+                  <div className="text-xl font-bold font-mono text-[#F3CA9D]">{currentStreak || 3} à¤¦à¤¿à¤µà¤¸</div>
+                  <span className="text-[10px] text-emerald-400 block mt-0.5">à¤¨à¤¿à¤¤à¥à¤¯ à¤¸à¤™à¥à¤•à¤²à¥à¤ª à¤¸à¤•à¥à¤°à¤¿à¤¯</span>
                 </div>
               </div>
 
@@ -365,24 +365,24 @@ function ProfileModal({ isOpen, onClose, initialTab = 'profile' }) {
               >
                 <div className="flex items-center gap-2">
                   <Settings className="w-4 h-4 text-[#E0A96D] group-hover:rotate-45 transition-transform" />
-                  <span className="font-bold text-[#F3CA9D]">भाषा, ध्वनि, स्थान एवं विन्यास सेटिंग्स</span>
+                  <span className="font-bold text-[#F3CA9D]">à¤­à¤¾à¤·à¤¾, à¤§à¥à¤µà¤¨à¤¿, à¤¸à¥à¤¥à¤¾à¤¨ à¤à¤µà¤‚ à¤µà¤¿à¤¨à¥à¤¯à¤¾à¤¸ à¤¸à¥‡à¤Ÿà¤¿à¤‚à¤—à¥à¤¸</span>
                 </div>
-                <span className="text-[11px] text-[#E0A96D] font-bold">खोलें →</span>
+                <span className="text-[11px] text-[#E0A96D] font-bold">à¤–à¥‹à¤²à¥‡à¤‚ â†’</span>
               </button>
             </div>
           )}
 
-          {/* TAB 2: विन्यास एवं सेटिंग्स (SETTINGS TABPANEL) */}
+          {/* TAB 2: à¤µà¤¿à¤¨à¥à¤¯à¤¾à¤¸ à¤à¤µà¤‚ à¤¸à¥‡à¤Ÿà¤¿à¤‚à¤—à¥à¤¸ (SETTINGS TABPANEL) */}
           {activeTab === 'settings' && (
             <div id="tabpanel-settings" role="tabpanel" aria-labelledby="tab-settings" className="space-y-5 animate-fade-in">
-              {/* 1. Language Selection (भाषा चयन) */}
+              {/* 1. Language Selection (à¤­à¤¾à¤·à¤¾ à¤šà¤¯à¤¨) */}
               <div className="space-y-2.5">
                 <div className="flex items-center gap-2 text-xs font-bold text-[#F3CA9D]">
                   <Globe className="w-4 h-4 text-[#E0A96D]" />
-                  <span>१. भाषा चयन (Language Selection)</span>
+                  <span>à¥§. à¤­à¤¾à¤·à¤¾ à¤šà¤¯à¤¨ (Language Selection)</span>
                 </div>
 
-                <div className="space-y-2" role="radiogroup" aria-label="एप्लिकेशन भाषा चुनें">
+                <div className="space-y-2" role="radiogroup" aria-label="à¤à¤ªà¥à¤²à¤¿à¤•à¥‡à¤¶à¤¨ à¤­à¤¾à¤·à¤¾ à¤šà¥à¤¨à¥‡à¤‚">
                   {languages.map(lang => {
                     const isSelected = currentLang === lang.code;
 
@@ -416,24 +416,24 @@ function ProfileModal({ isOpen, onClose, initialTab = 'profile' }) {
                 </div>
               </div>
 
-              {/* 2. Audio & Sacred Chimes Settings (ध्वनि नियंत्रण) */}
+              {/* 2. Audio & Sacred Chimes Settings (à¤§à¥à¤µà¤¨à¤¿ à¤¨à¤¿à¤¯à¤‚à¤¤à¥à¤°à¤£) */}
               <div className="space-y-2.5">
                 <div className="flex items-center gap-2 text-xs font-bold text-[#F3CA9D]">
                   <Bell className="w-4 h-4 text-[#E0A96D]" />
-                  <span>२. ध्वनि एवं घण्टा नाद विन्यास (Sound Toggle)</span>
+                  <span>à¥¨. à¤§à¥à¤µà¤¨à¤¿ à¤à¤µà¤‚ à¤˜à¤£à¥à¤Ÿà¤¾ à¤¨à¤¾à¤¦ à¤µà¤¿à¤¨à¥à¤¯à¤¾à¤¸ (Sound Toggle)</span>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-black/40 border border-[#C58B4E]/30 space-y-3">
                   <div className="flex items-center justify-between gap-2">
                     <div>
-                      <div className="text-xs font-bold text-[#F7E7D6]">साधना ध्वनि एवं नाद</div>
-                      <div className="text-[11px] text-[#C58B4E]">मन्दिर घण्टा, शंख एवं जप मनका नाद</div>
+                      <div className="text-xs font-bold text-[#F7E7D6]">à¤¸à¤¾à¤§à¤¨à¤¾ à¤§à¥à¤µà¤¨à¤¿ à¤à¤µà¤‚ à¤¨à¤¾à¤¦</div>
+                      <div className="text-[11px] text-[#C58B4E]">à¤®à¤¨à¥à¤¦à¤¿à¤° à¤˜à¤£à¥à¤Ÿà¤¾, à¤¶à¤‚à¤– à¤à¤µà¤‚ à¤œà¤ª à¤®à¤¨à¤•à¤¾ à¤¨à¤¾à¤¦</div>
                     </div>
 
                     <button
                       type="button"
                       onClick={handleToggleSound}
-                      aria-label={`${isMuted ? 'म्यूट' : 'सक्रिय'} - ${isMuted ? 'ध्वनि चालू करें (Unmute Bell & Chimes)' : 'ध्वनि म्यूट करें (Mute Sound)'}`}
+                      aria-label={`${isMuted ? 'à¤®à¥à¤¯à¥‚à¤Ÿ' : 'à¤¸à¤•à¥à¤°à¤¿à¤¯'} - ${isMuted ? 'à¤§à¥à¤µà¤¨à¤¿ à¤šà¤¾à¤²à¥‚ à¤•à¤°à¥‡à¤‚ (Unmute Bell & Chimes)' : 'à¤§à¥à¤µà¤¨à¤¿ à¤®à¥à¤¯à¥‚à¤Ÿ à¤•à¤°à¥‡à¤‚ (Mute Sound)'}`}
                       className={`min-w-[44px] min-h-[44px] px-3.5 py-2 rounded-xl border font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                         isMuted 
                           ? 'bg-rose-950/40 border-rose-500/40 text-rose-300' 
@@ -441,7 +441,7 @@ function ProfileModal({ isOpen, onClose, initialTab = 'profile' }) {
                       }`}
                     >
                       {isMuted ? <VolumeX className="w-4 h-4 text-rose-400" /> : <Volume2 className="w-4 h-4 text-emerald-400" />}
-                      <span>{isMuted ? 'म्यूट' : 'सक्रिय'}</span>
+                      <span>{isMuted ? 'à¤®à¥à¤¯à¥‚à¤Ÿ' : 'à¤¸à¤•à¥à¤°à¤¿à¤¯'}</span>
                     </button>
                   </div>
 
@@ -450,41 +450,41 @@ function ProfileModal({ isOpen, onClose, initialTab = 'profile' }) {
                     <button
                       type="button"
                       onClick={() => audioService.playTempleBell(528, 2.5)}
-                      aria-label="मन्दिर घण्टा नाद सुनें और परीक्षण करें"
+                      aria-label="à¤®à¤¨à¥à¤¦à¤¿à¤° à¤˜à¤£à¥à¤Ÿà¤¾ à¤¨à¤¾à¤¦ à¤¸à¥à¤¨à¥‡à¤‚ à¤”à¤° à¤ªà¤°à¥€à¤•à¥à¤·à¤£ à¤•à¤°à¥‡à¤‚"
                       className="w-full sm:flex-1 min-h-[44px] py-2 px-3 rounded-xl border border-[#C58B4E]/30 bg-black/30 hover:bg-[#C58B4E]/20 text-xs text-[#F3CA9D] font-medium transition-colors cursor-pointer flex items-center justify-center gap-1.5"
                     >
-                      <span>🔔</span>
-                      <span>मन्दिर घण्टा नाद सुनें</span>
+                      <span>ðŸ””</span>
+                      <span>à¤®à¤¨à¥à¤¦à¤¿à¤° à¤˜à¤£à¥à¤Ÿà¤¾ à¤¨à¤¾à¤¦ à¤¸à¥à¤¨à¥‡à¤‚</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => audioService.playShankh()}
-                      aria-label="दिव्य शंख नाद सुनें और परीक्षण करें"
+                      aria-label="à¤¦à¤¿à¤µà¥à¤¯ à¤¶à¤‚à¤– à¤¨à¤¾à¤¦ à¤¸à¥à¤¨à¥‡à¤‚ à¤”à¤° à¤ªà¤°à¥€à¤•à¥à¤·à¤£ à¤•à¤°à¥‡à¤‚"
                       className="w-full sm:flex-1 min-h-[44px] py-2 px-3 rounded-xl border border-[#C58B4E]/30 bg-black/30 hover:bg-[#C58B4E]/20 text-xs text-[#F3CA9D] font-medium transition-colors cursor-pointer flex items-center justify-center gap-1.5"
                     >
-                      <span>🐚</span>
-                      <span>दिव्य शंख नाद सुनें</span>
+                      <span>ðŸš</span>
+                      <span>à¤¦à¤¿à¤µà¥à¤¯ à¤¶à¤‚à¤– à¤¨à¤¾à¤¦ à¤¸à¥à¤¨à¥‡à¤‚</span>
                     </button>
                   </div>
                 </div>
               </div>
 
-              {/* 3. Profile Location (साधना नगर एवं पञ्चाङ्ग स्थान) */}
+              {/* 3. Profile Location (à¤¸à¤¾à¤§à¤¨à¤¾ à¤¨à¤—à¤° à¤à¤µà¤‚ à¤ªà¤žà¥à¤šà¤¾à¤™à¥à¤— à¤¸à¥à¤¥à¤¾à¤¨) */}
               <div className="space-y-2.5">
                 <div className="flex items-center gap-2 text-xs font-bold text-[#F3CA9D]">
                   <MapPin className="w-4 h-4 text-[#E0A96D]" />
-                  <span>३. साधना नगर एवं पञ्चाङ्ग स्थान (Profile Location)</span>
+                  <span>à¥©. à¤¸à¤¾à¤§à¤¨à¤¾ à¤¨à¤—à¤° à¤à¤µà¤‚ à¤ªà¤žà¥à¤šà¤¾à¤™à¥à¤— à¤¸à¥à¤¥à¤¾à¤¨ (Profile Location)</span>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-black/40 border border-[#C58B4E]/30 space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <span className="text-[#A67C52] text-[10px] block">सक्रिय साधना नगर:</span>
+                      <span className="text-[#A67C52] text-[10px] block">à¤¸à¤•à¥à¤°à¤¿à¤¯ à¤¸à¤¾à¤§à¤¨à¤¾ à¤¨à¤—à¤°:</span>
                       <strong className="text-sm text-[#F7E7D6]">
-                        {location?.cityName || userData.city || 'वाराणसी (Varanasi)'}
+                        {location?.cityName || userData.city || 'à¤µà¤¾à¤°à¤¾à¤£à¤¸à¥€ (Varanasi)'}
                       </strong>
                       <span className="text-[10px] text-[#D4A373] block font-mono">
-                        {location?.lat ? `${location.lat.toFixed(2)}° N, ${location.lon.toFixed(2)}° E` : '28.61° N, 77.21° E'}
+                        {location?.lat ? `${location.lat.toFixed(2)}Â° N, ${location.lon.toFixed(2)}Â° E` : '28.61Â° N, 77.21Â° E'}
                       </span>
                     </div>
 
@@ -493,55 +493,55 @@ function ProfileModal({ isOpen, onClose, initialTab = 'profile' }) {
                         ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' 
                         : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
                     }`}>
-                      {location?.isDefaultLocation ? 'पूर्वनिर्धारित (दिल्ली)' : 'सक्रिय नगर'}
+                      {location?.isDefaultLocation ? 'à¤ªà¥‚à¤°à¥à¤µà¤¨à¤¿à¤°à¥à¤§à¤¾à¤°à¤¿à¤¤ (à¤¦à¤¿à¤²à¥à¤²à¥€)' : 'à¤¸à¤•à¥à¤°à¤¿à¤¯ à¤¨à¤—à¤°'}
                     </span>
                   </div>
 
                   <button
                     type="button"
                     onClick={() => setIsLocationPickerOpen(true)}
-                    aria-label="साधना नगर बदलें या जीपीएस स्थान से पहचानें"
+                    aria-label="à¤¸à¤¾à¤§à¤¨à¤¾ à¤¨à¤—à¤° à¤¬à¤¦à¤²à¥‡à¤‚ à¤¯à¤¾ à¤œà¥€à¤ªà¥€à¤à¤¸ à¤¸à¥à¤¥à¤¾à¤¨ à¤¸à¥‡ à¤ªà¤¹à¤šà¤¾à¤¨à¥‡à¤‚"
                     className="w-full min-h-[44px] py-2.5 px-4 rounded-xl border border-[#C58B4E]/50 bg-gradient-to-r from-[#C58B4E]/20 to-[#E0A96D]/20 text-[#F3CA9D] hover:bg-[#C58B4E]/30 text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm"
                   >
                     <Compass className="w-4 h-4 text-[#E0A96D]" />
-                    <span>स्थान बदलें / जीपीएस से पहचानें (Change Location)</span>
+                    <span>à¤¸à¥à¤¥à¤¾à¤¨ à¤¬à¤¦à¤²à¥‡à¤‚ / à¤œà¥€à¤ªà¥€à¤à¤¸ à¤¸à¥‡ à¤ªà¤¹à¤šà¤¾à¤¨à¥‡à¤‚ (Change Location)</span>
                   </button>
                 </div>
               </div>
 
-              {/* 4. About & Privacy Section (परिचय एवं गोपनीयता नीति) */}
+              {/* 4. About & Privacy Section (à¤ªà¤°à¤¿à¤šà¤¯ à¤à¤µà¤‚ à¤—à¥‹à¤ªà¤¨à¥€à¤¯à¤¤à¤¾ à¤¨à¥€à¤¤à¤¿) */}
               <div className="space-y-2.5">
                 <div className="flex items-center gap-2 text-xs font-bold text-[#F3CA9D]">
                   <ShieldCheck className="w-4 h-4 text-[#E0A96D]" />
-                  <span>४. परिचय एवं गोपनीयता नीति (About & Privacy)</span>
+                  <span>à¥ª. à¤ªà¤°à¤¿à¤šà¤¯ à¤à¤µà¤‚ à¤—à¥‹à¤ªà¤¨à¥€à¤¯à¤¤à¤¾ à¤¨à¥€à¤¤à¤¿ (About & Privacy)</span>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-black/40 border border-[#C58B4E]/30 space-y-3 text-xs">
                   <div className="flex items-start gap-2.5">
                     <Info className="w-4 h-4 text-[#E0A96D] shrink-0 mt-0.5" />
                     <div>
-                      <strong className="text-[#F3CA9D] block">कर्मफल - सनातन वैदिक ऐप (v1.0.0-वैदिक)</strong>
+                      <strong className="text-[#F3CA9D] block">à¤•à¤°à¥à¤®à¤«à¤² - à¤¸à¤¨à¤¾à¤¤à¤¨ à¤µà¥ˆà¤¦à¤¿à¤• à¤à¤ª (v1.0.0-à¤µà¥ˆà¤¦à¤¿à¤•)</strong>
                       <p className="text-[11px] text-[#D4A373] mt-0.5 leading-relaxed">
-                        सनातन धर्म के शाश्वत ज्ञान, पञ्चाङ्ग, ज्योतिष, कुण्डली एवं नित्य साधना को समर्पित सम्पूर्ण आध्यात्मिक मञ्च।
+                        à¤¸à¤¨à¤¾à¤¤à¤¨ à¤§à¤°à¥à¤® à¤•à¥‡ à¤¶à¤¾à¤¶à¥à¤µà¤¤ à¤œà¥à¤žà¤¾à¤¨, à¤ªà¤žà¥à¤šà¤¾à¤™à¥à¤—, à¤œà¥à¤¯à¥‹à¤¤à¤¿à¤·, à¤•à¥à¤£à¥à¤¡à¤²à¥€ à¤à¤µà¤‚ à¤¨à¤¿à¤¤à¥à¤¯ à¤¸à¤¾à¤§à¤¨à¤¾ à¤•à¥‹ à¤¸à¤®à¤°à¥à¤ªà¤¿à¤¤ à¤¸à¤®à¥à¤ªà¥‚à¤°à¥à¤£ à¤†à¤§à¥à¤¯à¤¾à¤¤à¥à¤®à¤¿à¤• à¤®à¤žà¥à¤šà¥¤
                       </p>
                     </div>
                   </div>
 
                   <div className="p-2.5 rounded-xl bg-white/5 border border-[#C58B4E]/20 space-y-1">
                     <span className="text-[10px] font-bold text-[#E0A96D] uppercase block">
-                      धर्मशास्त्र एवं गणितीय आधार:
+                      à¤§à¤°à¥à¤®à¤¶à¤¾à¤¸à¥à¤¤à¥à¤° à¤à¤µà¤‚ à¤—à¤£à¤¿à¤¤à¥€à¤¯ à¤†à¤§à¤¾à¤°:
                     </span>
                     <p className="text-[11px] text-[#F7E7D6]">
-                      ऋग्वेद, श्रीमद्भगवद्गीता, गरुड़ पुराण, सूर्य सिद्धान्त एवं वृहत् पराशर होरा शास्त्र पर आधारित।
+                      à¤‹à¤—à¥à¤µà¥‡à¤¦, à¤¶à¥à¤°à¥€à¤®à¤¦à¥à¤­à¤—à¤µà¤¦à¥à¤—à¥€à¤¤à¤¾, à¤—à¤°à¥à¤¡à¤¼ à¤ªà¥à¤°à¤¾à¤£, à¤¸à¥‚à¤°à¥à¤¯ à¤¸à¤¿à¤¦à¥à¤§à¤¾à¤¨à¥à¤¤ à¤à¤µà¤‚ à¤µà¥ƒà¤¹à¤¤à¥ à¤ªà¤°à¤¾à¤¶à¤° à¤¹à¥‹à¤°à¤¾ à¤¶à¤¾à¤¸à¥à¤¤à¥à¤° à¤ªà¤° à¤†à¤§à¤¾à¤°à¤¿à¤¤à¥¤
                     </p>
                   </div>
 
                   <div className="p-2.5 rounded-xl bg-emerald-950/30 border border-emerald-500/30 space-y-1">
                     <span className="text-[10px] font-bold text-emerald-400 uppercase block">
-                      १००% स्थानीय एवं सुरक्षित गोपनीयता (Privacy Guarantee):
+                      à¥§à¥¦à¥¦% à¤¸à¥à¤¥à¤¾à¤¨à¥€à¤¯ à¤à¤µà¤‚ à¤¸à¥à¤°à¤•à¥à¤·à¤¿à¤¤ à¤—à¥‹à¤ªà¤¨à¥€à¤¯à¤¤à¤¾ (Privacy Guarantee):
                     </span>
                     <p className="text-[11px] text-emerald-200 leading-relaxed">
-                      आपकी जन्म तिथि, समय, जन्म स्थान, कुण्डली एवं साधना सम्बन्धी समस्त गणनाएं केवल आपके उपकरण (Device Local Storage) में सुरक्षित रहती हैं। कोई भी व्यक्तिगत डेटा किसी बाहरी सर्वर या तीसरे पक्ष को नहीं भेजा जाता।
+                      à¤†à¤ªà¤•à¥€ à¤œà¤¨à¥à¤® à¤¤à¤¿à¤¥à¤¿, à¤¸à¤®à¤¯, à¤œà¤¨à¥à¤® à¤¸à¥à¤¥à¤¾à¤¨, à¤•à¥à¤£à¥à¤¡à¤²à¥€ à¤à¤µà¤‚ à¤¸à¤¾à¤§à¤¨à¤¾ à¤¸à¤®à¥à¤¬à¤¨à¥à¤§à¥€ à¤¸à¤®à¤¸à¥à¤¤ à¤—à¤£à¤¨à¤¾à¤à¤‚ à¤•à¥‡à¤µà¤² à¤†à¤ªà¤•à¥‡ à¤‰à¤ªà¤•à¤°à¤£ (Device Local Storage) à¤®à¥‡à¤‚ à¤¸à¥à¤°à¤•à¥à¤·à¤¿à¤¤ à¤°à¤¹à¤¤à¥€ à¤¹à¥ˆà¤‚à¥¤ à¤•à¥‹à¤ˆ à¤­à¥€ à¤µà¥à¤¯à¤•à¥à¤¤à¤¿à¤—à¤¤ à¤¡à¥‡à¤Ÿà¤¾ à¤•à¤¿à¤¸à¥€ à¤¬à¤¾à¤¹à¤°à¥€ à¤¸à¤°à¥à¤µà¤° à¤¯à¤¾ à¤¤à¥€à¤¸à¤°à¥‡ à¤ªà¤•à¥à¤· à¤•à¥‹ à¤¨à¤¹à¥€à¤‚ à¤­à¥‡à¤œà¤¾ à¤œà¤¾à¤¤à¤¾à¥¤
                     </p>
                   </div>
 
@@ -549,20 +549,20 @@ function ProfileModal({ isOpen, onClose, initialTab = 'profile' }) {
                   <div className="p-3 rounded-xl bg-amber-950/40 border border-amber-500/40 space-y-2.5">
                     <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#F3CA9D]">
                       <ShieldCheck className="w-4 h-4 text-[#E0A96D]" />
-                      <span>उपकरण डेटा एवं बैकअप नीति (Device-Bound Data Notice)</span>
+                      <span>à¤‰à¤ªà¤•à¤°à¤£ à¤¡à¥‡à¤Ÿà¤¾ à¤à¤µà¤‚ à¤¬à¥ˆà¤•à¤…à¤ª à¤¨à¥€à¤¤à¤¿ (Device-Bound Data Notice)</span>
                     </div>
                     <p className="text-[11px] text-amber-200/90 leading-relaxed">
-                      इस एप्लिकेशन में कोई बाह्य ईमेल/पासवर्ड खाता नहीं है। आपका समस्त डेटा (पुण्य खाता, जप गणना, कुण्डली एवं साधना नियम) केवल आपके इसी उपकरण में सुरक्षित है। उपकरण बदलने अथवा ब्राउज़र डेटा हटाने से पूर्व अपना बैकअप निर्यात (Export) कर सुरक्षित रख लें।
+                      à¤‡à¤¸ à¤à¤ªà¥à¤²à¤¿à¤•à¥‡à¤¶à¤¨ à¤®à¥‡à¤‚ à¤•à¥‹à¤ˆ à¤¬à¤¾à¤¹à¥à¤¯ à¤ˆà¤®à¥‡à¤²/à¤ªà¤¾à¤¸à¤µà¤°à¥à¤¡ à¤–à¤¾à¤¤à¤¾ à¤¨à¤¹à¥€à¤‚ à¤¹à¥ˆà¥¤ à¤†à¤ªà¤•à¤¾ à¤¸à¤®à¤¸à¥à¤¤ à¤¡à¥‡à¤Ÿà¤¾ (à¤ªà¥à¤£à¥à¤¯ à¤–à¤¾à¤¤à¤¾, à¤œà¤ª à¤—à¤£à¤¨à¤¾, à¤•à¥à¤£à¥à¤¡à¤²à¥€ à¤à¤µà¤‚ à¤¸à¤¾à¤§à¤¨à¤¾ à¤¨à¤¿à¤¯à¤®) à¤•à¥‡à¤µà¤² à¤†à¤ªà¤•à¥‡ à¤‡à¤¸à¥€ à¤‰à¤ªà¤•à¤°à¤£ à¤®à¥‡à¤‚ à¤¸à¥à¤°à¤•à¥à¤·à¤¿à¤¤ à¤¹à¥ˆà¥¤ à¤‰à¤ªà¤•à¤°à¤£ à¤¬à¤¦à¤²à¤¨à¥‡ à¤…à¤¥à¤µà¤¾ à¤¬à¥à¤°à¤¾à¤‰à¤œà¤¼à¤° à¤¡à¥‡à¤Ÿà¤¾ à¤¹à¤Ÿà¤¾à¤¨à¥‡ à¤¸à¥‡ à¤ªà¥‚à¤°à¥à¤µ à¤…à¤ªà¤¨à¤¾ à¤¬à¥ˆà¤•à¤…à¤ª à¤¨à¤¿à¤°à¥à¤¯à¤¾à¤¤ (Export) à¤•à¤° à¤¸à¥à¤°à¤•à¥à¤·à¤¿à¤¤ à¤°à¤– à¤²à¥‡à¤‚à¥¤
                     </p>
                     <div className="flex flex-col sm:flex-row items-center gap-2 pt-1">
                       <button
                         type="button"
                         onClick={handleExportData}
-                        aria-label="मेरा डेटा JSON फाइल में निर्यात करें"
+                        aria-label="à¤®à¥‡à¤°à¤¾ à¤¡à¥‡à¤Ÿà¤¾ JSON à¤«à¤¾à¤‡à¤² à¤®à¥‡à¤‚ à¤¨à¤¿à¤°à¥à¤¯à¤¾à¤¤ à¤•à¤°à¥‡à¤‚"
                         className="w-full sm:flex-1 min-h-[44px] px-3 py-2 rounded-xl bg-gradient-to-r from-[#C58B4E] to-[#8C5318] text-[#120A05] font-bold text-xs hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
                       >
                         <Download className="w-4 h-4" />
-                        <span>डेटा निर्यात (Export JSON)</span>
+                        <span>à¤¡à¥‡à¤Ÿà¤¾ à¤¨à¤¿à¤°à¥à¤¯à¤¾à¤¤ (Export JSON)</span>
                       </button>
 
                       <label 
@@ -575,20 +575,20 @@ function ProfileModal({ isOpen, onClose, initialTab = 'profile' }) {
                         }}
                       >
                         <Upload className="w-4 h-4 text-[#E0A96D]" />
-                        <span>डेटा आयात (Import JSON)</span>
+                        <span>à¤¡à¥‡à¤Ÿà¤¾ à¤†à¤¯à¤¾à¤¤ (Import JSON)</span>
                         <input
                           type="file"
                           accept=".json,application/json"
                           onChange={handleImportFile}
                           className="hidden"
-                          aria-label="JSON बैकअप फ़ाइल चुनें"
+                          aria-label="JSON à¤¬à¥ˆà¤•à¤…à¤ª à¤«à¤¼à¤¾à¤‡à¤² à¤šà¥à¤¨à¥‡à¤‚"
                         />
                       </label>
                     </div>
                   </div>
 
                   <div className="text-[10px] text-center text-[#A67C52] pt-1">
-                    सर्वे भवन्तु सुखिनः सर्वे सन्तु निरामयाः। निष्काम धर्म सेवा हेतु समर्पित।
+                    à¤¸à¤°à¥à¤µà¥‡ à¤­à¤µà¤¨à¥à¤¤à¥ à¤¸à¥à¤–à¤¿à¤¨à¤ƒ à¤¸à¤°à¥à¤µà¥‡ à¤¸à¤¨à¥à¤¤à¥ à¤¨à¤¿à¤°à¤¾à¤®à¤¯à¤¾à¤ƒà¥¤ à¤¨à¤¿à¤·à¥à¤•à¤¾à¤® à¤§à¤°à¥à¤® à¤¸à¥‡à¤µà¤¾ à¤¹à¥‡à¤¤à¥ à¤¸à¤®à¤°à¥à¤ªà¤¿à¤¤à¥¤
                   </div>
                 </div>
               </div>
@@ -603,7 +603,7 @@ function ProfileModal({ isOpen, onClose, initialTab = 'profile' }) {
               className="btn-gold w-full min-h-[44px] justify-center text-xs py-2.5 flex items-center gap-2 cursor-pointer"
             >
               <Check className="w-4 h-4" />
-              <span>सम्पन्न (Done)</span>
+              <span>à¤¸à¤®à¥à¤ªà¤¨à¥à¤¨ (Done)</span>
             </button>
           </div>
         </div>
@@ -619,4 +619,5 @@ function ProfileModal({ isOpen, onClose, initialTab = 'profile' }) {
 }
 
 export default memo(ProfileModal);
+
 

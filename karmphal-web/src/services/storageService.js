@@ -5,8 +5,8 @@ import { apiClient } from './apiClient';
 const STORAGE_KEY = 'karmphal_sanatan_state_v2';
 
 const DEFAULT_TASKS = [
-  { id: 'brahma_muhurta', title: 'ब्रह्म मुहूर्त जागरण (सूर्योदय पूर्व)', points: 50, completed: true },
-  { id: 'surya_arghya', title: 'भगवान् सूर्यनारायण को अर्घ्य समर्पण', points: 30, completed: true },
+  { id: 'brahma_muhurta', title: 'ब्रह्म मुहूर्त जागरण (सूर्योदय पूर्व)', points: 50, completed: false },
+  { id: 'surya_arghya', title: 'भगवान् सूर्यनारायण को अर्घ्य समर्पण', points: 30, completed: false },
   { id: 'gayatri_japa', title: 'गायत्री महामन्त्र १०८ जप', points: 40, completed: false },
   { id: 'deva_puja', title: 'दैनिक पञ्चदेव पूजन एवं दीप प्रज्वलन', points: 50, completed: false },
   { id: 'gau_seva', title: 'गौसेवा / पक्षियों को अन्न-जल दान', points: 35, completed: false },
@@ -15,21 +15,21 @@ const DEFAULT_TASKS = [
 
 const DEFAULT_STATE = {
   version: 2,
-  punyaLedger: 108,
-  currentStreak: 3,
-  bestStreak: 7,
-  lastCheckInDate: new Date().toDateString(),
+  punyaLedger: 0,
+  currentStreak: 0,
+  bestStreak: 0,
+  lastCheckInDate: null,
   japaStats: {
-    totalBeads: 324,
-    completedMalas: 3,
+    totalBeads: 0,
+    completedMalas: 0,
     mantraCounters: {
-      gayatri: 108,
-      mahamrityunjaya: 108,
-      om_namah_shivaya: 108,
+      gayatri: 0,
+      mahamrityunjaya: 0,
+      om_namah_shivaya: 0,
       hare_krishna: 0
     }
   },
-  swadhyayaMinutes: 35,
+  swadhyayaMinutes: 0,
   tasks: DEFAULT_TASKS,
   mutationQueue: [] // Queue for offline sync
 };
