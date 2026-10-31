@@ -345,43 +345,43 @@
   },
   {
     "source": "Ramcharitmanas",
-    "reference": "Ramcharitmanas Aranya 3.32",
-    "sanskrit_text": "रिपु रन अरी काम कोध मद लोभा। जिन्हहि न सुधि नहिं देह संभोभा॥",
-    "hindi_translation": "काम, क्रोध, मद और लोभ—ये अन्तःकरण के सबसे बड़े शत्रु हैं जो मनुष्य के विवेक और शान्ति को नष्ट कर देते हैं।",
-    "tags": "anger,greed,ego,self-mastery,peace",
-    "verified_source": "Gita Press Gorakhpur, Sri Ramcharitmanas, Aranya Kanda"
+    "reference": "Ramcharitmanas Aranya 3.38",
+    "sanskrit_text": "तात तीनि अति प्रबल खल काम क्रोध अरु लोभ। मुनि बिग्यान धाम मन करहिं निमिष महुँ छोभ॥",
+    "hindi_translation": "हे तात! काम, क्रोध और लोभ— ये तीनों अत्यंत प्रबल दुष्ट हैं। ये तत्त्वज्ञानी मुनियों के मन को भी पलभर में क्षुब्ध कर देते हैं।",
+    "tags": "anger,greed,ego,self-mastery,peace,krodh",
+    "verified_source": "Gita Press Gorakhpur, Sri Ramcharitmanas, Aranya Kanda, Doha 38 Chaupai 1"
   },
   {
     "source": "Ramcharitmanas",
-    "reference": "Ramcharitmanas Kishkindha 4.6",
-    "sanskrit_text": "जे न मित्र दुख होहिं दुखारी। तिन्हहि बिलोकत पातक भारी॥",
-    "hindi_translation": "जो लोग मित्र के दुःख से दुःखी नहीं होते, उन्हें देखना भी अनुचित है। सच्चे सम्बन्धी और मित्र वही हैं जो संकट में संबल बनें।",
+    "reference": "Ramcharitmanas Kishkindha 4.7",
+    "sanskrit_text": "जे न मित्र दुख होहिं दुखारी। तिन्हहि बिलोकत पातक भारी॥ निज दुख गिरि सम रज करि जाना। मित्रक दुख रज मेरु समाना॥",
+    "hindi_translation": "जो लोग मित्र के दुःख से दुःखी नहीं होते, उन्हें देखना भी अनुचित है। सच्चा मित्र अपने पर्वत समान दुःख को धूल जैसा और मित्र के धूल समान दुःख को सुमेरु पर्वत जैसा समझता है।",
     "tags": "grief,friendship,compassion,empathy,support",
-    "verified_source": "Gita Press Gorakhpur, Sri Ramcharitmanas, Kishkindha Kanda Chaupai 4.6"
+    "verified_source": "Gita Press Gorakhpur, Sri Ramcharitmanas, Kishkindha Kanda, Doha 7 Chaupai 1"
   },
   {
     "source": "Ramcharitmanas",
-    "reference": "Ramcharitmanas Sundar 5.40",
-    "sanskrit_text": "कर्म प्रधान बिस्व करि राखा। जो जस करइ सो तस फलु चाखा॥",
-    "hindi_translation": "ईश्वर ने इस संसार को कर्मप्रधान बनाया है; जो जैसा सात्त्विक कर्म करता है, वैसा ही उत्तम फल प्राप्त करता है। अतः पुरुषार्थ करें।",
+    "reference": "Ramcharitmanas Ayodhya 2.218",
+    "sanskrit_text": "करम प्रधान बिस्व करि राखा। जो जस करइ सो तस फलु चाखा॥",
+    "hindi_translation": "ईश्वर ने इस संसार को कर्मप्रधान बनाया है; जो जैसा कर्म करता है, वह वैसा ही उसका फल चखता (भोगता) है।",
     "tags": "duty-conflict,karma,action,despair,hope",
-    "verified_source": "Gita Press Gorakhpur, Sri Ramcharitmanas, Sundar Kanda Chaupai 5.40"
+    "verified_source": "Gita Press Gorakhpur, Sri Ramcharitmanas, Ayodhya Kanda, Chaupai before Doha 219"
   },
   {
     "source": "Ramcharitmanas",
-    "reference": "Ramcharitmanas Uttara 7.41",
+    "reference": "Ramcharitmanas Uttara 7.40",
     "sanskrit_text": "पर हित सरिस धरम नहिं भाई। पर पीड़ा सम नहिं अधमाई॥",
-    "hindi_translation": "हे भाई! दूसरों की भलाई करने के समान कोई बड़ा धर्म नहीं है और दूसरों को पीड़ा पहुँचाने के समान कोई अधर्म नहीं है।",
+    "hindi_translation": "हे भाई! दूसरों की भलाई (परोपकार) करने के समान कोई दूसरा धर्म नहीं है और दूसरों को पीड़ा पहुँचाने के समान कोई अधर्म या नीचता नहीं है।",
     "tags": "compassion,kindness,service,duty-conflict,injustice",
-    "verified_source": "Gita Press Gorakhpur, Sri Ramcharitmanas, Uttara Kanda Chaupai 7.41"
+    "verified_source": "Gita Press Gorakhpur, Sri Ramcharitmanas, Uttara Kanda, Doha 40 Chaupai 1"
   },
   {
     "source": "Ramcharitmanas",
-    "reference": "Ramcharitmanas Uttara 7.44",
-    "sanskrit_text": "बड़े भाग मानुष तनु पावा। सुर दुर्लभ सब ग्रंथन्हि गावा॥ साधन धाम मोच्छ कर द्वारा। पाइ न जेहिं परलोक संवारा॥",
-    "hindi_translation": "अत्यन्त सौभाग्य से यह मानव शरीर प्राप्त हुआ है, जिसे सब ग्रन्थों ने देवताओं के लिये भी दुर्लभ बताया है। यह साधना का धाम और मुक्ति का द्वार है।",
+    "reference": "Ramcharitmanas Uttara 7.43",
+    "sanskrit_text": "बड़ें भाग मानुष तनु पावा। सुर दुर्लभ सब ग्रंथन्हि गावा॥ साधन धाम मोच्छ कर द्वारा। पाइ न जेहिं परलोक सँवारा॥",
+    "hindi_translation": "अत्यन्त सौभाग्य से यह मानव शरीर प्राप्त हुआ है, जिसे सब ग्रन्थों ने देवताओं के लिये भी दुर्लभ बताया है। यह साधन का धाम और मुक्ति का द्वार है।",
     "tags": "self-harm-risk,despair,human-life-sanctity,self-worth,crisis,depression",
-    "verified_source": "Gita Press Gorakhpur, Sri Ramcharitmanas, Uttara Kanda Chaupai 7.44"
+    "verified_source": "Gita Press Gorakhpur, Sri Ramcharitmanas, Uttara Kanda, Chaupai after Doha 43"
   },
   {
     "source": "GarudaPurana",
@@ -392,20 +392,20 @@
     "verified_source": "Gita Press Gorakhpur, Garuda Purana Acharakhanda Chapter 222 Shloka 10"
   },
   {
-    "source": "GarudaPurana",
-    "reference": "Garuda Purana 1.229.18",
+    "source": "Manusmriti",
+    "reference": "Manusmriti 8.15",
     "sanskrit_text": "धर्म एव हतो हन्ति धर्मो रक्षति रक्षितः। तस्माद्धर्मो न हन्तव्यो मा नो धर्मो हतोऽवधीत्॥",
-    "hindi_translation": "नष्ट किया हुआ धर्म मनुष्य का पतन करता है और रक्षित धर्म सदैव मनुष्य की रक्षा करता है; इसलिये सत्य और धर्म की रक्षा करनी चाहिये।",
+    "hindi_translation": "जो मनुष्य धर्म का नाश करता है, धर्म उसका नाश कर देता है और जो धर्म की रक्षा करता है, धर्म उसकी रक्षा करता है। इसलिये धर्म का कभी त्याग नहीं करना चाहिये।",
     "tags": "duty-conflict,ethics,protection,justice,injustice",
-    "verified_source": "Gita Press Gorakhpur, Garuda Purana Acharakhanda Chapter 229"
+    "verified_source": "Manusmriti Chapter 8 Verse 15; Mahabharata Vana Parva 314.128"
   },
   {
-    "source": "GarudaPurana",
-    "reference": "Garuda Purana 2.2.14",
-    "sanskrit_text": "दानेन प्राप्यते सर्वं दानेन सुखमेधते। परोपकारः पुण्याय पापो हि परपीड़नम्॥",
-    "hindi_translation": "सत्पात्र दान और परोपकार से अन्तःकरण का सुख बढ़ता है। दूसरों का हित करना ही सर्वोच्च पुण्य है और किसी को कष्ट न देना ही धर्म है।",
+    "source": "Subhashita",
+    "reference": "Vyasa Subhashita 1",
+    "sanskrit_text": "अष्टादशपुराणेषु व्यासस्य वचनद्वयम्। परोपकारः पुण्याय पापाय परपीड़नम्॥",
+    "hindi_translation": "अठारह पुराणों में महर्षि व्यास के दो ही प्रमुख सारवचन हैं— परोपकार करने से पुण्य होता है और दूसरों को पीड़ा देना ही पाप है।",
     "tags": "charity,redemption,peace,guilt,compassion",
-    "verified_source": "Gita Press Gorakhpur, Garuda Purana Dharma Khanda Chapter 2"
+    "verified_source": "Maharshi Vyasa Subhashita, Skanda Purana / Hitopadesha"
   }
 ]
 

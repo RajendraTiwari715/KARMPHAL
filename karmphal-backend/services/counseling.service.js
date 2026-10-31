@@ -60,29 +60,37 @@ function classifyEmotionAndIntent(userMessage) {
   // Direct, indirect, existential hopelessness, and hypothetical phrasing
   // -------------------------------------------------------------
   const crisisPatterns = [
-    // Direct suicidal phrases (English & Hinglish)
-    /\b(suicide|suicidal|kill\s*myself|end\s*my\s*life|ending\s*my\s*life|die\s*by\s*suicide)\b/i,
-    /\b(mar\s*jana\s*chahta|mar\s*jane\s*ka\s*man|jaan\s*de\s*du|jaan\s*le\s*lu|khudkushi|atmahatya|atma\s*hatya)\b/i,
+    // Direct suicidal phrases (English, Hindi, Hinglish with typos)
+    /\b(sui[cs]ides?|sui[cs]idal|sucide|suecide)\b/i,
+    /\b(kill\s*myself|end\s*my\s*life|ending\s*my\s*life|die\s*by\s*suicide)\b/i,
+    /\b(mar\s*jana\s*(?:chahta|chahti|h\b|hai)|marna\s*(?:chahta|chahti|h\b|hai)|mujhe\s*marna\s*h\b|mar\s*jane\s*ka\s*man|jaan\s*de\s*(?:du|dungi|dunga)|jaan\s*le\s*lu|khudkushi|atmahatya|atma\s*hatya)\b/i,
     
     // Devanagari direct phrases
-    /(आत्महत्या|आत्मघात|खुदकुशी|खुद\s*को\s*मार|मरना\s*चाहता|मरने\s*का\s*मन|जान\s*दे\s*दूँ|जान\s*ले\s*लूँ)/u,
+    /(आत्महत्या|आत्मघात|खुदकुशी|खुद\s*को\s*मार|मरना\s*चाहता|मरना\s*चाहती|मरने\s*का\s*मन|जान\s*दे\s*दूँ|जान\s*ले\s*लूँ|प्राण\s*त्याग\s*दूँ)/u,
     
-    // Lethal means / Self-harm methods
-    /\b(take\s*poison|swallow\s*pills|hang\s*myself|slit\s*my\s*wrist|jump\s*off|jump\s*from\s*bridge|jump\s*from\s*roof)\b/i,
-    /\b(zeher\s*kha|faansi\s*laga|chhat\s*se\s*kood|chhat\s*se\s*jump|nas\s*kaat)\b/i,
-    /(जहर\s*खा|फांसी\s*लगा|छत\s*से\s*कूद|नदी\s*में\s*कूद|नस\s*काट)/u,
+    // Lethal means / Self-harm methods (with 'the/a' and participle variants)
+    /\b(take\s*poison|swallow\s*pills|hang\s*myself|slit\s*my\s*wrists?)\b/i,
+    /\b(jump(?:ing)?\s*(?:off|from)\s*(?:a\s*|the\s*)?(?:bridge|roof|building|balcony|terrace|cliff|train|window))\b/i,
+    /\b(zeher\s*kha|faansi\s*laga|chhat\s*se\s*(?:kood|jump)|nas\s*kaat)\b/i,
+    /(जहर\s*खा|फांसी\s*लगा|छत\s*से\s*(?:कूद|छलांग)|नदी\s*में\s*कूद|नस\s*काट)/u,
 
-    // Existential hopelessness / Wanting life to end
+    // Existential hopelessness / Wanting life to end / Negations / Metaphors
     /\b(i\s*want\s*to\s*die|wish\s*i\s*were\s*dead|better\s*off(?:\s+\w+){0,4}\s+dead|no\s*reason\s*to\s*live|point\s*of\s*living|tired\s*of\s*living|tired\s*of\s*existing)\b/i,
-    /\b(jeene\s*ka(?:\s+\w+){0,3}\s+man\s*nahi|zindagi\s*khatam\s*karna|kya\s*fayda\s*is\s*zindagi|koi\s*jeene\s*ki\s*wajah\s*nahi|sab\s*khatam\s*kar\s*du)\b/i,
-    /(जीने\s*का(?:\s+[\u0900-\u097F]+){0,3}\s+मन\s*नहीं|ज़िन्दगी\s*खत्म\s*करना|जिंदगी\s*से\s*थक|जीने\s*की\s*कोई\s*वजह\s*नहीं|सब\s*समाप्त\s*कर\s*दूँ)/u,
+    /\b(can['’]?t\s*go\s*on(?:\s*anymore)?|can['’]?t\s*take\s*(?:this|it)\s*anymore|cannot\s*go\s*on|cannot\s*take\s*(?:this|it)\s*anymore)\b/i,
+    /\b(don['’]?t\s*(?:want|wish)\s*to\s*live|no\s*will\s*to\s*live|lost\s*(?:the\s*)?will\s*to\s*live)\b/i,
+    /\b(jeene\s*ka(?:\s+\w+){0,3}\s*man\s*nahi|zindagi\s*(?:khatam|khatm)|kya\s*fayda\s*is\s*zindagi|koi\s*(?:bhi\s*)?jeene\s*ki\s*wajah\s*nahi|koi\s*rasta\s*nahi(?:\s*\w+){0,3}\s*jeene)\b/i,
+    /\b(sab\s*(?:khatam|khatm|samapt)\s*k[a]?r\s*(?:du|raha|lunga|dena))\b/i,
+    /(जीने\s*का(?:\s+[\u0900-\u097F]+){0,3}\s+मन\s*नहीं|ज़िन्दगी\s*(?:खत्म|समाप्त)|जिंदगी\s*से\s*थक|जीने\s*की\s*कोई\s*वजह\s*नहीं|जीना\s*नहीं\s*चाहता)/u,
+    /(सब\s*(?:खत्म|समाप्त)\s*(?:कर\s*दूँ|कर\s*लूँगा|करूँगा|करने\s*जा\s*रहा)|मुझसे\s*नहीं\s*सहा\s*जाता|दर्द\s*नहीं\s*सहा\s*जाता)/u,
     /\b(nobody\s*will\s*miss\s*me|i\s*am\s*a\s*burden|want\s*to\s*disappear\s*forever|cannot\s*take\s*this\s*pain\s*anymore)\b/i,
+    /\b(hamesha\s*ke\s*liye\s*so\s*jana|sleep\s*forever\s*and\s*never\s*wake|is\s*sharir\s*se\s*mukti\s*chahta)\b/i,
+    /(हमेशा\s*के\s*लिए\s*सो\s*जाना|शरीर\s*से\s*मुक्ति\s*चाहता)/u,
 
     // Hypothetical & Philosophical queries on self-harm
-    /\b(if\s*(?:i|someone)\s*(?:commits?\s*suicide|ends?\s*(?:my|their)\s*life))\b/i,
-    /\b(agar\s*(?:main|koi)\s*(?:atmahatya|suicide|mar\s*jaye))\b/i,
+    /\b(if\s*(?:i|someone)\s*(?:commits?\s*sui[cs]ide|ends?\s*(?:my|their)\s*life))\b/i,
+    /\b(agar\s*(?:main|koi)\s*(?:atmahatya|sui[cs]ide|mar\s*jaye))\b/i,
     /(अगर\s*(?:कोई|मैं)\s*(?:आत्महत्या|खुदकुशी|प्राण\s*त्याग))/u,
-    /\b(is\s*it\s*(?:a\s*sin|wrong)\s*to\s*kill\s*oneself|what\s*happens\s*to\s*soul\s*after\s*suicide)\b/i,
+    /\b(is\s*it\s*(?:a\s*sin|wrong)\s*to\s*kill\s*oneself|what\s*happens\s*to\s*soul\s*after\s*sui[cs]ide)\b/i,
     /(आत्महत्या\s*करने\s*पर\s*क्या\s*होता|खुदकुशी\s*पाप\s*है\s*क्या)/u,
 
     // Threat to harm others

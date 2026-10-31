@@ -59,6 +59,50 @@ describe('Scripture-Grounded Counseling Service Unit Tests', () => {
       });
     });
 
+    describe('Adversarial Self-Harm & False-Positive Regression Suite (18 Scenarios)', () => {
+      const adversarialCases = [
+        // 1. Typos
+        { id: 'TYPO-1', input: 'mujhe marna h bs', expectedCrisis: true },
+        { id: 'TYPO-2', input: 'zindagi khatm krne ka man kr raha h ab', expectedCrisis: true },
+        { id: 'TYPO-3', input: 'suiside krne ki soch rha hu', expectedCrisis: true },
+
+        // 2. Negated statements / Complex expressions
+        { id: 'NEG-1', input: "I don't want to die but I can't go on anymore", expectedCrisis: true },
+        { id: 'NEG-2', input: "I don't wish to live like this anymore, everything hurts", expectedCrisis: true },
+        { id: 'NEG-3', input: "Mujhe marna to nahi tha par ab koi rasta nahi dikh raha jeene ka", expectedCrisis: true },
+
+        // 3. Metaphorical language
+        { id: 'META-1', input: 'I want to disappear forever and never wake up', expectedCrisis: true },
+        { id: 'META-2', input: 'Bas hamesha ke liye so jana chahta hu taaki sab khatam ho jaye', expectedCrisis: true },
+        { id: 'META-3', input: 'Is sharir se mukti chahta hu hamesha ke liye, dard seh nahi sakta', expectedCrisis: true },
+
+        // 4. Genuine spiritual question with buried crisis signal
+        { id: 'BURIED-1', input: 'गीता में मोक्ष का क्या विधान है? क्योंकि अब मेरा इस दुनिया में दम घुट रहा है और मैं सब खत्म करने जा रहा हूँ।', expectedCrisis: true },
+        { id: 'BURIED-2', input: 'What does Krishna say about karma? I feel like jumping from the roof because my karma is too dark.', expectedCrisis: true },
+
+        // 5. Gradual escalation across conversation (simulated inputs)
+        { id: 'CONV-STEP-1', input: 'जीवन में बहुत कठिनाइयाँ आ रही हैं।', expectedCrisis: false },
+        { id: 'CONV-STEP-2', input: 'हर तरफ से निराशा ही हाथ लग रही है, कुछ समझ नहीं आ रहा।', expectedCrisis: false },
+        { id: 'CONV-STEP-3', input: 'अब मुझसे नहीं सहा जाता, आज रात सब समाप्त कर लूँगा।', expectedCrisis: true },
+
+        // 6. False-Positive risks (Academic/philosophical questions about death/mortality - MUST NOT trigger crisis!)
+        { id: 'FP-1', input: 'गीता में मृत्यु के बारे में क्या कहा गया है?', expectedCrisis: false },
+        { id: 'FP-2', input: 'What is the concept of death and reincarnation in Katha Upanishad?', expectedCrisis: false },
+        { id: 'FP-3', input: 'महाभारत के युद्ध में इतने लोगों की मृत्यु क्यों हुई? क्या यह नियति थी?', expectedCrisis: false },
+        { id: 'FP-4', input: 'गरुड़ पुराण में यमलोक और मृत्यु के पश्चात आत्मा की यात्रा का क्या वर्णन है?', expectedCrisis: false }
+      ];
+
+      it.each(adversarialCases)('$id: accurately handles "$input" (expectedCrisis: $expectedCrisis)', ({ input, expectedCrisis }) => {
+        const result = counselingService.classifyEmotionAndIntent(input);
+        expect(result.isCrisis).toBe(expectedCrisis);
+        if (expectedCrisis) {
+          expect(result.category).toBe('self-harm-risk');
+        } else {
+          expect(result.category).not.toBe('self-harm-risk');
+        }
+      });
+    });
+
     describe('Non-Crisis Mental Health & Emotional Categories (Part D.5)', () => {
       it('correctly classifies anxiety/despair without triggering crisis', () => {
         const phrases = [

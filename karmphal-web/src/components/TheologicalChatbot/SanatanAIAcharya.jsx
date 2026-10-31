@@ -2,10 +2,12 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send, Copy, Check, Trash2, Loader2 } from 'lucide-react';
 import { useChat } from '../../context/useChat';
 import { useToast, useConfirm } from '../../context/useToast';
+import { useTranslation } from '../../services/languageService';
 const AcharyaMarkdown = React.lazy(() => import('./AcharyaMarkdown'));
 import guruAvatar, { handleImageError, OM_FALLBACK_SVG } from '../../assets';
 
 export default function SanatanAIAcharya({ panchangData }) {
+  const { t } = useTranslation();
   const {
     messages,
     isLoading,
@@ -138,23 +140,23 @@ export default function SanatanAIAcharya({ panchangData }) {
         {/* Persistent Crisis & Professional Care Disclaimer Banner (Part D.4) */}
         <div className="bg-[#1a140d]/90 border border-[#C58B4E]/30 px-3 py-2 rounded-xl mb-2.5 flex flex-wrap items-center justify-between gap-2 text-[11px] text-[#E0A96D]/90 shadow-inner shrink-0">
           <div className="flex items-center gap-1.5 flex-1 min-w-[200px]">
-            <span className="text-amber-400 font-semibold text-xs shrink-0">ℹ️ सूचना:</span>
-            <span>यह आध्यात्मिक मार्गदर्शन है, पेशेवर मानसिक स्वास्थ्य सहायता का विकल्प नहीं। कृपया संकट में हेल्पलाइन से संपर्क करें।</span>
+            <span className="text-amber-400 font-semibold text-xs shrink-0">{t.crisisNoticePrefix}</span>
+            <span>{t.crisisDisclaimer}</span>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <a
               href="tel:18005990019"
               className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-950/70 border border-emerald-500/50 text-emerald-300 font-medium hover:bg-emerald-900/90 transition-all active:scale-95 text-[10px]"
-              title="KIRAN 24/7 मानसिक स्वास्थ्य हेल्पलाइन पर कॉल करें (नि:शुल्क)"
+              title={t.kiranHelplineTitle}
             >
-              📞 किरण: 1800-599-0019
+              {t.kiranHelplineLabel}
             </a>
             <a
               href="tel:14416"
               className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-950/70 border border-amber-500/50 text-amber-300 font-medium hover:bg-amber-900/90 transition-all active:scale-95 text-[10px]"
-              title="Tele-MANAS राष्ट्रीय मानसिक स्वास्थ्य हेल्पलाइन"
+              title={t.teleManasTitle}
             >
-              Tele-MANAS: 14416
+              {t.teleManasLabel}
             </a>
           </div>
         </div>
@@ -241,7 +243,7 @@ export default function SanatanAIAcharya({ panchangData }) {
                         <span className="font-dharmik font-bold text-[#F3CA9D] text-xs sm:text-sm flex items-center gap-1.5">
                           {msg.isError ? (
                             <span className="text-amber-400 font-sans font-medium text-xs flex items-center gap-1">
-                              ⚠️ सम्पर्क त्रुटि (Connection Notice)
+                              {t.connNotice}
                             </span>
                           ) : (
                             <>
@@ -257,7 +259,7 @@ export default function SanatanAIAcharya({ panchangData }) {
                               <span>आचार्य जी</span>
                               {msg.isCrisis && (
                                 <span className="ml-2 px-2 py-0.5 rounded text-[10px] bg-rose-500/20 text-rose-300 border border-rose-500/40">
-                                  सुरक्षा एवं सहायता
+                                  {t.safetySupportBadge}
                                 </span>
                               )}
                             </>
@@ -296,18 +298,18 @@ export default function SanatanAIAcharya({ panchangData }) {
                     {/* Quick Helpline Tap-to-Call Buttons for Crisis Flagged Responses */}
                     {msg.isCrisis && (
                       <div className="mt-3 pt-2.5 border-t border-rose-500/30 flex flex-wrap items-center gap-2">
-                        <span className="text-[11px] font-semibold text-rose-300">तत्काल नि:शुल्क सहायता:</span>
+                        <span className="text-[11px] font-semibold text-rose-300">{t.immediateHelpLabel}</span>
                         <a
                           href="tel:18005990019"
                           className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-[11px] shadow transition-all active:scale-95"
                         >
-                          📞 KIRAN: 1800-599-0019
+                          {t.kiranCallBtn}
                         </a>
                         <a
                           href="tel:14416"
                           className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-sky-700 hover:bg-sky-600 text-white font-medium text-[11px] shadow transition-all active:scale-95"
                         >
-                          📞 Tele-MANAS: 14416
+                          {t.teleManasCallBtn}
                         </a>
                         <a
                           href="tel:112"

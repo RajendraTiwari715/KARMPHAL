@@ -254,21 +254,25 @@ const migrations = [
   }
 ];
 
-// Helper to seed canonical scriptures if table is empty
-const seedScriptures = (targetDb = db) => {
+// Helper to seed canonical scriptures if table is empty (or when forced)
+const seedScriptures = (targetDb = db, force = false) => {
   try {
     const tableExists = targetDb.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='ScriptureVerses'").get();
     if (!tableExists) return;
 
     const countRow = targetDb.prepare('SELECT COUNT(*) AS count FROM ScriptureVerses').get();
-    if (countRow && countRow.count > 0) return; // Already seeded
+    if (countRow && countRow.count > 0 && !force) return;
 
     const seedFile = path.resolve(__dirname, 'data', 'scriptures.seed.json');
     if (!fs.existsSync(seedFile)) return;
 
+    if (force) {
+      targetDb.prepare('DELETE FROM ScriptureVerses').run();
+    }
+
     const verses = JSON.parse(fs.readFileSync(seedFile, 'utf8'));
     const insertStmt = targetDb.prepare(`
-      INSERT OR IGNORE INTO ScriptureVerses (source, reference, sanskrit_text, hindi_translation, tags, verified_source)
+      INSERT OR REPLACE INTO ScriptureVerses (source, reference, sanskrit_text, hindi_translation, tags, verified_source)
       VALUES (?, ?, ?, ?, ?, ?)
     `);
 

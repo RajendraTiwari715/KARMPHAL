@@ -96,9 +96,19 @@ karmphal/
 - **संवाद आचार्य चैट ([`SanatanAIAcharya.jsx`](file:///c:/Users/rajen/AndroidStudioProjects/karmphal/karmphal-web/src/components/TheologicalChatbot/SanatanAIAcharya.jsx))**:
   - सुरक्षित बैकएंड प्रॉक्सी के माध्यम से जेमिनी AI से संवाद।
   - `react-markdown` + `remark-gfm` + `rehype-sanitize` द्वारा शुद्ध देवनागरी/संस्कृत रेंडरिंग।
+  - **शास्त्र-सम्मत आध्यात्मिक परामर्श एवं संकट सुरक्षा (Scripture-Grounded Counseling & Crisis Layer)**:
+    - प्रामाणिक श्लोकों के आधार पर ग्राउंडेड उत्तर और उद्धरण (Citations)।
+    - निरंतर दृश्यमान (persistent) संकट परामर्श डिस्क्लेमर तथा प्रत्यक्ष 'कॉल-टू-हेल्पलाइन' बटन्स (KIRAN: `1800-599-0019`, Tele-MANAS: `14416`, `112`)।
+    - ऑफ़लाइन या नेटवर्क त्रुटि होने पर पारदर्शी और स्पष्ट तकनीकी सन्देश (कोई भ्रामक आध्यात्मिक उत्तर नहीं)।
   - सेशन एवं सर्वर-साइड डेटाबेस हिस्ट्री परसिस्टेंस।
 
 ### 2. `karmphal-backend` (सुरक्षित एवं सुदृढ़ API सर्वर)
+- **शास्त्र-आधारित आध्यात्मिक काउंसलिंग इंजन ([`counseling.service.js`](file:///c:/Users/rajen/AndroidStudioProjects/karmphal/karmphal-backend/services/counseling.service.js))**:
+  - **प्रामाणिक शास्त्र ज्ञानकोश (Curated Scripture Knowledge Base)**: 51 गीता प्रेस एवं उपनिषद् श्लोक (`ScriptureVerses` तालिका) जो चिंता, शोक, धर्मसंकट, क्रोध, आत्म-हानि जोखिम आदि टैग्स से अनुक्रमित हैं।
+  - **तीव्र इन-प्रोसेस भावना व मंतव्य वर्गीकरण (Emotion & Intent Classifier)**: शून्य AI कॉल ओवरहेड के साथ 1-10ms में यूज़र संदेश का वर्गीकरण (`anxiety/despair`, `grief`, `duty-conflict`, `anger/injustice`, `self-harm-risk`, `general-question`)।
+  - **एंटी-मतिभ्रम सत्यापन (Anti-Hallucination Citation Validator)**: जेमिनी द्वारा उद्धृत श्लोक सन्दर्भों का सत्यापन कर काल्पनिक या अप्रमाणित श्लोक संख्याओं को स्वतः निष्कासित (strip/sanitize) करना।
+  - **अनिवार्य संकट सुरक्षा स्तर (Critical Crisis Safety Layer)**: आत्म-हानि, अवसाद या निराशा के प्रत्यक्ष/परोक्ष/काल्पनिक संकेतों पर स्वतः आपातकालीन राष्ट्रीय मानसिक स्वास्थ्य हेल्पलाइन (KIRAN `1800-599-0019`, Tele-MANAS `14416`, Vandrevala, `112`) जोड़ना।
+  - **आत्मिक यात्रा एवं पुण्य संचय (Wellbeing Journey Ledger)**: प्रत्येक आध्यात्मिक संवाद चिंतन पर साधक को +5 पुण्य अंक और निजी `WellbeingJourneys` इतिहास।
 - **प्रमाणीकरण (Authentication)**:
   - बिना किसी बाहरी पासवर्ड निर्भरता के तात्कालिक गेस्ट सेशन एवं JWT टोकन जेनरेशन (HS256, 30-day expiry)।
   - रिफ्रेश टोकन रोटेशन (SHA-256 हैशेड स्टोरेज) और ऑटो-रिफ्रेश सिंगल-फ्लाइट मैकेनिज्म।
