@@ -216,3 +216,18 @@ npm run backup
 
 
 विस्तृत उत्पादन परिनियोजन (Production Deployment) निर्देशों के लिए [`DEPLOYMENT.md`](file:///c:/Users/rajen/AndroidStudioProjects/karmphal/DEPLOYMENT.md) देखें।
+
+---
+
+## 🔮 भविष्य की कार्ययोजना एवं शोध दिशाएं (Future Roadmap & Research Directions)
+
+शोध पत्र में उल्लिखित निम्नलिखित उन्नत अवधारणाएं वर्तमान चरण के दायरे से बाहर (Out of Scope) रखी गई हैं, ताकि वर्तमान स्टैक हल्का, तेज और बाह्य निर्भरताओं से मुक्त रहे। इन्हें भविष्य के रिलीज हेतु सूचीबद्ध किया गया है:
+
+1. **वितरित माइक्रोसेवा ट्रांजिशन (Distributed Microservice Architecture):**
+   - बड़े पैमाने (Multi-region scale) पर इन-प्रोसेस SQLite को PostgreSQL अथवा MongoDB क्लस्टर द्वारा प्रतिस्थापित करना।
+2. **उन्नत स्थानीय एनएलपी एवं वेक्टर एम्बेडिंग्स (On-Premise Indic NLP & Vector Search):**
+   - वर्तमान तीव्र रेगेक्स/कीवर्ड वर्गीकरण के स्थान पर हल्के, ऑन-प्रिमाइसेस इंडिक मॉडल (जैसे IndicBERT या BGE-M3) और SQLite vss / pgvector का उपयोग।
+3. **बायोमेट्रिक एवं वेयरेबल इंटीग्रेशन (IoT & Wearable Physiological Stress Streaming):**
+   - स्मार्ट वॉच एवं स्मार्ट रिंग्स के माध्यम से रीयल-टाइम हृदय गति परिवर्तनशीलता (HRV - Heart Rate Variability) डेटा प्राप्त कर आध्यात्मिक काउंसलिंग में तनाव इनपुट के रूप में उपयोग करना।
+4. **इमर्सिव आध्यात्मिक वीआर वातावरण (WebXR & Immersive VR Dhyana):**
+   - निर्देशित ध्यान (Guided Dhyana), वैदिक अनुष्ठान एवं मन्दिर परिक्रमा हेतु WebXR / 3D वर्चुअल रियलिटी परिवेश।

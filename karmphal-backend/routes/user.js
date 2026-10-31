@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../database');
+const counselingService = require('../services/counseling.service');
 const { requireAuth } = require('../middlewares/auth');
 const { profileUpdateSchema, punyaSyncSchema, chatHistorySchema } = require('../schemas/user.schema');
 
@@ -185,6 +186,23 @@ router.delete('/chat-history', (req, res, next) => {
 });
 
 /**
+ * GET /api/user/wellbeing-journey
+ * Private reflection journey and themes over time (Part E)
+ */
+router.get('/wellbeing-journey', (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const journey = counselingService.getUserWellbeingJourney(userId);
+    res.json({
+      success: true,
+      data: journey
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
  * GET /api/user/export
  * Exports all user data scoped strictly to req.user.id
  */
@@ -199,12 +217,14 @@ router.get('/export', (req, res, next) => {
 
     const chatHistory = db.prepare('SELECT sender, text, timestamp FROM ChatHistory WHERE userId = ?').all(userId);
     const sadhanaLogs = db.prepare('SELECT * FROM SadhanaLogs WHERE userId = ?').all(userId);
+    const wellbeing = db.prepare('SELECT category, userQuerySummary, versesCited, timestamp FROM WellbeingJourneys WHERE userId = ?').all(userId);
     
     res.json({
       exportDate: new Date().toISOString(),
       profile,
       chatHistory,
-      sadhanaLogs
+      sadhanaLogs,
+      wellbeing
     });
   } catch (err) {
     next(err);
@@ -214,7 +234,7 @@ router.get('/export', (req, res, next) => {
 /**
  * DELETE /api/user/delete & DELETE /api/user/account
  * Permanently and atomically deletes all user rows across all tables:
- * Users, ChatHistory, SadhanaLogs, RefreshTokens, UserPreferences, ConsentRecords, SavedReports, Sessions, AiUsageDaily, SecurityAudit.
+ * Users, ChatHistory, SadhanaLogs, RefreshTokens, UserPreferences, ConsentRecords, SavedReports, Sessions, AiUsageDaily, SecurityAudit, WellbeingJourneys.
  */
 const handleDeleteUser = (req, res, next) => {
   try {
@@ -236,6 +256,7 @@ const handleDeleteUser = (req, res, next) => {
       db.prepare('DELETE FROM Sessions WHERE userId = ?').run(id);
       db.prepare('DELETE FROM AiUsageDaily WHERE userId = ?').run(id);
       db.prepare('DELETE FROM SecurityAudit WHERE userId = ?').run(id);
+      db.prepare('DELETE FROM WellbeingJourneys WHERE userId = ?').run(id);
       return db.prepare('DELETE FROM Users WHERE id = ?').run(id);
     });
     

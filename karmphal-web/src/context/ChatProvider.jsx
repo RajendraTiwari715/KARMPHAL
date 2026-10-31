@@ -121,6 +121,9 @@ export const ChatProvider = ({ children }) => {
           id: Date.now() + 1,
           sender: 'model',
           text: result.text,
+          grounding: result.grounding,
+          timings: result.timings,
+          isCrisis: result.grounding?.isCrisis || false,
           timestamp: new Date().toISOString()
         };
 
@@ -138,6 +141,10 @@ export const ChatProvider = ({ children }) => {
           errorText = error.message || 'AI चैट अनुरोध सीमा पूर्ण हो चुकी है। कृपया कुछ समय बाद पुनः प्रयास करें।';
         } else if (error?.status === 503 || error?.code === 'GLOBAL_DAILY_LIMIT_REACHED') {
           errorText = error.message || 'सर्वर पर दैनिक AI सीमा पूर्ण हो चुकी है। कृपया कल पुनः प्रयास करें।';
+        } else if (error?.code === 'OFFLINE' || (typeof navigator !== 'undefined' && !navigator.onLine)) {
+          errorText = '⚠️ आप ऑफ़लाइन हैं। आचार्य संवाद हेतु सक्रिय इंटरनेट कनेक्शन आवश्यक है। कृपया नेटवर्क की जाँच कर पुनः प्रयास करें।';
+        } else if (error?.code === 'NETWORK_ERROR') {
+          errorText = '⚠️ आचार्य सेवा से संपर्क नहीं हो सका। सर्वर अनुपलब्ध है अथवा नेटवर्क त्रुटि है। कृपया कुछ समय बाद पुनः प्रयास करें।';
         } else {
           errorText = 'कर्म का नियम सनातन और अटल है। श्रीमद्भगवद्गीता (२.४७) के अनुसार निष्काम कर्म और सात्विक पुरुषार्थ से चित्त की शुद्धि होती है। कृपया नेटवर्क की जाँच कर पुनः प्रयास करें।';
         }
@@ -146,6 +153,7 @@ export const ChatProvider = ({ children }) => {
           id: Date.now() + 1,
           sender: 'model',
           text: errorText,
+          isError: true,
           timestamp: new Date().toISOString()
         };
         setMessages((prev) => [...prev, fallbackMsg]);

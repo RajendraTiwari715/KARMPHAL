@@ -135,6 +135,30 @@ export default function SanatanAIAcharya({ panchangData }) {
           </button>
         </div>
 
+        {/* Persistent Crisis & Professional Care Disclaimer Banner (Part D.4) */}
+        <div className="bg-[#1a140d]/90 border border-[#C58B4E]/30 px-3 py-2 rounded-xl mb-2.5 flex flex-wrap items-center justify-between gap-2 text-[11px] text-[#E0A96D]/90 shadow-inner shrink-0">
+          <div className="flex items-center gap-1.5 flex-1 min-w-[200px]">
+            <span className="text-amber-400 font-semibold text-xs shrink-0">ℹ️ सूचना:</span>
+            <span>यह आध्यात्मिक मार्गदर्शन है, पेशेवर मानसिक स्वास्थ्य सहायता का विकल्प नहीं। कृपया संकट में हेल्पलाइन से संपर्क करें।</span>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <a
+              href="tel:18005990019"
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-950/70 border border-emerald-500/50 text-emerald-300 font-medium hover:bg-emerald-900/90 transition-all active:scale-95 text-[10px]"
+              title="KIRAN 24/7 मानसिक स्वास्थ्य हेल्पलाइन पर कॉल करें (नि:शुल्क)"
+            >
+              📞 किरण: 1800-599-0019
+            </a>
+            <a
+              href="tel:14416"
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-950/70 border border-amber-500/50 text-amber-300 font-medium hover:bg-amber-900/90 transition-all active:scale-95 text-[10px]"
+              title="Tele-MANAS राष्ट्रीय मानसिक स्वास्थ्य हेल्पलाइन"
+            >
+              Tele-MANAS: 14416
+            </a>
+          </div>
+        </div>
+
         {/* Messages Feed */}
         <div
           ref={chatContainerRef}
@@ -205,22 +229,39 @@ export default function SanatanAIAcharya({ panchangData }) {
                     className={`max-w-[92%] sm:max-w-2xl lg:max-w-3xl rounded-2xl p-3 sm:p-4 text-xs sm:text-sm leading-relaxed ${
                       isUser
                         ? 'bg-gradient-to-r from-[#C58B4E]/30 to-[#8C4B19]/40 text-[#F7E7D6] border border-[#C58B4E]/40 rounded-br-none'
+                        : msg.isError
+                        ? 'bg-amber-950/40 backdrop-blur-sm text-amber-200 border border-amber-500/50 rounded-bl-none shadow-xl'
+                        : msg.isCrisis
+                        ? 'bg-rose-950/40 backdrop-blur-sm text-rose-100 border border-rose-500/50 rounded-bl-none shadow-xl ring-1 ring-rose-500/30'
                         : 'bg-black/40 backdrop-blur-sm text-[#F7E7D6] border border-[#C58B4E]/25 rounded-bl-none shadow-xl'
                     }`}
                   >
                     {!isUser && (
                       <div className="flex items-center justify-between gap-2 mb-1.5 pb-1 border-b border-[#C58B4E]/20">
                         <span className="font-dharmik font-bold text-[#F3CA9D] text-xs sm:text-sm flex items-center gap-1.5">
-                          <img 
-                            src={guruAvatar} 
-                            alt="आचार्य जी" 
-                            width="20" 
-                            height="20" 
-                            loading="lazy" 
-                            onError={handleImageError(OM_FALLBACK_SVG)}
-                            className="w-5 h-5 rounded-full object-cover border border-[#C58B4E]/50 shadow shrink-0" 
-                          />
-                          <span>आचार्य जी</span>
+                          {msg.isError ? (
+                            <span className="text-amber-400 font-sans font-medium text-xs flex items-center gap-1">
+                              ⚠️ सम्पर्क त्रुटि (Connection Notice)
+                            </span>
+                          ) : (
+                            <>
+                              <img 
+                                src={guruAvatar} 
+                                alt="आचार्य जी" 
+                                width="20" 
+                                height="20" 
+                                loading="lazy" 
+                                onError={handleImageError(OM_FALLBACK_SVG)}
+                                className="w-5 h-5 rounded-full object-cover border border-[#C58B4E]/50 shadow shrink-0" 
+                              />
+                              <span>आचार्य जी</span>
+                              {msg.isCrisis && (
+                                <span className="ml-2 px-2 py-0.5 rounded text-[10px] bg-rose-500/20 text-rose-300 border border-rose-500/40">
+                                  सुरक्षा एवं सहायता
+                                </span>
+                              )}
+                            </>
+                          )}
                         </span>
 
                         <button
@@ -238,7 +279,7 @@ export default function SanatanAIAcharya({ panchangData }) {
                       </div>
                     )}
 
-                    {isUser || msg.id === 'default-greeting' ? (
+                    {isUser || msg.id === 'default-greeting' || msg.isError ? (
                       <div className="whitespace-pre-line text-[#F7E7D6] leading-[1.75] font-sans font-normal text-xs sm:text-sm break-words">
                         {msg.text}
                       </div>
@@ -250,6 +291,31 @@ export default function SanatanAIAcharya({ panchangData }) {
                       }>
                         <AcharyaMarkdown content={msg.text} />
                       </React.Suspense>
+                    )}
+
+                    {/* Quick Helpline Tap-to-Call Buttons for Crisis Flagged Responses */}
+                    {msg.isCrisis && (
+                      <div className="mt-3 pt-2.5 border-t border-rose-500/30 flex flex-wrap items-center gap-2">
+                        <span className="text-[11px] font-semibold text-rose-300">तत्काल नि:शुल्क सहायता:</span>
+                        <a
+                          href="tel:18005990019"
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-[11px] shadow transition-all active:scale-95"
+                        >
+                          📞 KIRAN: 1800-599-0019
+                        </a>
+                        <a
+                          href="tel:14416"
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-sky-700 hover:bg-sky-600 text-white font-medium text-[11px] shadow transition-all active:scale-95"
+                        >
+                          📞 Tele-MANAS: 14416
+                        </a>
+                        <a
+                          href="tel:112"
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-rose-700 hover:bg-rose-600 text-white font-medium text-[11px] shadow transition-all active:scale-95"
+                        >
+                          🚨 112
+                        </a>
+                      </div>
                     )}
                   </div>
                 </div>

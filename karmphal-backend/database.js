@@ -221,8 +221,75 @@ const migrations = [
         count INTEGER DEFAULT 0
       );
     `
+  },
+  {
+    name: '007_scripture_grounding_and_counseling',
+    up: `
+      CREATE TABLE IF NOT EXISTS ScriptureVerses (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        source TEXT NOT NULL,
+        reference TEXT NOT NULL UNIQUE,
+        sanskrit_text TEXT NOT NULL,
+        hindi_translation TEXT NOT NULL,
+        tags TEXT NOT NULL,
+        verified_source TEXT NOT NULL,
+        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_scripture_reference ON ScriptureVerses(reference);
+      CREATE INDEX IF NOT EXISTS idx_scripture_source ON ScriptureVerses(source);
+
+      CREATE TABLE IF NOT EXISTS WellbeingJourneys (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        userId TEXT NOT NULL,
+        category TEXT NOT NULL,
+        userQuerySummary TEXT,
+        versesCited TEXT,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY(userId) REFERENCES Users(id) ON DELETE CASCADE
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_wellbeing_user_time ON WellbeingJourneys(userId, timestamp DESC);
+    `
   }
 ];
+
+// Helper to seed canonical scriptures if table is empty
+const seedScriptures = (targetDb = db) => {
+  try {
+    const tableExists = targetDb.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='ScriptureVerses'").get();
+    if (!tableExists) return;
+
+    const countRow = targetDb.prepare('SELECT COUNT(*) AS count FROM ScriptureVerses').get();
+    if (countRow && countRow.count > 0) return; // Already seeded
+
+    const seedFile = path.resolve(__dirname, 'data', 'scriptures.seed.json');
+    if (!fs.existsSync(seedFile)) return;
+
+    const verses = JSON.parse(fs.readFileSync(seedFile, 'utf8'));
+    const insertStmt = targetDb.prepare(`
+      INSERT OR IGNORE INTO ScriptureVerses (source, reference, sanskrit_text, hindi_translation, tags, verified_source)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `);
+
+    const insertMany = targetDb.transaction((items) => {
+      for (const item of items) {
+        insertStmt.run(
+          item.source,
+          item.reference,
+          item.sanskrit_text,
+          item.hindi_translation,
+          item.tags,
+          item.verified_source
+        );
+      }
+    });
+
+    insertMany(verses);
+  } catch (err) {
+    console.warn('[ScripturesSeed] Non-fatal seed error:', err.message);
+  }
+};
 
 // Run migrations inside a transaction
 const runMigrations = (targetDb = db) => {
@@ -236,6 +303,8 @@ const runMigrations = (targetDb = db) => {
       targetDb.prepare('INSERT INTO Migrations (name) VALUES (?)').run(migration.name);
     }
   }
+
+  seedScriptures(targetDb);
 };
 
 try {
@@ -247,3 +316,4 @@ try {
 
 module.exports = db;
 module.exports.runMigrations = runMigrations;
+module.exports.seedScriptures = seedScriptures;

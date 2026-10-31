@@ -3,7 +3,6 @@ import { NARAKAS_28 } from './narakasData';
 import { DREAM_MOTIFS } from './swapnaData';
 import { VASTU_ZONES_16 } from './vastuEngine';
 import { computePanchang } from './ephemerisEngine';
-import { resolveTheologicalInquiry } from './theologicalEngine';
 import { apiClient } from './apiClient';
 
 class GeminiService {
@@ -76,7 +75,11 @@ class GeminiService {
         ragContext
       });
 
-      return { text: data.text };
+      return {
+        text: data.text,
+        grounding: data.grounding,
+        timings: data.timings
+      };
     } catch (err) {
       // Differentiate honest API errors (rate limits, quotas, 503s) from offline network failure
       const isRateOrQuotaLimit = err.status === 429 || err.code === 'RATE_LIMIT' || err.code === 'DAILY_QUOTA_EXCEEDED';
@@ -87,10 +90,16 @@ class GeminiService {
       }
 
       const isOffline = typeof navigator !== 'undefined' && !navigator.onLine;
-      if (isOffline || err.code === 'NETWORK_ERROR') {
-        console.warn('Network offline, falling back to local theological engine:', err.message);
-        const localResolution = resolveTheologicalInquiry(userMessage, { planets: panchangContext?.planets });
-        return { text: localResolution.content };
+      if (isOffline) {
+        const offlineErr = new Error('आप ऑफ़लाइन हैं। आचार्य संवाद हेतु सक्रिय इंटरनेट कनेक्शन आवश्यक है।');
+        offlineErr.code = 'OFFLINE';
+        throw offlineErr;
+      }
+
+      if (err.code === 'NETWORK_ERROR' || err.name === 'TypeError') {
+        const connErr = new Error('आचार्य सेवा से संपर्क नहीं हो सका। सर्वर अनुपलब्ध है अथवा नेटवर्क त्रुटि है।');
+        connErr.code = 'NETWORK_ERROR';
+        throw connErr;
       }
 
       throw err;

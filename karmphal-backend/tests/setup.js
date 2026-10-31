@@ -16,6 +16,7 @@ const db = require('../database');
 // Helper to reset DB tables between tests
 function resetTestDatabase() {
   const tables = [
+    'WellbeingJourneys',
     'SecurityAudit',
     'AiGlobalDailyUsage',
     'AiUsageDaily',
