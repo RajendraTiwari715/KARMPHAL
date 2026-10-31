@@ -25,7 +25,7 @@
       "npx --prefix karmphal-web oxlint"
     ],
     "karmphal-backend/**/*.js": [
-      "npx --prefix karmphal-web oxlint"
+      "npx --prefix karmphal-backend oxlint"
     ]
   },
   "devDependencies": {

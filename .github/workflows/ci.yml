@@ -10,6 +10,9 @@ jobs:
   ci-pipeline:
     name: Continuous Integration & Test Verification
     runs-on: ubuntu-latest
+    env:
+      TZ: UTC
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -49,10 +52,13 @@ jobs:
           npm --prefix karmphal-backend audit --audit-level=high
           npm --prefix karmphal-web audit --audit-level=high
 
+      # Root oxlint: .eslintignore auto-excludes third-party/public/dist/android files
+      # Frontend: targets karmphal-web/src only — excludes public/pdfjs-wasm minified files
+      # Backend: targets backend source only
       - name: Run Oxlint (Deny Warnings)
         run: |
           npx oxlint --deny-warnings
-          npx --prefix karmphal-web oxlint --deny-warnings
+          npx --prefix karmphal-web oxlint karmphal-web/src --deny-warnings
           npx --prefix karmphal-backend oxlint --deny-warnings
 
       - name: Verify i18n Hardcoded Strings Baseline (check:i18n)
@@ -84,4 +90,3 @@ jobs:
       - name: Run Visual Assets & Screenshots Test
         working-directory: karmphal-web
         run: npm run test:visual-assets
-

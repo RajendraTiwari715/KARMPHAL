@@ -1,0 +1,12 @@
+# Third-party & generated files — excluded from oxlint at repo root
+node_modules/
+karmphal-web/node_modules/
+karmphal-backend/node_modules/
+karmphal-web/dist/
+karmphal-web/public/
+karmphal-web/android/
+karmphal-web/coverage/
+karmphal-backend/coverage/
+karmphal-backend/backups/
+docs/
+
